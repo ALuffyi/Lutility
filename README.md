@@ -7,7 +7,7 @@
 
 ## Téléchargement
 
-👉 [Lutility Setup 1.28.0.exe](https://github.com/ALuffyi/Lutility/releases/latest) *(Releases)*
+👉 [Lutility Setup 1.28.0.exe](https://github.com/ALuffyi/Lutility/raw/main/dist/Lutility%20Setup%201.28.0.exe)
 
 ---
 
