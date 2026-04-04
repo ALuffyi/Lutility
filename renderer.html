@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src https://fonts.googleapis.com https://fonts.gstatic.com">
+<title>LUTILITY</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+/* Titlebar offset — 32px for custom frameless titlebar */
+body{flex-direction:column!important}
+#launch{top:0;padding-top:0;height:calc(100vh - 32px)}
+#app{height:calc(100vh - 32px)!important}
+.app-body{height:calc(100vh - 84px)!important}
+</style>
+</head>
+<body style="flex-direction:column">
+<!-- TITLEBAR (frameless window) -->
+<div id="titlebar" style="-webkit-app-region:drag;height:32px;flex-shrink:0;background:var(--bg);display:flex;align-items:center;padding:0 12px;border-bottom:1px solid var(--bord);position:relative;z-index:10000">
+  <span class="titlebar-tagline">// Confidentialité Absolue : 100% Offline &amp; Sans collecte de données. Une garantie signée ALuffy //</span>
+  <div style="-webkit-app-region:no-drag;display:flex;gap:4px;position:absolute;right:8px;top:50%;transform:translateY(-50%)">
+    <button onclick="window.api.minimize()" style="width:28px;height:20px;border-radius:4px;background:transparent;border:1px solid transparent;color:var(--dim);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .12s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='transparent'">−</button>
+    <button onclick="window.api.maximize()" style="width:28px;height:20px;border-radius:4px;background:transparent;border:1px solid transparent;color:var(--dim);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:background .12s" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='transparent'">□</button>
+    <button onclick="window.api.close()" style="width:28px;height:20px;border-radius:4px;background:transparent;border:1px solid transparent;color:var(--dim);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .12s" onmouseover="this.style.background='rgba(239,68,68,.25)';this.style.color='var(--red)'" onmouseout="this.style.background='transparent';this.style.color='var(--dim)'">×</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     LAUNCH SCREEN — Wizard 3 étapes + Retour
+══════════════════════════════════════════════════════ -->
+<div id="launch">
+  <div class="launch-logo">L<span class="u-orange">U</span>TILITY</div>
+
+  <!-- ── WIZARD (premier lancement) ── -->
+  <div class="lcard" id="card-setup" style="display:none;max-width:520px">
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+      <div class="step active" id="step-dot-1"><span class="step-n">1</span><span class="step-lbl">Profil</span></div>
+      <div class="step-line"></div>
+      <div class="step" id="step-dot-2"><span class="step-n">2</span><span class="step-lbl">Info</span></div>
+      <div class="step-line"></div>
+      <div class="step" id="step-dot-3"><span class="step-n">3</span><span class="step-lbl">Dossier</span></div>
+      <div class="step-line"></div>
+      <div class="step" id="step-dot-4"><span class="step-n">4</span><span class="step-lbl">Prêt</span></div>
+    </div>
+
+    <!-- Étape 1 : Profil -->
+    <div class="wiz-step" id="wiz-1">
+      <div class="wiz-title">👤 Qui êtes-vous ?</div>
+      <div class="wiz-desc">Choisissez un nom et un emoji pour personnaliser votre espace.</div>
+      <div class="frow" style="margin-bottom:0">
+        <label class="flbl">Nom du profil</label>
+        <input class="fin" id="s-name" placeholder="Alex, Gamer27…" maxlength="24"
+          onkeydown="if(event.key==='Enter')wizNext(1)" style="margin-top:6px">
+      </div>
+      <div class="frow" style="margin-bottom:0">
+        <label class="flbl">Emoji</label>
+        <div class="emoji-grid" id="setup-emoji-grid" style="margin-top:8px"></div>
+      </div>
+      <div class="wiz-acts">
+        <button class="btn" style="font-size:12px;opacity:.75" onclick="importAndStart()" title="Charger une sauvegarde Lutility existante">📥 Importer</button>
+        <button class="btn prim" onclick="wizNext(1)">Suivant →</button>
+      </div>
+    </div>
+
+    <!-- Étape 2 : Explication sauvegarde -->
+    <div class="wiz-step" id="wiz-2" style="display:none">
+      <div class="wiz-title">💾 Comprendre la sauvegarde</div>
+      <div class="wiz-desc">Lutility crée un dossier <strong style="color:var(--cyan)">Lutility_SAV</strong> à l'emplacement de votre choix. Toutes vos données y sont stockées.</div>
+      <div class="wiz-tip">
+        <span class="wiz-tip-ico">📁</span>
+        <span style="font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--dim2)">
+          Lutility_SAV/<br>
+          &nbsp;&nbsp;├── games.json<br>
+          &nbsp;&nbsp;├── notes.json<br>
+          &nbsp;&nbsp;├── shortcuts.json<br>
+          &nbsp;&nbsp;└── images/
+        </span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="wiz-tip">
+          <span class="wiz-tip-ico">🔌</span>
+          <span><strong>Clé USB</strong> — recommandé. Vos données vous suivent partout et restent sauvegardées même si votre PC crashe.</span>
+        </div>
+        <div class="wiz-tip">
+          <span class="wiz-tip-ico">💻</span>
+          <span><strong>PC local</strong> — Documents, Bureau ou n'importe quel dossier. Pratique mais lié à cette machine.</span>
+        </div>
+      </div>
+      <div class="wiz-acts">
+        <button class="btn" onclick="wizBack(2)">← Retour</button>
+        <button class="btn prim" onclick="wizNext(2)">Choisir un dossier →</button>
+      </div>
+    </div>
+
+    <!-- Étape 3 : Dossier -->
+    <div class="wiz-step" id="wiz-3" style="display:none">
+      <div class="wiz-title">📁 Où installer ?</div>
+      <div class="wiz-tip">
+        <span class="wiz-tip-ico">💡</span>
+        <span>Sélectionnez un <strong>dossier parent</strong> — Lutility créera automatiquement <strong style="color:var(--cyan)">Lutility_SAV</strong> à l'intérieur.</span>
+      </div>
+      <button class="btn prim" style="width:100%;justify-content:center" onclick="pickFolder(false)">
+        📁 Choisir un dossier
+      </button>
+      <div class="wiz-path" id="spath">Aucun dossier sélectionné…</div>
+      <div class="wiz-acts">
+        <button class="btn" onclick="wizBack(3)">← Retour</button>
+        <button class="btn green" id="btn-go" onclick="wizNext(3)" disabled>Suivant →</button>
+      </div>
+    </div>
+
+    <!-- Étape 4 : Confirmation -->
+    <div class="wiz-step" id="wiz-4" style="display:none">
+      <div class="wiz-title" style="color:var(--green)">✅ Tout est prêt !</div>
+      <div class="wiz-summary" id="wiz-summary"></div>
+      <div class="wiz-acts" style="justify-content:center">
+        <button class="btn-reopen" onclick="firstLaunch()" style="width:100%">▶ &nbsp; Lancer Lutility</button>
+      </div>
+      <div class="return-reset" onclick="wizBack(4)" style="text-align:center;margin-top:4px">← Modifier</div>
+    </div>
+  </div>
+
+  <!-- ── RETOUR (utilisateur connu) ── -->
+  <div class="lcard" id="card-return" style="display:none;max-width:520px">
+    <div class="return-greeting">
+      <span class="return-emoji" id="r-emoji">🎮</span>
+      <div>
+        <div class="return-name" id="r-name">Joueur</div>
+        <div class="return-sub">Bon retour !</div>
+      </div>
+    </div>
+
+    <!-- Status rows -->
+    <div class="status-rows">
+      <div class="status-row">
+        <span class="status-ico" id="st-profile-ico">●</span>
+        <span class="status-lbl">Profil</span>
+        <span class="status-val" id="st-profile-val">—</span>
+      </div>
+      <div class="status-row">
+        <span class="status-ico" id="st-folder-ico">●</span>
+        <span class="status-lbl">Dossier</span>
+        <span class="status-val" id="st-folder-val">—</span>
+      </div>
+      <div class="status-row">
+        <span class="status-ico" id="st-data-ico">●</span>
+        <span class="status-lbl">Données</span>
+        <span class="status-val" id="st-data-val">—</span>
+      </div>
+    </div>
+
+    <div class="return-actions">
+      <button class="btn-reopen" id="btn-open" onclick="returnOpen()">▶ &nbsp; Ouvrir</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div class="return-reset" id="btn-repair" style="display:none" onclick="repairFolder()">🔧 Réparer le dossier</div>
+        <div style="flex:1"></div>
+        <div class="return-reset" onclick="resetSetup()">⚙ Reconfigurer</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     APP
+══════════════════════════════════════════════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">L<span class="u-orange">U</span>TILITY</div>
+    <div class="topbar-r">
+      <div class="profile-chip" onclick="openModal('modal-profile')" title="Modifier le profil">
+        <span class="t-emoji" id="t-emoji">🎮</span>
+        <div class="t-name" id="t-name">Profil</div>
+      </div>
+      <div class="sav-chip" onclick="document.getElementById('folder-path-lbl').textContent=savPath||'—';openModal('modal-folder')" title="Settings">
+        <div class="led" id="led"></div>
+        <span id="sav-lbl">Settings</span>
+      </div>
+      <button id="update-btn" class="update-btn gone" onclick="openUpdatePopup(this)" title="Mise à jour disponible"></button>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <div class="sidebar">
+      <!-- HOME -->
+      <button class="nav on" data-p="home" onclick="nav('home')"><span class="ico">🏠</span><span class="lbl">Home</span></button>
+      <div class="navsep"></div>
+      <!-- CONTENU -->
+      <button class="nav" data-p="jeux"  onclick="nav('jeux')"> <span class="ico">🎮</span><span class="lbl">Jeux</span></button>
+      <button class="nav" data-p="notes" onclick="nav('notes')"><span class="ico">📝</span><span class="lbl">Notes</span></button>
+      <div class="navsep"></div>
+      <!-- OUTILS -->
+      <button class="nav" data-p="programmes" onclick="nav('programmes')"><span class="ico">📦</span><span class="lbl">Apps</span></button>
+      <button class="nav" data-p="shortcuts"  onclick="nav('shortcuts')"> <span class="ico">🔗</span><span class="lbl">Raccourcis</span></button>
+      <button class="nav" data-p="scripts"    onclick="nav('scripts')">   <span class="ico">🛠️</span><span class="lbl">Scripts</span></button>
+      <div class="navsep"></div>
+      <button class="nav" data-p="tools" onclick="nav('tools')"><span class="ico">⚙️</span><span class="lbl">Outils</span></button>
+    </div>
+
+    <div class="content">
+      <!-- HOME -->
+      <div class="page on" id="p-home">
+        <div class="wlogo">L<span class="u-orange">U</span>TILITY</div>
+        <!-- Groupe Contenu -->
+        <div class="home-section-lbl">CONTENU</div>
+        <div class="wgrid wgrid-2">
+          <div class="wcard" data-p="jeux"  onclick="nav('jeux')"> <span class="wi">🎮</span><div class="wt">Jeux</div> <div class="wd">Touches, graphismes et configs — tout éditable</div></div>
+          <div class="wcard" data-p="notes" onclick="nav('notes')"><span class="wi">📝</span><div class="wt">Notes</div><div class="wd">OneNote style · Tableaux · Images · .md</div></div>
+        </div>
+        <!-- Groupe Outils -->
+        <div class="home-section-lbl">OUTILS</div>
+        <div class="wgrid wgrid-4">
+          <div class="wcard" data-p="programmes" onclick="nav('programmes')"><span class="wi">📦</span><div class="wt">Apps</div>      <div class="wd">Apps Windows conseillées</div></div>
+          <div class="wcard" data-p="shortcuts"  onclick="nav('shortcuts')"> <span class="wi">🔗</span><div class="wt">Raccourcis</div><div class="wd">Lancez vos apps en un clic</div></div>
+          <div class="wcard" data-p="scripts"    onclick="nav('scripts')">   <span class="wi">🛠️</span><div class="wt">Scripts</div>   <div class="wd">CMD &amp; PowerShell personnalisés</div></div>
+          <div class="wcard" data-p="tools"      onclick="nav('tools')">     <span class="wi">⚙️</span><div class="wt">Outils</div>    <div class="wd">Sys Info · Maintenance · Optimisation</div></div>
+        </div>
+        <a class="discord-btn" onclick="window.api.openUrl('https://discord.gg/sjguZWfgK9')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+          Discord
+        </a>
+      </div>
+
+      <!-- JEUX -->
+      <div class="page" id="p-jeux">
+        <div class="ph">
+          <div class="ph-t" style="--pc:var(--orange)">🎮 Jeux</div>
+          <button class="btn orange" onclick="openModal('modal-game')">+ Ajouter un jeu</button>
+        </div>
+        <div class="jeux-body">
+          <div class="glist"><div class="glist-hdr">BIBLIOTHÈQUE</div><div class="glist-scroll" id="glist"></div></div>
+          <div class="gdetail" id="gdetail"><div class="gempty"><span class="ei">🎮</span><span class="et">Sélectionnez un jeu</span></div></div>
+        </div>
+      </div>
+
+      <!-- NOTES -->
+      <div class="page" id="p-notes">
+        <div class="nb-panel">
+          <div class="panel-hdr">CARNETS <span class="padd" onclick="addNotebook()">+</span></div>
+          <div class="nb-scroll" id="nb-list"></div>
+        </div>
+        <div class="note-editor">
+          <div class="note-tb">
+            <!-- ── LIGNE 1 : Police · Format · Couleurs · Titres · Sub/Sup ──────── -->
+            <select class="tb-sel" id="tb-font" onchange="setFont(this.value)" title="Police">
+              <option value="">Police</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="Verdana, sans-serif">Verdana</option>
+              <option value="Trebuchet MS, sans-serif">Trebuchet</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="Courier New, monospace">Courier</option>
+              <option value="Exo 2, sans-serif">Exo 2</option>
+            </select>
+            <select class="tb-sel tb-sel-sm" id="tb-size" onchange="setSize(this.value)" title="Taille">
+              <option value="">Taille</option>
+              <option value="11px">11</option>
+              <option value="12px">12</option>
+              <option value="13px">13</option>
+              <option value="14px">14</option>
+              <option value="16px">16</option>
+              <option value="18px">18</option>
+              <option value="20px">20</option>
+              <option value="24px">24</option>
+              <option value="28px">28</option>
+              <option value="32px">32</option>
+            </select>
+            <div class="tb-sep"></div>
+            <button class="tb" onclick="ex('bold')"          title="Gras"><b>B</b></button>
+            <button class="tb" onclick="ex('italic')"        title="Italique"><i>I</i></button>
+            <button class="tb" onclick="ex('underline')"     title="Souligné"><u>U</u></button>
+            <button class="tb" onclick="ex('strikeThrough')" title="Barré"><s>S</s></button>
+            <div class="tb-sep"></div>
+            <button class="tb tb-color" id="tb-fg" onclick="showColorPicker('fg',this)" title="Couleur du texte">A<span class="tb-color-bar" id="tb-fg-bar" style="background:#e2e8f0"></span></button>
+            <button class="tb tb-color" id="tb-hl" onclick="showColorPicker('hl',this)" title="Surlignage">H<span class="tb-color-bar" id="tb-hl-bar" style="background:#fbbf24"></span></button>
+            <div class="tb-sep"></div>
+            <button class="tb" onclick="ex('formatBlock','h1')" style="font-size:10px;font-family:var(--head)" title="Titre H1">H1</button>
+            <button class="tb" onclick="ex('formatBlock','h2')" style="font-size:10px;font-family:var(--head)" title="Titre H2">H2</button>
+            <button class="tb" onclick="ex('formatBlock','h3')" style="font-size:10px;font-family:var(--head)" title="Titre H3">H3</button>
+            <button class="tb" onclick="ex('formatBlock','p')"  title="Paragraphe">¶</button>
+            <div class="tb-sep"></div>
+            <button class="tb" onclick="ex('subscript')"   title="Indice"   style="font-size:11px">x₂</button>
+            <button class="tb" onclick="ex('superscript')" title="Exposant" style="font-size:11px">x²</button>
+            <!-- ── SÉPARATEUR DE LIGNE ─────────────────────────────────────────── -->
+            <div class="tb-break"></div>
+            <!-- ── LIGNE 2 : Alignement · Listes · Tableau · Image · Outils ──── -->
+            <button class="tb" onclick="ex('justifyLeft')"   title="Aligner à gauche" style="font-size:12px">⇤</button>
+            <button class="tb" onclick="ex('justifyCenter')" title="Centrer"          style="font-size:12px">⇔</button>
+            <button class="tb" onclick="ex('justifyRight')"  title="Aligner à droite" style="font-size:12px">⇥</button>
+            <button class="tb" onclick="ex('justifyFull')"   title="Justifier"        style="font-size:12px">☰</button>
+            <div class="tb-sep"></div>
+            <button class="tb" onclick="ex('insertUnorderedList')" title="Liste à puces">•</button>
+            <button class="tb" onclick="ex('insertOrderedList')"   title="Liste numérotée" style="font-size:10px">1.</button>
+            <div class="tb-sep"></div>
+            <button class="tb" onclick="showTblPopup(event)" style="font-size:11px" title="Tableau">⊞</button>
+            <button class="tb" onclick="pickImg()"           style="font-size:14px" title="Image">🖼</button>
+            <div class="tb-sep"></div>
+            <button class="tb" onclick="ex('removeFormat')"  style="font-size:11px" title="Effacer le formatage">✕</button>
+            <div class="tb-sep"></div>
+            <button class="tb" onclick="saveNote(true)"      style="font-size:14px;color:var(--yellow)" title="Sauvegarder">💾</button>
+          </div>
+          <div class="note-bar" id="note-bar">
+            <div class="sd"></div>
+            <span class="sl" id="note-sl">Sauvegardé</span>
+            <span class="sp" id="note-sp"></span>
+          </div>
+          <input class="note-title-in" id="note-title" placeholder="Titre de la note…" oninput="onEdit()">
+          <div class="note-body" contenteditable="true" id="note-body" oninput="onEdit()" onpaste="onPaste(event)"></div>
+          <div class="note-canvas-empty">
+            <span class="nce-ico">📄</span>
+            <span class="nce-txt">Sélectionnez une page</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROGRAMMES CONSEILLÉS -->
+      <div class="page" id="p-programmes">
+        <div class="ph">
+          <div class="ph-t" style="--pc:#60a5fa">📦 Programmes</div>
+        </div>
+        <div class="tools-scroll">
+          <div class="tools-inner-grid" id="prog-grid"></div>
+        </div>
+      </div>
+
+      <!-- RACCOURCIS -->
+      <div class="page" id="p-shortcuts">
+        <div class="ph">
+          <div class="ph-t" style="--pc:var(--yellow)">🔗 Raccourcis</div>
+          <button class="btn orange" onclick="openAddShortcut()">+ Ajouter</button>
+        </div>
+        <div class="tools-scroll" style="padding:0;gap:0">
+          <div class="page-with-panel">
+            <div class="page-with-panel-main">
+              <div class="sc-wrap" id="sc-wrap"></div>
+            </div>
+            <div class="tuto-panel">
+              <div class="tuto-ttl">🔗 Raccourcis</div>
+              <div>
+                <div class="tuto-lbl">À quoi ça sert</div>
+                <p class="tuto-p">Accédez à vos <strong>apps, dossiers et fichiers</strong> favoris directement depuis Lutility.</p>
+              </div>
+              <div>
+                <div class="tuto-lbl">Ajouter</div>
+                <p class="tuto-p">→ Cliquez <strong>+ Ajouter</strong><br>→ Choisissez un emoji<br>→ Collez le chemin ou parcourez</p>
+              </div>
+              <div>
+                <div class="tuto-lbl">Compatible</div>
+                <div class="tuto-code">.exe &nbsp;.bat &nbsp;.lnk<br>dossiers / URLs</div>
+              </div>
+              <div class="example-wrap">
+                <div class="example-lbl">— Exemple —</div>
+                <div class="example-sc">
+                  <div class="example-sc-ico">⌨️</div>
+                  <div class="example-sc-name">Invite de commande</div>
+                </div>
+                <p class="tuto-p" style="margin-top:6px;font-size:11px">Chemin : <code style="font-family:var(--mono);color:var(--cyan)">cmd.exe</code></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCRIPTS (ex Mes Commandes) -->
+      <div class="page" id="p-scripts">
+        <div class="ph">
+          <div class="ph-t" style="--pc:var(--purple)">🛠️ Scripts</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="tool-cat-badge" id="ct-count">0</span>
+            <button class="btn orange" onclick="openAddCustomTool()">+ Ajouter</button>
+          </div>
+        </div>
+        <div class="tools-scroll" style="padding:0;gap:0">
+          <div class="page-with-panel">
+            <div class="page-with-panel-main">
+              <div class="tools-inner-grid" id="cat-body-custom"></div>
+            </div>
+            <div class="tuto-panel">
+              <div class="tuto-ttl">🛠️ Scripts</div>
+              <div>
+                <div class="tuto-lbl">À quoi ça sert</div>
+                <p class="tuto-p">Créez et lancez vos <strong>commandes personnalisées</strong> en un clic, sans ouvrir de terminal.</p>
+              </div>
+              <div>
+                <div class="tuto-lbl">Types</div>
+                <p class="tuto-p"><strong style="color:var(--cyan)">CMD</strong> — Invite de commande<br><strong style="color:var(--purple)">PS</strong> &nbsp;— PowerShell</p>
+              </div>
+              <div>
+                <div class="tuto-lbl">Conseils</div>
+                <p class="tuto-p">→ Cochez <strong>Admin</strong> pour les tâches système<br>→ <strong>Dupliquer</strong> pour créer des variantes<br>→ Scripts liés à votre profil</p>
+              </div>
+              <div class="example-wrap">
+                <div class="example-lbl">— Exemple CMD —</div>
+                <div class="tuto-code">ipconfig /flushdns</div>
+                <p class="tuto-p" style="margin-top:6px;font-size:11px">Vide le cache DNS Windows pour résoudre des problèmes de connexion.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OUTILS SYSTÈME -->
+      <div class="page" id="p-tools">
+        <div class="ph">
+          <div class="ph-t" style="--pc:var(--green)">⚙️ Outils Système</div>
+        </div>
+        <div class="tools-scroll" style="display:flex;flex-direction:column;gap:0">
+          <!-- Sys Info intégré sous Système -->
+          <div class="ts">
+            <div class="tool-cat">
+              <div class="tool-cat-hdr" onclick="toggleCat('sysinfo')">
+                <span class="tool-cat-lbl">🖥️ Informations Système</span>
+                <button class="btn sm" id="si-refresh-btn" onclick="event.stopPropagation();loadSysinfo()" style="margin-left:auto;margin-right:8px">🔄 Actualiser</button>
+                <span class="tool-cat-arr" id="cat-icon-sysinfo">▾</span>
+              </div>
+              <div id="cat-body-sysinfo" style="padding:14px">
+                <div class="sysinfo-panel">
+                  <div class="sysinfo-grid" id="sysinfo-grid">
+                    <div class="si-loading">Cliquez sur <strong>🔄 Actualiser</strong> pour collecter les informations.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Outils générés par renderTools() -->
+          <div id="tools-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE POPUP -->
+<div class="tbl-popup" id="tbl-popup">
+  <h3>⊞ Tableau</h3>
+  <div class="tbl-row"><label>Colonnes</label><input class="tbl-num" id="tbl-cols" type="number" min="1" max="10" value="3"></div>
+  <div class="tbl-row"><label>Lignes</label><input class="tbl-num" id="tbl-rows" type="number" min="1" max="20" value="3"></div>
+  <div class="tbl-acts"><button class="btn sm" onclick="hideTbl()">Annuler</button><button class="btn sm prim" onclick="insertTable()">Insérer</button></div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx"></div>
+
+<!-- MODAL GAME -->
+<div class="overlay" id="modal-game">
+  <div class="modal">
+    <div class="modal-t orange">+ Nouveau Jeu</div>
+    <div class="frow"><label class="flbl">Plateforme</label>
+      <div class="autocomplete"><input class="fin" id="g-plat" placeholder="Steam, Epic…" autocomplete="off" oninput="acF('g-plat','ac-plat',PLAT)" onfocus="acF('g-plat','ac-plat',PLAT)" onblur="setTimeout(()=>hideAc('ac-plat'),150)"><div class="ac-list" id="ac-plat"></div></div>
+    </div>
+    <div class="frow"><label class="flbl">Nom du jeu</label>
+      <div class="autocomplete"><input class="fin" id="g-name" placeholder="CS2, Valorant…" autocomplete="off" oninput="acF('g-name','ac-game',GAMES)" onfocus="acF('g-name','ac-game',GAMES)" onblur="setTimeout(()=>hideAc('ac-game'),150)"><div class="ac-list" id="ac-game"></div></div>
+    </div>
+    <div class="frow"><label class="flbl">Emoji</label><input class="fin" id="g-ico" placeholder="🎮 🔫 ⚔️" maxlength="4"></div>
+    <div class="macts"><button class="btn sm" onclick="closeModal('modal-game')">Annuler</button><button class="btn sm orange" onclick="addGame()">Ajouter</button></div>
+  </div>
+</div>
+
+<!-- MODAL PROFILE -->
+<div class="overlay" id="modal-profile">
+  <div class="modal">
+    <div class="modal-t">👤 Modifier le profil</div>
+    <div class="frow"><label class="flbl">Nom</label><input class="fin" id="p-name" maxlength="24"></div>
+    <div class="frow"><label class="flbl">Emoji</label><div class="emoji-grid" id="edit-emoji-grid" style="margin-top:8px"></div></div>
+    <div class="macts"><button class="btn sm" onclick="closeModal('modal-profile')">Annuler</button><button class="btn sm prim" onclick="saveProfile()">Sauvegarder</button></div>
+  </div>
+</div>
+
+<!-- MODAL FOLDER -->
+<div class="overlay" id="modal-folder">
+  <div class="modal">
+    <div class="modal-t">📁 Sauvegarde</div>
+    <div style="font-size:13px;color:var(--dim2);line-height:1.7;margin-bottom:16px">
+      Dossier actuel : <strong style="color:var(--yellow);font-family:var(--mono);font-size:11px" id="folder-path-lbl">—</strong>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <button class="btn prim" style="justify-content:center" onclick="closeModal('modal-folder');pickFolder(true)">📁 Changer de dossier</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn green" style="justify-content:center" onclick="exportSav()">⬆️ Exporter</button>
+        <button class="btn green" style="justify-content:center" onclick="importSav()">⬇️ Importer</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--dim);font-family:var(--mono);line-height:1.6;margin-bottom:16px">
+      Export : copie <strong>Lutility_SAV</strong> complet (données + images) vers un dossier de votre choix.<br>
+      Import : restaure depuis un dossier <strong>Lutility_SAV</strong> — remplace les données actuelles.
+    </div>
+    <div class="macts"><button class="btn sm" onclick="closeModal('modal-folder')">Fermer</button></div>
+  </div>
+</div>
+
+
+<!-- MODAL NOTEBOOK (create + edit) -->
+<div class="overlay" id="modal-nb">
+  <div class="modal">
+    <input type="hidden" id="nb-mode" value="create">
+    <input type="hidden" id="nb-edit-id" value="">
+    <div class="modal-t" id="nb-modal-title">📓 Nouveau carnet</div>
+    <div class="frow">
+      <label class="flbl">Nom</label>
+      <input class="fin" id="nb-name" maxlength="40" placeholder="Gaming, Setup PC, Perso…"
+        onkeydown="if(event.key==='Enter')nbConfirm()">
+    </div>
+    <div class="frow" style="margin-bottom:0">
+      <label class="flbl">Emoji <span style="color:var(--dim);font-size:10px;text-transform:none;letter-spacing:0;font-family:var(--body)">(optionnel)</span></label>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <span id="nb-no-emoji" onclick="nbPickEmoji('')"
+          style="padding:3px 10px;border-radius:5px;border:1px solid var(--cyan);color:var(--cyan);font-family:var(--mono);font-size:9px;cursor:pointer;transition:all .15px">✕ Aucun</span>
+        <span id="nb-emoji-preview" style="font-size:22px;min-width:28px;text-align:center"></span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px" id="nb-emoji-grid"></div>
+    </div>
+    <div class="macts">
+      <button class="btn sm" onclick="closeModal('modal-nb')">Annuler</button>
+      <button class="btn sm prim" id="nb-confirm-btn" onclick="nbConfirm()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RENAME (section / subsection) -->
+<div class="overlay" id="modal-rename">
+  <div class="modal" style="width:360px">
+    <input type="hidden" id="rn-type" value="">
+    <input type="hidden" id="rn-nb" value="">
+    <input type="hidden" id="rn-sec" value="">
+    <input type="hidden" id="rn-sub" value="">
+    <div class="modal-t" id="rn-title">Renommer</div>
+    <div class="frow" style="margin-bottom:0">
+      <input class="fin" id="rn-name" maxlength="50" placeholder="Nom…"
+        onkeydown="if(event.key==='Enter')rnConfirm()">
+    </div>
+    <div class="macts">
+      <button class="btn sm" onclick="closeModal('modal-rename')">Annuler</button>
+      <button class="btn sm prim" onclick="rnConfirm()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SHORTCUT -->
+<div class="overlay" id="modal-shortcut">
+  <div class="modal" style="width:440px">
+    <div class="modal-t" id="sc-modal-title">🔗 Ajouter un raccourci</div>
+    <div class="frow">
+      <label class="flbl">Programme</label>
+      <div style="display:flex;gap:8px">
+        <input class="fin" id="sc-path" placeholder="Cliquez sur Parcourir…" style="flex:1;cursor:default" readonly>
+        <button class="btn sm prim" onclick="scBrowse()" style="flex-shrink:0">📂 Parcourir</button>
+      </div>
+    </div>
+    <div class="frow">
+      <label class="flbl">Nom</label>
+      <input class="fin" id="sc-name" maxlength="32" placeholder="Mon App…" onkeydown="if(event.key==='Enter')scConfirm()">
+    </div>
+    <div class="frow" style="margin-bottom:0">
+      <label class="flbl">Emoji</label>
+      <div class="emoji-grid" id="sc-emoji-grid" style="margin-top:8px"></div>
+    </div>
+    <div class="macts">
+      <button class="btn sm" onclick="closeModal('modal-shortcut')">Annuler</button>
+      <button class="btn sm prim" onclick="scConfirm()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CUSTOM TOOL -->
+<div class="overlay" id="modal-custom-tool">
+  <div class="modal" style="width:500px">
+    <div class="modal-t" id="ct-modal-title">⚙️ Nouvelle commande</div>
+    <div class="frow">
+      <label class="flbl">Nom</label>
+      <input class="fin" id="ct-name" maxlength="48" placeholder="Mon outil…"
+        onkeydown="if(event.key==='Enter')ctConfirm()">
+    </div>
+    <div class="frow" style="margin-bottom:13px">
+      <label class="flbl">Icône</label>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input class="fin" id="ct-ico" maxlength="4" placeholder="⚙️"
+          style="width:54px;text-align:center;font-size:20px;padding:5px;flex-shrink:0"
+          oninput="_ctIcoSel=this.value;_ctBuildEmojiGrid()">
+        <div id="ct-ico-grid" style="display:flex;flex-wrap:wrap;gap:3px"></div>
+      </div>
+    </div>
+    <div class="frow">
+      <label class="flbl">Description</label>
+      <input class="fin" id="ct-desc" maxlength="120" placeholder="Ce que fait cette commande…">
+    </div>
+    <div class="frow">
+      <label class="flbl">Commande</label>
+      <textarea class="fin" id="ct-cmd" rows="4"
+        style="resize:vertical;font-family:var(--mono);font-size:12px;line-height:1.5"
+        placeholder="Entrez votre commande CMD ou PowerShell…"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0">
+      <div>
+        <label class="flbl">Type</label>
+        <select class="fin" id="ct-type">
+          <option value="CMD">CMD</option>
+          <option value="PS">PowerShell</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
+        <input type="checkbox" id="ct-admin"
+          style="width:16px;height:16px;accent-color:var(--orange);cursor:pointer;flex-shrink:0">
+        <label for="ct-admin"
+          style="font-family:var(--mono);font-size:10px;color:var(--dim2);letter-spacing:1px;cursor:pointer">
+          🛡️ Requiert Admin
+        </label>
+      </div>
+    </div>
+    <div class="macts">
+      <button class="btn sm" onclick="closeModal('modal-custom-tool')">Annuler</button>
+      <button class="btn sm prim" onclick="ctConfirm()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="img-input" accept="image/*" style="display:none" onchange="onImgFile(this)">
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════
+     MODULES — order matters
+     state → launch → persist → app → jeux → notes → tools
+════════════════════════════════════════════════════ -->
+<script src="js/state.js"></script>
+<script src="js/launch.js"></script>
+<script src="js/persist.js"></script>
+<script src="js/app.js"></script>
+<script src="js/jeux.js"></script>
+<script src="js/notes.js"></script>
+<script src="js/tools.js"></script>
+</body>
+</html>

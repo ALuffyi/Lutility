@@ -1,0 +1,45 @@
+{
+  "name": "lutility",
+  "version": "2.0.0",
+  "description": "Lutility — utilitaire personnel gaming",
+  "author": "Lutility",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-packager . Lutility --platform=win32 --arch=x64 --out=dist-pack --overwrite --icon=assets/icon.ico --ignore=\"dist|dist-pack|\\.claude|\\.git\"",
+    "build-installer": "set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.lutility.app",
+    "productName": "Lutility",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico",
+      "forceCodeSigning": false,
+      "publish": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Lutility"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.html",
+      "css/**",
+      "js/**",
+      "assets/**"
+    ]
+  },
+  "devDependencies": {
+    "@electron/packager": "^19.1.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}
