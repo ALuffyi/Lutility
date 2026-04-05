@@ -248,6 +248,13 @@ ipcMain.handle('check-update', async () => {
   } catch { return null; }
 });
 
+ipcMain.handle('get-file-icon', async (_e, filePath) => {
+  try {
+    const icon = await app.getFileIcon(filePath, { size: 'normal' });
+    return icon.toDataURL();
+  } catch { return null; }
+});
+
 ipcMain.handle('download-update', async (_e, url) => {
   const os   = require('os');
   const dest = path.join(os.tmpdir(), 'Lutility-Setup-latest.exe');
