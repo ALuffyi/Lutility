@@ -55,10 +55,16 @@ const TOOLS = [
   },
   // ── MISES À JOUR ─────────────────────────────────────
   {
-    ico:'🔄', name:'Mettre à jour tous les logiciels (winget)', tag:'Update', tc:'g',
-    desc:'Ouvre un terminal et met à jour tous les logiciels via winget (progression visible).',
+    ico:'🔄', name:'Mettre à jour les logiciels (winget)', tag:'Update', tc:'g',
+    desc:'Ouvre un terminal et met à jour tous les logiciels installés via winget (progression visible).',
     admin:false, type:'PS',
-    cmd:'Start-Process powershell -ArgumentList \'-NoExit -ExecutionPolicy Bypass -Command "Write-Host \'\'Mise a jour via winget...\'\' -ForegroundColor Cyan; winget upgrade --all --accept-package-agreements --accept-source-agreements"\' ',
+    cmd:'Start-Process powershell -ArgumentList \'-NoExit -ExecutionPolicy Bypass -Command "Write-Host \'\'Mise a jour via winget...\'\' -ForegroundColor Cyan; winget upgrade --all --accept-package-agreements --accept-source-agreements"\'',
+  },
+  {
+    ico:'🖥️', name:'Mettre à jour les drivers (DriversCloud)', tag:'Update', tc:'g',
+    desc:'Ouvre DriversCloud dans le navigateur : détection automatique des drivers manquants ou obsolètes.',
+    admin:false, type:'CMD',
+    cmd:'start https://www.driverscloud.com/fr',
   },
   {
     ico:'🟢', name:'Mettre à jour les pilotes NVIDIA', tag:'Update', tc:'g',
@@ -258,7 +264,8 @@ async function loadSysinfo() {
       <div class="si-block si-block-full">
         <div class="si-lbl">📊 Utilisation des disques</div>
         <div class="si-val" style="display:flex;flex-direction:column;gap:6px;margin-top:2px">${diskBarsHtml}</div>
-      </div>`;
+      </div>
+      `;
 
     startTempRefresh(); // démarre le rafraîchissement auto des températures
   } catch(e) {
@@ -733,6 +740,9 @@ function renderTools() {
   if (!container) return;
   container.innerHTML = '';
 
+  const updatesContainer = document.getElementById('updates-grid');
+  if (updatesContainer) updatesContainer.innerHTML = '';
+
   const toolSec = document.createElement('div');
   toolSec.className = 'ts';
   toolSec.innerHTML = '';
@@ -741,6 +751,12 @@ function renderTools() {
     const tools = TOOLS.filter(t => cat.tags.includes(t.tag));
     if (!tools.length) return;
     const collapsed = !!_catCollapsed[cat.id];
+
+    // La catégorie Mises à jour va dans updates-grid (entre sysinfo et le reste)
+    const isUpdates = cat.id === 'updates';
+    const targetSec = isUpdates && updatesContainer
+      ? (() => { const s = document.createElement('div'); s.className = 'ts'; return s; })()
+      : toolSec;
 
     const catEl = document.createElement('div');
     catEl.className = 'tool-cat';
@@ -781,7 +797,8 @@ function renderTools() {
       grid.appendChild(card);
     });
 
-    toolSec.appendChild(catEl);
+    targetSec.appendChild(catEl);
+    if (isUpdates && updatesContainer) updatesContainer.appendChild(targetSec);
   });
 
   container.appendChild(toolSec);

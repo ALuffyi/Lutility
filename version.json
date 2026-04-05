@@ -1,5 +1,5 @@
 {
-  "version": "2.11.0",
-  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.11.0.exe",
-  "notes": "Tray système, panneau redimensionnable, correction orthographique, émojis personnalisés sur catégories/sections/pages, tri des jeux, copier/couper image, colonnes/lignes tableau, correctifs drag-drop et import."
+  "version": "2.12.0",
+  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.12.0.exe",
+  "notes": "Manette découplée de la plateforme (sélecteur ⌨️/PS/Xbox/Switch), boutons colorés avec sticks analogiques, suppression jeux sans freeze, inputs action auto-sizing, DriversCloud dans les outils MàJ, mises à jour regroupées sous infos système."
 }

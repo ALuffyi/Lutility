@@ -172,7 +172,7 @@ document.addEventListener('contextmenu',e=>{
     else items.push({ico:'—',text:'Rien à copier',action:()=>{}});
   }
   const gitem=e.target.closest('.gitem');
-  if(gitem){items.push('sep');items.push({label:'Jeu'});items.push({ico:'🗑️',text:'Supprimer ce jeu',danger:true,action:()=>{const idx=Array.from(document.querySelectorAll('.gitem')).indexOf(gitem);if(idx>=0&&S.games[idx]){if(!confirm('Supprimer ce jeu ?'))return;S.games.splice(idx,1);S.activeGame=null;renderGames();saveAll();}}});}
+  if(gitem){items.push('sep');items.push({label:'Jeu'});items.push({ico:'🗑️',text:'Supprimer ce jeu',danger:true,action:()=>{delGame(+gitem.dataset.gid);}});}
   const nbHdr=e.target.closest('.nb-hdr');
   if(nbHdr){const nbId=+nbHdr.dataset.id;const nb=S.notebooks.find(x=>x.id===nbId);items.push('sep');items.push({label:'Carnet'});items.push({ico:'✏️',text:'Modifier (nom + emoji)',action:()=>nbEdit(nbId)});items.push({ico:'🗑️',text:'Supprimer',danger:true,action:()=>nbDel(nbId,{stopPropagation:()=>{}})});}
   // Clic droit sur une image dans l'éditeur de notes
