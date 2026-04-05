@@ -98,6 +98,28 @@ function _ctrlBtnsFor(plat) {
   return null;
 }
 function _isConsolePlat(p) { return !!_ctrlBtnsFor(p); }
+let _ctrlPopup = null;
+function showCtrlMenu(e, gid, idx, plat) {
+  e.stopPropagation();
+  if (_ctrlPopup) { _ctrlPopup.remove(); _ctrlPopup = null; }
+  const chips = _ctrlBtnsFor(plat);
+  if (!chips) return;
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'ctrl-popup';
+  pop.innerHTML = chips.map(c =>
+    `<span class="ctrl-chip" data-gid="${gid}" data-idx="${idx}" data-val="${esc(c)}"
+      onclick="fillKeyFromChip(this);closeCtrlMenu()">${c}</span>`
+  ).join('');
+  pop.style.cssText = `position:fixed;top:${rect.bottom+4}px;left:${rect.left}px;z-index:5000`;
+  document.body.appendChild(pop);
+  _ctrlPopup = pop;
+  setTimeout(() => document.addEventListener('click', closeCtrlMenu, {once:true}), 0);
+}
+function closeCtrlMenu() {
+  if (_ctrlPopup) { _ctrlPopup.remove(); _ctrlPopup = null; }
+}
 function fillKeyFromChip(el){
   const gid=+el.dataset.gid, idx=+el.dataset.idx, val=el.dataset.val;
   updateBind(gid,idx,'k',val);
@@ -107,7 +129,7 @@ function fillKeyFromChip(el){
 }
 function bindRowHTML(gid,idx,b,plat){
   const chips=_ctrlBtnsFor(plat||'');
-  const chipsHtml=chips?`<div class="ctrl-chips">${chips.map(c=>`<span class="ctrl-chip" data-gid="${gid}" data-idx="${idx}" data-val="${esc(c)}" onclick="fillKeyFromChip(this)">${c}</span>`).join('')}</div>`:'';
+  const ctrlBtn=chips?`<button class="ctrl-menu-btn" title="Boutons manette" onclick="showCtrlMenu(event,${gid},${idx},'${esc(plat||'')}')">🎮</button>`:'';
   return `<div class="brow" draggable="true" data-gid="${gid}" data-idx="${idx}" data-type="bind"
     ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">
     <span class="drag-handle" title="Déplacer">⠿</span>
@@ -115,12 +137,12 @@ function bindRowHTML(gid,idx,b,plat){
       onfocus="this.select()"
       oninput="updateBind(${gid},${idx},'a',this.value)"
       onblur="updateBind(${gid},${idx},'a',this.value);saveAll()">
-    <div style="display:flex;flex-direction:column;gap:3px">
+    <div style="display:flex;gap:4px;align-items:center">
       <input class="key-in" id="key-${gid}-${idx}" value="${esc(b.k)}" placeholder="Touche"
         onfocus="this.select()"
         oninput="updateBind(${gid},${idx},'k',this.value)"
         onblur="updateBind(${gid},${idx},'k',this.value);saveAll()">
-      ${chipsHtml}
+      ${ctrlBtn}
     </div>
     <span class="row-del" onclick="delBind(${gid},${idx})">✕</span>
   </div>`;

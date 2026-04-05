@@ -56,21 +56,21 @@ const TOOLS = [
   // ── MISES À JOUR ─────────────────────────────────────
   {
     ico:'🔄', name:'Mettre à jour tous les logiciels (winget)', tag:'Update', tc:'g',
-    desc:'Met à jour tous les logiciels installés via winget, y compris les pilotes et applications reconnues.',
-    admin:true, type:'PS',
-    cmd:'winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements',
+    desc:'Ouvre un terminal et met à jour tous les logiciels via winget (progression visible).',
+    admin:false, type:'PS',
+    cmd:'Start-Process powershell -ArgumentList \'-NoExit -ExecutionPolicy Bypass -Command "Write-Host \'\'Mise a jour via winget...\'\' -ForegroundColor Cyan; winget upgrade --all --accept-package-agreements --accept-source-agreements"\' ',
   },
   {
     ico:'🟢', name:'Mettre à jour les pilotes NVIDIA', tag:'Update', tc:'g',
-    desc:'Met à jour GeForce Experience et les pilotes NVIDIA via winget.',
-    admin:true, type:'PS',
-    cmd:'winget upgrade --id NVIDIA.GeForceExperience --accept-package-agreements --accept-source-agreements',
+    desc:'Lance GeForce Experience pour mettre à jour les pilotes NVIDIA. Ouvre la page de téléchargement si GFE n\'est pas installé.',
+    admin:false, type:'PS',
+    cmd:'$paths=@("C:\\Program Files\\NVIDIA Corporation\\NVIDIA GeForce Experience\\NVIDIA GeForce Experience.exe","C:\\Program Files (x86)\\NVIDIA Corporation\\NVIDIA GeForce Experience\\NVIDIA GeForce Experience.exe");$exe=$paths|Where-Object{Test-Path $_}|Select-Object -First 1;if($exe){Start-Process $exe}else{Start-Process "https://www.nvidia.com/fr-fr/geforce/drivers/"}',
   },
   {
-    ico:'🪟', name:'Mises à jour Windows (Windows Update)', tag:'Update', tc:'g',
-    desc:'Lance les mises à jour Windows via PowerShell (installe le module PSWindowsUpdate si besoin).',
-    admin:true, type:'PS',
-    cmd:'if (!(Get-Module -ListAvailable -Name PSWindowsUpdate)) { Install-Module PSWindowsUpdate -Force -Scope CurrentUser -SkipPublisherCheck }\nImport-Module PSWindowsUpdate\nGet-WindowsUpdate -AcceptAll -Install -AutoReboot:$false',
+    ico:'🪟', name:'Windows Update', tag:'Update', tc:'g',
+    desc:'Ouvre les paramètres Windows Update pour rechercher et installer les mises à jour.',
+    admin:false, type:'CMD',
+    cmd:'start ms-settings:windowsupdate',
   },
 ];
 
