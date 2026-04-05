@@ -1,11 +1,11 @@
 @echo off
-title LUTILITY — Build .exe
+title LUTILITY — Build Installeur
 setlocal
 cd /d "%~dp0"
 
 echo.
 echo  ============================================
-echo   LUTILITY Builder
+echo   LUTILITY — Build installeur .exe
 echo  ============================================
 echo.
 
@@ -17,40 +17,38 @@ if errorlevel 1 (
 )
 for /f %%v in ('node --version') do echo  Node.js : %%v
 
+:: Branche + version courante
+for /f "tokens=*" %%b in ('git branch --show-current 2^>nul') do set BRANCH=%%b
+for /f "tokens=2 delims=:, " %%v in ('findstr "\"version\"" package.json') do set VER=%%v
+echo  Branche  : %BRANCH%
+echo  Version  : %VER%
 echo.
-echo  [1/3] npm install...
+
+:: Confirmation si on est sur dev
+if /i "%BRANCH%"=="dev" (
+    echo  [AVERTISSEMENT] Tu es sur la branche DEV.
+    echo  Appuie sur une touche pour continuer ou ferme la fenetre pour annuler.
+    pause >nul
+    echo.
+)
+
+echo  [1/2] npm install...
 call npm install
-if errorlevel 1 (
-    echo  [ERREUR] npm install a echoue
-    pause & exit /b 1
-)
+if errorlevel 1 ( echo  [ERREUR] npm install a echoue & pause & exit /b 1 )
 
 echo.
-echo  [2/3] Build portable (sans Admin requis)...
-call npm run build
-if errorlevel 1 (
-    echo  [ERREUR] Build echoue
-    pause & exit /b 1
-)
+echo  [2/2] Build installeur NSIS...
+set CSC_IDENTITY_AUTO_DISCOVERY=false
+call npx electron-builder --win --x64
+if errorlevel 1 ( echo  [ERREUR] Build echoue & pause & exit /b 1 )
 
-echo.
-echo  [3/3] Creation du ZIP distribuable...
-powershell -NoProfile -Command ^
-  "Compress-Archive -Path 'dist-pack\Lutility-win32-x64\*' -DestinationPath 'dist-pack\Lutility.zip' -Force"
-if errorlevel 1 (
-    echo  [INFO] ZIP non cree ^(PowerShell indisponible^), le dossier reste dans dist-pack\Lutility-win32-x64\
-) else (
-    echo  ZIP cree : dist-pack\Lutility.zip
-)
+:: Trouver le .exe generé
+for %%f in ("dist\Lutility-Setup-*.exe") do set OUTFILE=%%f
 
 echo.
 echo  ============================================
 echo   BUILD REUSSI !
-echo   - Portable  : dist-pack\Lutility-win32-x64\Lutility.exe
-echo   - Archive   : dist-pack\Lutility.zip
+echo   Installeur : %OUTFILE%
 echo  ============================================
-echo.
-echo  Note : pour obtenir un installeur .exe avec menu Demarrer,
-echo  activez le Mode Developpeur Windows et lancez : npm run build-installer
 echo.
 pause
