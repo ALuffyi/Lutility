@@ -41,6 +41,44 @@ function openUpdatePopup(btn) {
   }), 50);
 }
 
+// ══ PANNEAU NOTES REDIMENSIONNABLE ══════════════════════
+(function _initNbResize() {
+  const handle = document.getElementById('nb-resize-handle');
+  const panel  = document.getElementById('nb-panel');
+  if (!handle || !panel) return;
+
+  // Restore saved width
+  const saved = localStorage.getItem('nb-panel-width');
+  if (saved) panel.style.width = saved + 'px';
+
+  let _dragging = false, _startX = 0, _startW = 0;
+
+  handle.addEventListener('mousedown', e => {
+    _dragging = true;
+    _startX   = e.clientX;
+    _startW   = panel.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!_dragging) return;
+    const w = Math.min(480, Math.max(140, _startW + (e.clientX - _startX)));
+    panel.style.width = w + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!_dragging) return;
+    _dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    localStorage.setItem('nb-panel-width', panel.offsetWidth);
+  });
+})();
+
 // ══ CLOCK ═══════════════════════════════════════════════
 setInterval(() => {
   const n=new Date(),p=v=>String(v).padStart(2,'0');

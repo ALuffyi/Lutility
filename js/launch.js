@@ -215,7 +215,18 @@ async function importSav() {
 
 // ── Import depuis l'écran de lancement ───────────────────
 async function importAndStart() {
-  // Ouvre directement le sélecteur de fichier JSON — le dossier est déduit automatiquement
+  // Si un dossier est déjà configuré, on importe dedans sans redemander de destination
+  if (savPath) {
+    const ok = await window.api.importSav(savPath);
+    if (!ok) { toast('Import annulé ou fichier invalide', 'warn'); return; }
+    const name = document.getElementById('s-name')?.value?.trim() || profile.name || 'Joueur';
+    profile.name  = name;
+    profile.emoji = selEmoji || profile.emoji || '🎮';
+    await window.api.configSave({ savPath, profile });
+    startApp();
+    return;
+  }
+  // Premier lancement sans dossier configuré → wizard complet (source + destination)
   const destPath = await window.api.importSavWizard();
   if (!destPath) { toast('Import annulé ou fichier invalide', 'warn'); return; }
 

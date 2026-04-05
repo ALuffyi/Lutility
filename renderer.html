@@ -231,17 +231,28 @@ body{flex-direction:column!important}
           <button class="btn orange" onclick="openModal('modal-game')">+ Ajouter un jeu</button>
         </div>
         <div class="jeux-body">
-          <div class="glist"><div class="glist-hdr">BIBLIOTHÈQUE</div><div class="glist-scroll" id="glist"></div></div>
+          <div class="glist">
+            <div class="glist-hdr" style="display:flex;align-items:center;justify-content:space-between;padding-right:8px">
+              <span>BIBLIOTHÈQUE</span>
+              <div style="display:flex;gap:4px">
+                <button class="btn xs" title="Trier A→Z" onclick="sortGames('az')">A→Z</button>
+                <button class="btn xs" title="Trier Z→A" onclick="sortGames('za')">Z→A</button>
+                <button class="btn xs" title="Trier par plateforme" onclick="sortGames('plat')">🖥</button>
+              </div>
+            </div>
+            <div class="glist-scroll" id="glist"></div>
+          </div>
           <div class="gdetail" id="gdetail"><div class="gempty"><span class="ei">🎮</span><span class="et">Sélectionnez un jeu</span></div></div>
         </div>
       </div>
 
       <!-- NOTES -->
       <div class="page" id="p-notes">
-        <div class="nb-panel">
+        <div class="nb-panel" id="nb-panel">
           <div class="panel-hdr">CARNETS <span class="padd" onclick="addNotebook()">+</span></div>
           <div class="nb-scroll" id="nb-list"></div>
         </div>
+        <div class="nb-resize-handle" id="nb-resize-handle" title="Redimensionner"></div>
         <div class="note-editor">
           <div class="note-tb">
             <!-- ── LIGNE 1 : Police · Format · Couleurs · Titres · Sub/Sup ──────── -->
@@ -307,7 +318,7 @@ body{flex-direction:column!important}
             <span class="sp" id="note-sp"></span>
           </div>
           <input class="note-title-in" id="note-title" placeholder="Titre de la note…" oninput="onEdit()">
-          <div class="note-body" contenteditable="true" id="note-body" oninput="onEdit()" onpaste="onPaste(event)"></div>
+          <div class="note-body" contenteditable="true" spellcheck="true" id="note-body" oninput="onEdit()" onpaste="onPaste(event)"></div>
           <div class="note-canvas-empty">
             <span class="nce-ico">📄</span>
             <span class="nce-txt">Sélectionnez une page</span>
@@ -520,15 +531,20 @@ body{flex-direction:column!important}
 
 <!-- MODAL RENAME (section / subsection) -->
 <div class="overlay" id="modal-rename">
-  <div class="modal" style="width:360px">
+  <div class="modal" style="width:380px">
     <input type="hidden" id="rn-type" value="">
     <input type="hidden" id="rn-nb" value="">
     <input type="hidden" id="rn-sec" value="">
     <input type="hidden" id="rn-sub" value="">
     <div class="modal-t" id="rn-title">Renommer</div>
-    <div class="frow" style="margin-bottom:0">
+    <div class="frow" style="margin-bottom:12px">
       <input class="fin" id="rn-name" maxlength="50" placeholder="Nom…"
         onkeydown="if(event.key==='Enter')rnConfirm()">
+    </div>
+    <div id="rn-emoji-section" style="display:none;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--dim);letter-spacing:1px;margin-bottom:8px;font-family:var(--mono)">EMOJI <span id="rn-emoji-preview" style="font-size:16px;margin-left:6px"></span></div>
+      <div class="emoji-grid" id="rn-emoji-grid" style="margin-bottom:6px"></div>
+      <button id="rn-no-emoji" class="btn xs" style="font-size:11px;color:var(--dim)" onclick="rnPickEmoji('')">Aucun emoji</button>
     </div>
     <div class="macts">
       <button class="btn sm" onclick="closeModal('modal-rename')">Annuler</button>

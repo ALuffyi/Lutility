@@ -8,6 +8,15 @@ function esc(s) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+let _gameDragId = null;
+
+function sortGames(mode) {
+  if (mode === 'az')   S.games.sort((a,b) => a.name.localeCompare(b.name));
+  else if (mode === 'za')   S.games.sort((a,b) => b.name.localeCompare(a.name));
+  else if (mode === 'plat') S.games.sort((a,b) => a.plat.localeCompare(b.plat) || a.name.localeCompare(b.name));
+  renderGames(); saveAll();
+}
+
 function renderGames(){
   const list=document.getElementById('glist');if(!list)return;list.innerHTML='';
   const det=document.getElementById('gdetail');
@@ -16,9 +25,24 @@ function renderGames(){
     return;
   }
   S.games.forEach(g=>{
-    const el=document.createElement('div');el.className='gitem'+(S.activeGame===g.id?' on':'');
-    el.innerHTML=`<div class="gi-ico">${escHtml(g.ico)}</div><div><div class="gi-name">${escHtml(g.name)}</div><div class="gi-plat">${escHtml(g.plat)}</div></div>`;
-    el.onclick=()=>selectGame(g.id);list.appendChild(el);
+    const el=document.createElement('div');
+    el.className='gitem'+(S.activeGame===g.id?' on':'');
+    el.draggable=true;
+    el.dataset.gid=g.id;
+    el.innerHTML=`<span class="drag-handle" style="font-size:14px;color:var(--dim);cursor:grab;padding:0 6px 0 2px;flex-shrink:0" title="Réordonner">⠿</span><div class="gi-ico">${escHtml(g.ico)}</div><div><div class="gi-name">${escHtml(g.name)}</div><div class="gi-plat">${escHtml(g.plat)}</div></div>`;
+    el.onclick=e=>{if(e.target.classList.contains('drag-handle'))return;selectGame(g.id);};
+    el.addEventListener('dragstart',e=>{_gameDragId=g.id;e.dataTransfer.effectAllowed='move';el.style.opacity='0.4';});
+    el.addEventListener('dragend',()=>{el.style.opacity='';_gameDragId=null;});
+    el.addEventListener('dragover',e=>{e.preventDefault();el.style.background='rgba(255,107,53,.08)';});
+    el.addEventListener('dragleave',()=>{el.style.background='';});
+    el.addEventListener('drop',e=>{
+      e.preventDefault();el.style.background='';
+      if(!_gameDragId||_gameDragId===g.id)return;
+      const si=S.games.findIndex(x=>x.id===_gameDragId),ti=S.games.findIndex(x=>x.id===g.id);
+      if(si>=0&&ti>=0){const[m]=S.games.splice(si,1);S.games.splice(ti,0,m);}
+      renderGames();saveAll();
+    });
+    list.appendChild(el);
   });
   // Ensure activeGame is still valid (e.g. after a delete)
   if(S.activeGame && S.games.find(x=>x.id===S.activeGame)) selectGame(S.activeGame);

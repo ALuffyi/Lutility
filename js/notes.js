@@ -23,8 +23,10 @@
 
 const NB_EMOJIS = ['🎮','💻','📌','📚','🔥','⚡','🎯','💡','🏆','🛡️','🎲','🎵','🌙','☀️','🔧','📊','✍️','🗒️','🏠','🎨','⚔️','🐉','🦊','💎','🚀'];
 const NB_COLORS = ['#ff6b35','#00d4ff','#a855f7','#22c55e','#fbbf24','#ec4899','#06b6d4'];
+const ITEM_EMOJIS = ['📂','📁','📄','🗂️','📋','📝','🗒️','📌','📍','🔖','🏷️','💡','🔥','⚡','🎯','🏆','🌟','✨','💎','🔮','🎲','🎮','💻','🔧','⚙️','🛠️','🔑','🔐','📊','📈','🎨','🖼️','🎵','🎬','📷','🌙','☀️','🌈','⭐','🚀','🌊','🌿','❤️','💙','💜','🟢','🟡','🟠','🔴','⚪'];
 
 let _nbSelEmoji = '';
+let _rnSelEmoji = '';
 let _nbDragData = null;
 const _collapsed  = new Set(); // stores ids of collapsed carnets/cats/secs
 const _imgBlobMap = new Map(); // blobUrl → relPath (fallback quand data-src est absent)
@@ -86,8 +88,8 @@ function renderNotebooks() {
       catEl.className = 'nb-row lvl-cat' + (S.activeCat === cat.id && S.activeNB === nb.id ? ' on' : '');
       catEl.draggable = true;
       catEl.innerHTML =
-        '<span class="item-lbl" style="padding-left:12px">📂 ' + h(cat.name) + '</span>' +
-        '<span class="item-edit" onclick="rnOpen(\'cat-edit\',' + nb.id + ',' + cat.id + ',0,0,\'' + escAttr(cat.name) + '\')" title="Renommer">✏️</span>' +
+        '<span class="item-lbl" style="padding-left:12px">' + (cat.emoji||'📂') + ' ' + h(cat.name) + '</span>' +
+        '<span class="item-edit" onclick="rnOpen(\'cat-edit\',' + nb.id + ',' + cat.id + ',0,0,\'' + escAttr(cat.name) + '\',0,\'' + escAttr(cat.emoji||'') + '\')" title="Renommer">✏️</span>' +
         '<span class="item-del"  onclick="catDel(' + nb.id + ',' + cat.id + ',event)" title="Supprimer">✕</span>';
       catEl.insertBefore(mkToggle('cat_' + cat.id), catEl.querySelector('.item-lbl'));
       catEl.onclick = e => {
@@ -107,8 +109,8 @@ function renderNotebooks() {
         secEl.className = 'nb-row lvl-sec' + (S.activeSec === sec.id && S.activeCat === cat.id ? ' on' : '');
         secEl.draggable = true;
         secEl.innerHTML =
-          '<span class="item-lbl" style="padding-left:24px">📁 ' + h(sec.name) + '</span>' +
-          '<span class="item-edit" onclick="rnOpen(\'sec-edit\',' + nb.id + ',' + cat.id + ',' + sec.id + ',0,\'' + escAttr(sec.name) + '\')" title="Renommer">✏️</span>' +
+          '<span class="item-lbl" style="padding-left:24px">' + (sec.emoji||'📁') + ' ' + h(sec.name) + '</span>' +
+          '<span class="item-edit" onclick="rnOpen(\'sec-edit\',' + nb.id + ',' + cat.id + ',' + sec.id + ',0,\'' + escAttr(sec.name) + '\',0,\'' + escAttr(sec.emoji||'') + '\')" title="Renommer">✏️</span>' +
           '<span class="item-del"  onclick="secDel(' + nb.id + ',' + cat.id + ',' + sec.id + ',event)" title="Supprimer">✕</span>';
         secEl.insertBefore(mkToggle('sec_' + sec.id), secEl.querySelector('.item-lbl'));
         secEl.onclick = e => {
@@ -129,8 +131,8 @@ function renderNotebooks() {
           pageEl.className = 'nb-row lvl-page' + (pageOn ? ' on' : '');
           pageEl.draggable = true;
           pageEl.innerHTML =
-            '<span class="item-lbl" style="padding-left:36px">📄 ' + h(page.name) + '</span>' +
-            '<span class="item-edit" onclick="rnOpen(\'page-edit\',' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',\'' + escAttr(page.name) + '\')" title="Renommer">✏️</span>' +
+            '<span class="item-lbl" style="padding-left:36px">' + (page.emoji||'📄') + ' ' + h(page.name) + '</span>' +
+            '<span class="item-edit" onclick="rnOpen(\'page-edit\',' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',\'' + escAttr(page.name) + '\',' + page.id + ',\'' + escAttr(page.emoji||'') + '\')" title="Renommer">✏️</span>' +
             '<span class="item-del"  onclick="pageDel(' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',event)" title="Supprimer">✕</span>';
           pageEl.onclick = e => {
             if (e.target.classList.contains('item-del') || e.target.classList.contains('item-edit')) return;
@@ -147,8 +149,8 @@ function renderNotebooks() {
             subEl.className = 'nb-row lvl-sub' + (subOn ? ' on' : '');
             subEl.draggable = true;
             subEl.innerHTML =
-              '<span class="item-lbl" style="padding-left:48px">↳ ' + h(sub.name) + '</span>' +
-              '<span class="item-edit" onclick="rnOpen(\'sub-edit\',' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',\'' + escAttr(sub.name) + '\',' + sub.id + ')" title="Renommer">✏️</span>' +
+              '<span class="item-lbl" style="padding-left:48px">' + (sub.emoji||'↳') + ' ' + h(sub.name) + '</span>' +
+              '<span class="item-edit" onclick="rnOpen(\'sub-edit\',' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',\'' + escAttr(sub.name) + '\',' + sub.id + ',\'' + escAttr(sub.emoji||'') + '\')" title="Renommer">✏️</span>' +
               '<span class="item-del"  onclick="subDel(' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',' + sub.id + ',event)" title="Supprimer">✕</span>';
             subEl.onclick = e => {
               if (e.target.classList.contains('item-del') || e.target.classList.contains('item-edit')) return;
@@ -164,7 +166,7 @@ function renderNotebooks() {
             e.preventDefault(); e.stopPropagation();
             nbCtxMenu(e, [
               { label: '＋ Sous-page', action: () => rnOpen('sub-new', nb.id, cat.id, sec.id, page.id, '') },
-              { label: '✏️ Renommer',  action: () => rnOpen('page-edit', nb.id, cat.id, sec.id, page.id, page.name) },
+              { label: '✏️ Renommer',  action: () => rnOpen('page-edit', nb.id, cat.id, sec.id, page.id, page.name, page.id, page.emoji||'') },
               { label: '🗑 Supprimer', danger: true, action: () => pageDel(nb.id, cat.id, sec.id, page.id, e) },
             ]);
           };
@@ -175,7 +177,7 @@ function renderNotebooks() {
           e.preventDefault(); e.stopPropagation();
           nbCtxMenu(e, [
             { label: '＋ Page',        action: () => rnOpen('page-new', nb.id, cat.id, sec.id, 0, '') },
-            { label: '✏️ Renommer',    action: () => rnOpen('sec-edit', nb.id, cat.id, sec.id, 0, sec.name) },
+            { label: '✏️ Renommer',    action: () => rnOpen('sec-edit', nb.id, cat.id, sec.id, 0, sec.name, 0, sec.emoji||'') },
             { label: '🗑 Supprimer',   danger: true, action: () => secDel(nb.id, cat.id, sec.id, e) },
           ]);
         };
@@ -186,7 +188,7 @@ function renderNotebooks() {
         e.preventDefault(); e.stopPropagation();
         nbCtxMenu(e, [
           { label: '＋ Section',      action: () => rnOpen('sec-new', nb.id, cat.id, 0, 0, '') },
-          { label: '✏️ Renommer',     action: () => rnOpen('cat-edit', nb.id, cat.id, 0, 0, cat.name) },
+          { label: '✏️ Renommer',     action: () => rnOpen('cat-edit', nb.id, cat.id, 0, 0, cat.name, 0, cat.emoji||'') },
           { label: '🗑 Supprimer',    danger: true, action: () => catDel(nb.id, cat.id, e) },
         ]);
       };
@@ -252,6 +254,17 @@ function setupDrag(el, type, data) {
   });
 }
 
+function _migrateNoteKeys(oldPrefix, newPrefix) {
+  if (oldPrefix === newPrefix) return;
+  Object.keys(S.notes).forEach(k => {
+    if (k === oldPrefix || k.startsWith(oldPrefix + '_')) {
+      const newKey = newPrefix + k.slice(oldPrefix.length);
+      S.notes[newKey] = S.notes[k];
+      delete S.notes[k];
+    }
+  });
+}
+
 function nbDropHandle(src, tgt) {
   const getSec  = (nbId,catId,secId) => S.notebooks.find(x=>x.id===nbId)?.cats.find(x=>x.id===catId)?.secs.find(x=>x.id===secId);
   const getPage = (nbId,catId,secId,pageId) => getSec(nbId,catId,secId)?.pages.find(x=>x.id===pageId);
@@ -266,21 +279,48 @@ function nbDropHandle(src, tgt) {
     // Cross moves
     else if (src.type === 'page' && src.secId !== tgt.secId) {
       const ss=getSec(src.nbId,src.catId,src.secId), ts=getSec(tgt.nbId,tgt.catId,tgt.secId);
-      if(ss&&ts){const i=ss.pages.findIndex(x=>x.id===src.pageId);if(i>=0){const[m]=ss.pages.splice(i,1);ts.pages.push(m);}}
+      if(ss&&ts){const i=ss.pages.findIndex(x=>x.id===src.pageId);if(i>=0){const[m]=ss.pages.splice(i,1);ts.pages.push(m);
+        _migrateNoteKeys(
+          'nb'+src.nbId+'_cat'+src.catId+'_s'+src.secId+'_p'+src.pageId,
+          'nb'+tgt.nbId+'_cat'+tgt.catId+'_s'+tgt.secId+'_p'+src.pageId
+        );
+      }}
     } else if (src.type === 'sub' && src.pageId !== tgt.pageId) {
       const sp=getPage(src.nbId,src.catId,src.secId,src.pageId), tp=getPage(tgt.nbId,tgt.catId,tgt.secId,tgt.pageId);
-      if(sp&&tp){const i=sp.subpages.findIndex(x=>x.id===src.subId);if(i>=0){const[m]=sp.subpages.splice(i,1);tp.subpages.push(m);}}
+      if(sp&&tp){const i=sp.subpages.findIndex(x=>x.id===src.subId);if(i>=0){const[m]=sp.subpages.splice(i,1);tp.subpages.push(m);
+        const oldKey='nb'+src.nbId+'_cat'+src.catId+'_s'+src.secId+'_p'+src.pageId+'_sp'+src.subId;
+        const newKey='nb'+tgt.nbId+'_cat'+tgt.catId+'_s'+tgt.secId+'_p'+tgt.pageId+'_sp'+src.subId;
+        _migrateNoteKeys(oldKey, newKey);
+      }}
     }
   }
   // Promote sub → page
   else if (src.type==='sub' && tgt.type==='sec') {
     const sp=getPage(src.nbId,src.catId,src.secId,src.pageId), ts=getSec(tgt.nbId,tgt.catId,tgt.secId);
-    if(sp&&ts){const i=sp.subpages.findIndex(x=>x.id===src.subId);if(i>=0){const[m]=sp.subpages.splice(i,1);ts.pages.push({id:m.id,name:m.name,subpages:[]});}}
+    if(sp&&ts){const i=sp.subpages.findIndex(x=>x.id===src.subId);if(i>=0){const[m]=sp.subpages.splice(i,1);ts.pages.push({id:m.id,name:m.name,subpages:[]});
+      const oldKey='nb'+src.nbId+'_cat'+src.catId+'_s'+src.secId+'_p'+src.pageId+'_sp'+src.subId;
+      const newKey='nb'+tgt.nbId+'_cat'+tgt.catId+'_s'+tgt.secId+'_p'+src.subId+'_sproot';
+      _migrateNoteKeys(oldKey, newKey);
+    }}
   }
   // Promote page → section
   else if (src.type==='page' && tgt.type==='cat') {
     const ss=getSec(src.nbId,src.catId,src.secId), tc=S.notebooks.find(x=>x.id===tgt.nbId)?.cats.find(x=>x.id===tgt.catId);
-    if(ss&&tc){const i=ss.pages.findIndex(x=>x.id===src.pageId);if(i>=0){const[m]=ss.pages.splice(i,1);tc.secs.push({id:m.id,name:m.name,pages:[]});}}
+    if(ss&&tc){const i=ss.pages.findIndex(x=>x.id===src.pageId);if(i>=0){const[m]=ss.pages.splice(i,1);
+      // Preserve subpages as pages inside the new section
+      const subpagesAsPages = (m.subpages||[]).map(sp=>({id:sp.id,name:sp.name,subpages:[]}));
+      tc.secs.push({id:m.id,name:m.name,pages:subpagesAsPages});
+      // Migrate page note → section note
+      const oldPageKey='nb'+src.nbId+'_cat'+src.catId+'_s'+src.secId+'_p'+src.pageId+'_sproot';
+      const newSecKey ='nb'+tgt.nbId+'_cat'+tgt.catId+'_s'+src.pageId+'_sec';
+      if(S.notes[oldPageKey]){S.notes[newSecKey]=S.notes[oldPageKey];delete S.notes[oldPageKey];}
+      // Migrate each subpage note → page note within new section
+      (m.subpages||[]).forEach(sp=>{
+        const oldSpKey ='nb'+src.nbId+'_cat'+src.catId+'_s'+src.secId+'_p'+src.pageId+'_sp'+sp.id;
+        const newPageKey='nb'+tgt.nbId+'_cat'+tgt.catId+'_s'+src.pageId+'_p'+sp.id+'_sproot';
+        if(S.notes[oldSpKey]){S.notes[newPageKey]=S.notes[oldSpKey];delete S.notes[oldSpKey];}
+      });
+    }}
   }
 
   renderNotebooks(); saveAll();
@@ -360,7 +400,29 @@ function nbDel(id, e) {
 // RENAME MODAL
 // rnOpen(type, nbId, catId, secId, pageId, name, subId?)
 // ═══════════════════════════════════════════════════════
-function rnOpen(type, nbId, catId, secId, pageId, currentName, subId) {
+function buildRnEmojiGrid() {
+  const grid = document.getElementById('rn-emoji-grid'); if (!grid) return;
+  grid.innerHTML = '';
+  ITEM_EMOJIS.forEach(e => {
+    const btn = document.createElement('span');
+    btn.textContent = e;
+    btn.style.cssText = 'font-size:18px;cursor:pointer;padding:3px;border-radius:5px;border:1px solid transparent;transition:all .15s';
+    if (e === _rnSelEmoji) { btn.style.borderColor='var(--cyan)'; btn.style.background='rgba(0,212,255,.12)'; }
+    btn.onclick = () => rnPickEmoji(e);
+    grid.appendChild(btn);
+  });
+  const noBtn = document.getElementById('rn-no-emoji');
+  if (noBtn) { noBtn.style.color = _rnSelEmoji ? 'var(--dim)' : 'var(--cyan)'; }
+}
+
+function rnPickEmoji(e) {
+  _rnSelEmoji = e;
+  const prev = document.getElementById('rn-emoji-preview');
+  if (prev) prev.textContent = e;
+  buildRnEmojiGrid();
+}
+
+function rnOpen(type, nbId, catId, secId, pageId, currentName, subId, currentEmoji) {
   document.getElementById('rn-type').value = type;
   document.getElementById('rn-nb').value   = nbId   || 0;
   document.getElementById('rn-sec').value  = catId  || 0;
@@ -376,6 +438,16 @@ function rnOpen(type, nbId, catId, secId, pageId, currentName, subId) {
   };
   document.getElementById('rn-title').textContent = labels[type] || 'Renommer';
   inp.value = currentName || '';
+  // Emoji picker : visible seulement pour édition (pas création simple)
+  _rnSelEmoji = currentEmoji || '';
+  const emojiSection = document.getElementById('rn-emoji-section');
+  const showEmoji = type.endsWith('-edit') || type.endsWith('-new');
+  if (emojiSection) emojiSection.style.display = showEmoji ? 'block' : 'none';
+  if (showEmoji) {
+    const prev = document.getElementById('rn-emoji-preview');
+    if (prev) prev.textContent = _rnSelEmoji;
+    buildRnEmojiGrid();
+  }
   openModal('modal-rename');
   setTimeout(() => { inp.focus(); inp.select(); }, 80);
 }
@@ -395,14 +467,15 @@ function rnConfirm() {
   const sec  = cat?.secs.find(x=>x.id===secId);
   const page = sec?.pages.find(x=>x.id===pageId);
 
-  if      (type==='cat-new')  nb?.cats.push({id:Date.now(),name,secs:[]});
-  else if (type==='cat-edit') { if(cat)cat.name=name; }
-  else if (type==='sec-new')  cat?.secs.push({id:Date.now(),name,pages:[]});
-  else if (type==='sec-edit') { if(sec)sec.name=name; }
-  else if (type==='page-new') sec?.pages.push({id:Date.now(),name,subpages:[]});
-  else if (type==='page-edit'){ if(page)page.name=name; }
-  else if (type==='sub-new')  page?.subpages.push({id:Date.now(),name});
-  else if (type==='sub-edit') { const sub=page?.subpages.find(x=>x.id===subId); if(sub)sub.name=name; }
+  const emoji = _rnSelEmoji || undefined;
+  if      (type==='cat-new')  nb?.cats.push({id:Date.now(),name,emoji,secs:[]});
+  else if (type==='cat-edit') { if(cat){cat.name=name;cat.emoji=emoji;} }
+  else if (type==='sec-new')  cat?.secs.push({id:Date.now(),name,emoji,pages:[]});
+  else if (type==='sec-edit') { if(sec){sec.name=name;sec.emoji=emoji;} }
+  else if (type==='page-new') sec?.pages.push({id:Date.now(),name,emoji,subpages:[]});
+  else if (type==='page-edit'){ if(page){page.name=name;page.emoji=emoji;} }
+  else if (type==='sub-new')  page?.subpages.push({id:Date.now(),name,emoji});
+  else if (type==='sub-edit') { const sub=page?.subpages.find(x=>x.id===subId); if(sub){sub.name=name;sub.emoji=emoji;} }
 
   closeModal('modal-rename'); renderNotebooks(); saveAll();
 
@@ -602,32 +675,60 @@ function onImgFile(inp) {
   reader.readAsDataURL(f); inp.value = '';
 }
 
+async function _insertImgDataUrl(dataUrl) {
+  const relPath = await saveImg(dataUrl);
+  let src, dsrc;
+  if (relPath) {
+    const blobUrl = await readImgAsBlob(relPath);
+    src  = blobUrl || dataUrl;
+    dsrc = ` data-src="${relPath}"`;
+    if (blobUrl) _imgBlobMap.set(blobUrl, relPath);
+  } else {
+    src  = dataUrl;
+    dsrc = '';
+  }
+  document.execCommand('insertHTML', false,
+    `<img src="${src}"${dsrc} alt="image" style="max-width:100%"><p></p>`);
+  onEdit();
+}
+
 function onPaste(e) {
   const items = e.clipboardData?.items; if (!items) return;
+
   for (const item of items) {
-    if (item.type.startsWith('image/')) {
+    if (!item.type.startsWith('image/')) continue;
+
+    // Cas 1 : item de type file (PNG, JPEG uploadé, etc.)
+    const file = item.getAsFile();
+    if (file) {
       e.preventDefault();
       const reader = new FileReader();
       reader.onload = async ev => {
         const dataUrl = await compressImg(ev.target.result);
-        // Sauvegarde dans Lutility_SAV/images/ et utilise data-src
-        const relPath  = await saveImg(dataUrl);
-        let src, dsrc;
-        if (relPath) {
-          const blobUrl = await readImgAsBlob(relPath);
-          src  = blobUrl || dataUrl;
-          dsrc = ` data-src="${relPath}"`;
-          if (blobUrl) _imgBlobMap.set(blobUrl, relPath); // fallback suppression
-        } else {
-          src  = dataUrl;
-          dsrc = '';
-        }
-        document.execCommand('insertHTML', false,
-          `<img src="${src}"${dsrc} alt="image" style="max-width:100%"><p></p>`);
-        onEdit();
+        await _insertImgDataUrl(dataUrl);
       };
-      reader.readAsDataURL(item.getAsFile()); return;
+      reader.readAsDataURL(file);
+      return;
     }
+
+    // Cas 2 : screenshot Windows — le bitmap est parfois exposé comme string
+    // On tente navigator.clipboard.read() comme fallback
+    e.preventDefault();
+    navigator.clipboard.read().then(async clipItems => {
+      for (const ci of clipItems) {
+        const imgType = ci.types.find(t => t.startsWith('image/'));
+        if (!imgType) continue;
+        const blob = await ci.getType(imgType);
+        const reader = new FileReader();
+        reader.onload = async ev => {
+          const dataUrl = await compressImg(ev.target.result);
+          await _insertImgDataUrl(dataUrl);
+        };
+        reader.readAsDataURL(blob);
+        return;
+      }
+    }).catch(() => {});
+    return;
   }
 }
 
@@ -855,6 +956,8 @@ function _showImgBar(img) {
 
   bar.appendChild(mkBtn('↑ Monter',    false, () => _moveImg(img, -1)));
   bar.appendChild(mkBtn('↓ Descendre', false, () => _moveImg(img,  1)));
+  bar.appendChild(mkBtn('📋 Copier',   false, () => _copyImg(img, false)));
+  bar.appendChild(mkBtn('✂️ Couper',   false, () => _copyImg(img, true)));
   bar.appendChild(mkBtn('✕ Supprimer', true,  () => _deleteImg(img)));
   document.body.appendChild(bar);
   _posImgBar(img);
@@ -916,6 +1019,52 @@ function _moveImg(img, dir) {
   onEdit();
 }
 
+function _copyImg(img, cut) {
+  // Select the image node then execCommand copy
+  const range = document.createRange();
+  range.selectNode(img);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  document.execCommand('copy');
+  sel.removeAllRanges();
+  if (cut) { _deleteImg(img); toast('✂️ Image coupée — collez avec Ctrl+V'); }
+  else      { _removeImgBar(); toast('📋 Image copiée — collez avec Ctrl+V'); }
+}
+
+// ── Gestion colonnes/lignes du tableau ────────────────
+function _tblCellMenu(e, cell) {
+  e.preventDefault(); e.stopPropagation();
+  const tr    = cell.closest('tr');
+  const tbody = cell.closest('tbody, thead, table');
+  const table = cell.closest('table');
+  if (!tr || !table) return;
+
+  showCtx(e, [
+    { label: 'Lignes' },
+    { ico:'＋', text:'Ligne au-dessus',  action: () => { const nr=tr.cloneNode(true);nr.querySelectorAll('td,th').forEach(c=>c.innerHTML='<br>');tr.parentElement.insertBefore(nr,tr);onEdit(); } },
+    { ico:'＋', text:'Ligne en-dessous', action: () => { const nr=tr.cloneNode(true);nr.querySelectorAll('td,th').forEach(c=>c.innerHTML='<br>');tr.insertAdjacentElement('afterend',nr);onEdit(); } },
+    { ico:'−', text:'Supprimer la ligne', action: () => { if(table.rows.length>1){tr.remove();onEdit();}else toast('Impossible — dernière ligne','warn'); } },
+    'sep',
+    { label: 'Colonnes' },
+    { ico:'＋', text:'Colonne à gauche',  action: () => {
+      const ci=Array.from(tr.cells).indexOf(cell);
+      Array.from(table.rows).forEach(r=>{const nc=document.createElement(r.rowIndex===0?'th':'td');nc.innerHTML='<br>';r.cells[ci]?.insertAdjacentElement('beforebegin',nc);});onEdit();
+    }},
+    { ico:'＋', text:'Colonne à droite',  action: () => {
+      const ci=Array.from(tr.cells).indexOf(cell);
+      Array.from(table.rows).forEach(r=>{const nc=document.createElement(r.rowIndex===0?'th':'td');nc.innerHTML='<br>';r.cells[ci]?.insertAdjacentElement('afterend',nc);});onEdit();
+    }},
+    { ico:'−', text:'Supprimer la colonne', action: () => {
+      const ci=Array.from(tr.cells).indexOf(cell);
+      if(tr.cells.length>1){Array.from(table.rows).forEach(r=>{r.cells[ci]?.remove();});onEdit();}
+      else toast('Impossible — dernière colonne','warn');
+    }},
+    'sep',
+    { ico:'🗑️', text:'Supprimer le tableau', danger: true, action: () => { if(confirm('Supprimer ce tableau ?')){table.remove();onEdit();} } },
+  ]);
+}
+
 // ── Init : attache les événements sur note-body ────────
 (function _initImgEvents() {
   const body = document.getElementById('note-body');
@@ -923,6 +1072,10 @@ function _moveImg(img, dir) {
   body.addEventListener('click', e => {
     if (e.target.tagName === 'IMG') _showImgBar(e.target);
     else _removeImgBar();
+  });
+  body.addEventListener('contextmenu', e => {
+    const cell = e.target.closest('td, th');
+    if (cell && cell.closest('table')) { _tblCellMenu(e, cell); return; }
   });
   // Ferme la barre si clic hors de la zone
   document.addEventListener('mousedown', e => {
