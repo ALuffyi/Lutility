@@ -15,6 +15,7 @@
     "directories": {
       "output": "dist"
     },
+    "artifactName": "Lutility-Setup-${version}.exe",
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico",
