@@ -1,4 +1,4 @@
-# LUTILITY v1.28.0
+# LUTILITY v2.12.0
 
 > Utilitaire personnel gaming sous Electron — Windows uniquement.
 > Interface dark, données sauvegardées localement (clef USB ou PC).
@@ -7,7 +7,7 @@
 
 ## Téléchargement
 
-👉 [Lutility Setup 1.28.0.exe](https://github.com/ALuffyi/Lutility/raw/main/dist/Lutility%20Setup%201.28.0.exe)
+👉 [Lutility-Setup-2.12.0.exe](https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.12.0.exe)
 
 ---
 
@@ -15,20 +15,22 @@
 
 | Module | Description |
 |---|---|
-| 🎮 **Jeux** | Liste personnelle avec plateforme, emoji, notes de session |
-| 📓 **Carnets** | Éditeur riche : titres, listes, tableaux, images embarquées |
-| 🗒️ **Notes rapides** | Notes libres par catégorie |
-| 🛠️ **Outils** | Raccourcis, commandes CMD/PS, outils système (admin ou non) |
+| 🎮 **Jeux** | Liste personnelle, touches/manette par jeu (PS/Xbox/Switch/PC), codes, paramètres |
+| 📓 **Carnets** | Éditeur riche : titres, listes, tableaux, images embarquées, sous-pages |
+| 🛠️ **Outils** | Commandes CMD/PS, outils système, infos matériel, mises à jour |
 | 💾 **Sauvegarde** | Dossier `Lutility_SAV` portable (USB recommandé) |
-| 🔄 **Mises à jour** | Badge discret si nouvelle version disponible |
+| 🔄 **Mises à jour** | Badge discret + notification si nouvelle version disponible |
+| 🖥️ **Système** | Infos matériel (CPU, GPU, RAM, disques), pilote NVIDIA, températures |
 
 ---
 
 ## Installation
 
-1. Télécharger `Lutility Setup 1.28.0.exe`
+1. Télécharger `Lutility-Setup-2.12.0.exe`
 2. Lancer l'installateur (choix du répertoire, raccourcis bureau/démarrer)
 3. Démarrer Lutility → wizard de premier lancement (profil + dossier SAV)
+
+> Les données (`Lutility_SAV`) sont indépendantes de l'installation — une mise à jour ne supprime rien.
 
 ---
 
@@ -49,7 +51,7 @@ Double-clic sur run.bat
 ```
 Double-clic sur build.bat
 ```
-Produit : `dist/Lutility Setup 1.28.0.exe` (NSIS x64)
+Produit : `dist/Lutility-Setup-2.12.0.exe` (NSIS x64)
 
 ---
 
