@@ -1,5 +1,5 @@
 {
-  "version": "1.28.0",
-  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-1.28.0.exe",
-  "notes": "Version initiale publique."
+  "version": "2.11",
+  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.11.exe",
+  "notes": "Tray système, panneau redimensionnable, correction orthographique, émojis personnalisés sur catégories/sections/pages, tri des jeux, copier/couper image, colonnes/lignes tableau, correctifs drag-drop et import."
 }

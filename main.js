@@ -1,6 +1,8 @@
-const { app, BrowserWindow, ipcMain, dialog, net } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, net, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs   = require('fs');
+
+let tray = null;
 
 const USER_DATA   = app.getPath('userData');
 const CONFIG_FILE = path.join(USER_DATA, 'config.json');
@@ -37,6 +39,10 @@ function writeConfig(data) {
 }
 
 // ── Window ────────────────────────────────────────────
+// Accélère le démarrage : cache le bytecode V8 entre les sessions
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+
 let win;
 function createWindow() {
   win = new BrowserWindow({
@@ -47,12 +53,41 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      v8CacheOptions: 'code',        // cache bytecode → relance plus rapide
+      backgroundThrottling: false,
     },
     icon: path.join(__dirname, 'assets', 'icon.ico'),
     show: false,
   });
   win.loadFile('renderer.html');
-  win.once('ready-to-show', () => win.show());
+  win.once('ready-to-show', () => {
+    win.show();
+    // Activer la correction orthographique (fr + en)
+    win.webContents.session.setSpellCheckerLanguages(['fr', 'fr-FR', 'en-US']);
+    // Autoriser la lecture du presse-papiers (pour coller des screenshots)
+    win.webContents.session.setPermissionRequestHandler((_wc, permission, cb) => {
+      cb(permission === 'clipboard-read' || permission === 'clipboard-sanitized-write');
+    });
+  });
+  win.on('close', (e) => {
+    if (!app.isQuiting) {
+      e.preventDefault();
+      win.hide();
+    }
+  });
+}
+
+function createTray() {
+  const iconPath = path.join(__dirname, 'assets', 'icon.ico');
+  tray = new Tray(iconPath);
+  tray.setToolTip('Lutility');
+  const menu = Menu.buildFromTemplate([
+    { label: 'Ouvrir Lutility', click: () => { win.show(); win.focus(); } },
+    { type: 'separator' },
+    { label: 'Quitter', click: () => { app.isQuiting = true; app.quit(); } },
+  ]);
+  tray.setContextMenu(menu);
+  tray.on('double-click', () => { win.show(); win.focus(); });
 }
 
 // ── Single-instance lock ──────────────────────────────
@@ -64,13 +99,15 @@ if (!gotLock) {
   app.on('second-instance', () => {
     if (win) {
       if (win.isMinimized()) win.restore();
+      win.show();
       win.focus();
     }
   });
-  app.whenReady().then(createWindow);
+  app.whenReady().then(() => { createWindow(); createTray(); });
 }
 
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+app.on('window-all-closed', () => { /* Ne pas quitter — on garde la tray */ });
+app.on('before-quit', () => { app.isQuiting = true; });
 
 // ── Window controls ───────────────────────────────────
 ipcMain.on('win-minimize', () => win.minimize());
