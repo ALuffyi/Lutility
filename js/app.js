@@ -24,6 +24,8 @@ async function checkForUpdate() {
 }
 
 let _updPopup = null;
+let _updFilePath = null;
+
 function openUpdatePopup(btn) {
   if (_updPopup) { _updPopup.remove(); _updPopup = null; return; }
   if (!_updateData) return;
@@ -32,13 +34,56 @@ function openUpdatePopup(btn) {
   p.innerHTML = `
     <div class="update-popup-ver">↑ Version ${_updateData.version}</div>
     <div class="update-popup-notes">${_updateData.notes || 'Nouvelle version disponible.'}</div>
-    <button class="btn sm upd-dl-btn" onclick="window.api.openUrl('${_updateData.url}');this.closest('.update-popup').remove()">⬇️ Télécharger</button>`;
+    <div class="upd-progress-wrap" id="upd-progress-wrap" style="display:none">
+      <div class="upd-progress-track"><div class="upd-progress-bar" id="upd-progress-bar"></div></div>
+      <span class="upd-progress-pct" id="upd-progress-pct">0%</span>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn sm upd-dl-btn" id="upd-dl-btn" onclick="_startDownload()">⬇️ Télécharger et installer</button>
+    </div>`;
   btn.parentElement.style.position = 'relative';
   btn.parentElement.appendChild(p);
   _updPopup = p;
+  // Écoute la progression (une seule fois par session)
+  if (!_updProgressBound) {
+    _updProgressBound = true;
+    window.api.onUpdateProgress(pct => {
+      const bar = document.getElementById('upd-progress-bar');
+      const lbl = document.getElementById('upd-progress-pct');
+      if (bar) bar.style.width = pct + '%';
+      if (lbl) lbl.textContent = pct + '%';
+    });
+  }
   setTimeout(() => document.addEventListener('click', function h(e) {
     if (!p.contains(e.target) && e.target !== btn) { p.remove(); _updPopup = null; document.removeEventListener('click', h); }
   }), 50);
+}
+
+let _updProgressBound = false;
+
+async function _startDownload() {
+  const dlBtn = document.getElementById('upd-dl-btn');
+  const wrap  = document.getElementById('upd-progress-wrap');
+  if (dlBtn) { dlBtn.disabled = true; dlBtn.textContent = '⏳ Téléchargement…'; }
+  if (wrap)  wrap.style.display = 'flex';
+  const result = await window.api.downloadUpdate(_updateData.url);
+  if (!result.ok) {
+    if (dlBtn) { dlBtn.disabled = false; dlBtn.textContent = '⬇️ Réessayer'; }
+    toast('❌ Téléchargement échoué : ' + (result.error || ''), 'warn');
+    return;
+  }
+  _updFilePath = result.path;
+  if (dlBtn) {
+    dlBtn.disabled = false;
+    dlBtn.textContent = '🚀 Installer et relancer';
+    dlBtn.onclick = _installUpdate;
+  }
+}
+
+function _installUpdate() {
+  if (!_updFilePath) return;
+  toast('Installation en cours — l\'app va se fermer…');
+  setTimeout(() => window.api.installUpdate(_updFilePath), 1200);
 }
 
 // ══ PANNEAU NOTES REDIMENSIONNABLE ══════════════════════

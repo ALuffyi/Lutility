@@ -248,6 +248,34 @@ ipcMain.handle('check-update', async () => {
   } catch { return null; }
 });
 
+ipcMain.handle('download-update', async (_e, url) => {
+  const os   = require('os');
+  const dest = path.join(os.tmpdir(), 'Lutility-Setup-latest.exe');
+  try {
+    const res = await net.fetch(url);
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const total = parseInt(res.headers.get('content-length') || '0', 10);
+    let downloaded = 0;
+    const writeStream = fs.createWriteStream(dest);
+    const reader = res.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      writeStream.write(Buffer.from(value));
+      downloaded += value.length;
+      if (total > 0) win?.webContents.send('update-progress', Math.round((downloaded / total) * 100));
+    }
+    await new Promise((resolve, reject) => { writeStream.end(); writeStream.on('finish', resolve); writeStream.on('error', reject); });
+    return { ok: true, path: dest };
+  } catch(e) { return { ok: false, error: e.message }; }
+});
+
+ipcMain.handle('install-update', (_e, filePath) => {
+  const { spawn } = require('child_process');
+  spawn(filePath, [], { detached: true, stdio: 'ignore' }).unref();
+  app.quit();
+});
+
 // ── Ouvrir URL / lien Store ───────────────────────────
 ipcMain.handle('open-url', (_e, url) => {
   try { require('electron').shell.openExternal(url); return true; }

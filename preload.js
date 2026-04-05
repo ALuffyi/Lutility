@@ -37,6 +37,9 @@ contextBridge.exposeInMainWorld('api', {
   importSavWizard: ()        => ipcRenderer.invoke('import-sav-wizard'),
 
   // Mise à jour
-  getVersion:   () => ipcRenderer.invoke('get-version'),
-  checkUpdate:  () => ipcRenderer.invoke('check-update'),
+  getVersion:        () => ipcRenderer.invoke('get-version'),
+  checkUpdate:       () => ipcRenderer.invoke('check-update'),
+  downloadUpdate:    (url) => ipcRenderer.invoke('download-update', url),
+  installUpdate:     (filePath) => ipcRenderer.invoke('install-update', filePath),
+  onUpdateProgress:  (cb) => ipcRenderer.on('update-progress', (_e, pct) => cb(pct)),
 });
