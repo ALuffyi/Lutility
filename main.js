@@ -82,12 +82,12 @@ function createTray() {
   tray = new Tray(iconPath);
   tray.setToolTip('Lutility');
   const menu = Menu.buildFromTemplate([
-    { label: 'Ouvrir Lutility', click: () => { win.show(); win.focus(); } },
+    { label: 'Ouvrir Lutility', click: () => { win.show(); win.focus(); win.webContents.focus(); } },
     { type: 'separator' },
     { label: 'Quitter', click: () => { app.isQuiting = true; app.quit(); } },
   ]);
   tray.setContextMenu(menu);
-  tray.on('double-click', () => { win.show(); win.focus(); });
+  tray.on('double-click', () => { win.show(); win.focus(); win.webContents.focus(); });
 }
 
 // ── Single-instance lock ──────────────────────────────
@@ -101,6 +101,7 @@ if (!gotLock) {
       if (win.isMinimized()) win.restore();
       win.show();
       win.focus();
+      win.webContents.focus();
     }
   });
   app.whenReady().then(() => { createWindow(); createTray(); });

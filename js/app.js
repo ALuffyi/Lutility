@@ -110,6 +110,11 @@ function openModal(id){
 }
 function closeModal(id){
   document.getElementById(id).classList.remove('on');
+  // Remettre le focus sur l'éditeur de notes si une page est active
+  setTimeout(() => {
+    const body = document.getElementById('note-body');
+    if (body && body.contentEditable === 'true') body.focus();
+  }, 50);
   // Clean up inline modal state — use typeof to avoid ReferenceError
   if (id === 'modal-inline') {
     const row = document.getElementById('inline-emoji-row');

@@ -102,7 +102,7 @@ async function resolveNoteImages(bodyEl) {
   const imgs = bodyEl.querySelectorAll('img[data-src]');
   for (const img of imgs) {
     const blobUrl = await readImgAsBlob(img.dataset.src);
-    if (blobUrl) { img.src = blobUrl; img.removeAttribute('data-src'); }
+    if (blobUrl) { img.src = blobUrl; /* data-src conservé pour les rechargements futurs */ }
     else img.alt = '⚠ Image introuvable : ' + img.dataset.src;
   }
 }

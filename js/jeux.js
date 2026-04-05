@@ -60,7 +60,7 @@ function selectGame(id){
         <span class="dsec-title">⌨️ Touches</span>
         <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-size:10px;color:var(--dim2)">Cliquez pour éditer</span><button class="btn xs orange" onclick="addBind(${g.id})">+ Ligne</button></div>
       </div>
-      <div class="dsec-body" id="binds-${g.id}">${g.binds.map((b,i)=>bindRowHTML(g.id,i,b)).join('')}</div>
+      <div class="dsec-body" id="binds-${g.id}">${g.binds.map((b,i)=>bindRowHTML(g.id,i,b,g.plat)).join('')}</div>
     </div>
     <div class="dsec">
       <div class="dsec-hdr">
@@ -90,7 +90,22 @@ function selectGame(id){
       </div>
     </div>`;
 }
-function bindRowHTML(gid,idx,b){
+function _ctrlBtnsFor(plat) {
+  const p = (plat||'').toLowerCase();
+  if (p.includes('ps') || p.includes('playstation')) return ['✕','○','□','△','L1','L2','R1','R2','L3','R3','↑','↓','←','→'];
+  if (p.includes('xbox'))                             return ['A','B','X','Y','LB','LT','RB','RT','LS','RS','↑','↓','←','→'];
+  if (p.includes('switch') || p.includes('nintendo')) return ['A','B','X','Y','L','R','ZL','ZR','↑','↓','←','→'];
+  return null;
+}
+function fillKey(gid,idx,val){
+  updateBind(gid,idx,'k',val);
+  const inp=document.getElementById('key-'+gid+'-'+idx);
+  if(inp) inp.value=val;
+  saveAll();
+}
+function bindRowHTML(gid,idx,b,plat){
+  const chips=_ctrlBtnsFor(plat||'');
+  const chipsHtml=chips?`<div class="ctrl-chips">${chips.map(c=>`<span class="ctrl-chip" onclick="fillKey(${gid},${idx},'${c}')">${c}</span>`).join('')}</div>`:'';
   return `<div class="brow" draggable="true" data-gid="${gid}" data-idx="${idx}" data-type="bind"
     ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">
     <span class="drag-handle" title="Déplacer">⠿</span>
@@ -98,11 +113,12 @@ function bindRowHTML(gid,idx,b){
       onfocus="this.select()"
       oninput="updateBind(${gid},${idx},'a',this.value)"
       onblur="updateBind(${gid},${idx},'a',this.value);saveAll()">
-    <div style="display:flex;gap:4px">
-      <input class="key-in" value="${esc(b.k)}" placeholder="Touche"
+    <div style="display:flex;flex-direction:column;gap:3px">
+      <input class="key-in" id="key-${gid}-${idx}" value="${esc(b.k)}" placeholder="Touche"
         onfocus="this.select()"
         oninput="updateBind(${gid},${idx},'k',this.value)"
         onblur="updateBind(${gid},${idx},'k',this.value);saveAll()">
+      ${chipsHtml}
     </div>
     <span class="row-del" onclick="delBind(${gid},${idx})">✕</span>
   </div>`;
@@ -207,11 +223,20 @@ function addCode(gid){const g=S.games.find(x=>x.id===gid);if(!g)return;if(!g.cod
 function addGame(){
   const name=document.getElementById('g-name').value.trim();const plat=document.getElementById('g-plat').value.trim()||'PC';const ico=document.getElementById('g-ico').value.trim()||'🎮';
   if(!name){toast('Entrez un nom de jeu','warn');return;}
-  const id=Date.now();const nl=name.toLowerCase();
-  let binds=[{a:'Avancer',k:'W'},{a:'Reculer',k:'S'},{a:'Gauche',k:'A'},{a:'Droite',k:'D'},{a:'Sauter',k:'ESPACE'}];
-  let sets=[{n:'Sensibilité',v:'—'},{n:'DPI',v:'—'},{n:'Résolution',v:'—'},{n:'FPS Max',v:'—'},{n:'V-Sync',v:'—'}];
-  if(nl.includes('counter')||nl.includes('cs2')){binds=[...binds,{a:'Accroupir',k:'CTRL'},{a:'Marcher',k:'SHIFT'},{a:'Tir',k:'CG'},{a:'Recharger',k:'R'},{a:'Grenade',k:'G'},{a:'Acheter',k:'B'}];sets=[{n:'Sensibilité',v:'—'},{n:'DPI',v:'—'},{n:'eDPI',v:'—'},{n:'Résolution',v:'—'},{n:'Ratio',v:'—'},{n:'FPS Max',v:'—'},{n:'V-Sync',v:'OFF'}];}
-  else if(nl.includes('valorant')){binds=[...binds,{a:'Capacité 1',k:'E'},{a:'Capacité 2',k:'Q'},{a:'Capacité 3',k:'C'},{a:'Ultime',k:'X'}];}
+  const id=Date.now();const nl=name.toLowerCase();const pl=plat.toLowerCase();
+  let binds,sets=[{n:'Sensibilité',v:'—'},{n:'DPI',v:'—'},{n:'Résolution',v:'—'},{n:'FPS Max',v:'—'},{n:'V-Sync',v:'—'}];
+  // Touches par défaut selon la plateforme
+  if(pl.includes('ps')||pl.includes('playstation')){
+    binds=[{a:'Avancer',k:'↑'},{a:'Reculer',k:'↓'},{a:'Gauche',k:'←'},{a:'Droite',k:'→'},{a:'Sauter',k:'✕'},{a:'Attaquer',k:'○'},{a:'Action',k:'□'},{a:'Spécial',k:'△'},{a:'Gâchette G',k:'L2'},{a:'Gâchette D',k:'R2'}];
+  } else if(pl.includes('xbox')){
+    binds=[{a:'Avancer',k:'↑'},{a:'Reculer',k:'↓'},{a:'Gauche',k:'←'},{a:'Droite',k:'→'},{a:'Sauter',k:'A'},{a:'Attaquer',k:'B'},{a:'Action',k:'X'},{a:'Spécial',k:'Y'},{a:'Gâchette G',k:'LT'},{a:'Gâchette D',k:'RT'}];
+  } else if(pl.includes('switch')||pl.includes('nintendo')){
+    binds=[{a:'Avancer',k:'↑'},{a:'Reculer',k:'↓'},{a:'Gauche',k:'←'},{a:'Droite',k:'→'},{a:'Sauter',k:'A'},{a:'Attaquer',k:'B'},{a:'Action',k:'X'},{a:'Spécial',k:'Y'},{a:'Gâchette G',k:'ZL'},{a:'Gâchette D',k:'ZR'}];
+  } else {
+    binds=[{a:'Avancer',k:'W'},{a:'Reculer',k:'S'},{a:'Gauche',k:'A'},{a:'Droite',k:'D'},{a:'Sauter',k:'ESPACE'}];
+    if(nl.includes('counter')||nl.includes('cs2')){binds=[...binds,{a:'Accroupir',k:'CTRL'},{a:'Marcher',k:'SHIFT'},{a:'Tir',k:'CG'},{a:'Recharger',k:'R'},{a:'Grenade',k:'G'},{a:'Acheter',k:'B'}];sets=[{n:'Sensibilité',v:'—'},{n:'DPI',v:'—'},{n:'eDPI',v:'—'},{n:'Résolution',v:'—'},{n:'Ratio',v:'—'},{n:'FPS Max',v:'—'},{n:'V-Sync',v:'OFF'}];}
+    else if(nl.includes('valorant')){binds=[...binds,{a:'Capacité 1',k:'E'},{a:'Capacité 2',k:'Q'},{a:'Capacité 3',k:'C'},{a:'Ultime',k:'X'}];}
+  }
   S.games.push({id,name,plat,ico,binds,sets,codes:[]});
   closeModal('modal-game');['g-name','g-plat','g-ico'].forEach(i=>document.getElementById(i).value='');
   renderGames();selectGame(id);saveAll();toast('✅ Jeu ajouté !');
