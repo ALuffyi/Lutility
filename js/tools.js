@@ -483,6 +483,8 @@ async function scLaunch(id) {
   else    toast('Impossible de lancer : ' + sc.name, 'warn');
 }
 
+const _scIconCache = new Map(); // path → dataURL
+
 function renderShortcuts() {
   const wrap = document.getElementById('sc-wrap');
   if (!wrap) return;
@@ -490,14 +492,30 @@ function renderShortcuts() {
     wrap.innerHTML = '<div class="sc-empty">Aucun raccourci — cliquez sur <strong>+ Ajouter</strong>.</div>';
     return;
   }
-  wrap.innerHTML = S.shortcuts.map(sc => `
+  wrap.innerHTML = S.shortcuts.map(sc => {
+    const cached = _scIconCache.get(sc.path);
+    const icoHtml = cached
+      ? `<img src="${cached}" class="sc-file-ico" draggable="false">`
+      : `<span class="sc-ico-fallback">${escHtml(sc.emoji || '🔗')}</span>`;
+    return `
     <div class="sc-card">
-      <div class="sc-ico">${escHtml(sc.emoji || '🔗')}</div>
+      <div class="sc-ico" id="sc-ico-${sc.id}">${icoHtml}</div>
       <div class="sc-name" title="${escHtml(sc.path)}">${escHtml(sc.name)}</div>
       <button class="btn sm prim sc-btn" onclick="scLaunch(${sc.id})" title="Lancer">▶</button>
       <button class="btn sm sc-btn" onclick="scEdit(${sc.id})" title="Modifier">✏️</button>
       <button class="btn sm sc-btn sc-del" onclick="scDelete(${sc.id})" title="Supprimer">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+
+  // Chargement async des icônes non encore en cache
+  S.shortcuts.forEach(async sc => {
+    if (_scIconCache.has(sc.path)) return;
+    const dataUrl = await window.api.getFileIcon(sc.path);
+    if (!dataUrl) return;
+    _scIconCache.set(sc.path, dataUrl);
+    const el = document.getElementById('sc-ico-' + sc.id);
+    if (el) el.innerHTML = `<img src="${dataUrl}" class="sc-file-ico" draggable="false">`;
+  });
 }
 
 // ══ MES COMMANDES (outils personnalisés) ══════════════
