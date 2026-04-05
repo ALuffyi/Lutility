@@ -53,13 +53,33 @@ const TOOLS = [
     admin:false, type:'CMD',
     cmd:'start https://www.malwarebytes.com/adwcleaner',
   },
+  // ── MISES À JOUR ─────────────────────────────────────
+  {
+    ico:'🔄', name:'Mettre à jour tous les logiciels (winget)', tag:'Update', tc:'g',
+    desc:'Met à jour tous les logiciels installés via winget, y compris les pilotes et applications reconnues.',
+    admin:true, type:'PS',
+    cmd:'winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements',
+  },
+  {
+    ico:'🟢', name:'Mettre à jour les pilotes NVIDIA', tag:'Update', tc:'g',
+    desc:'Met à jour GeForce Experience et les pilotes NVIDIA via winget.',
+    admin:true, type:'PS',
+    cmd:'winget upgrade --id NVIDIA.GeForceExperience --accept-package-agreements --accept-source-agreements',
+  },
+  {
+    ico:'🪟', name:'Mises à jour Windows (Windows Update)', tag:'Update', tc:'g',
+    desc:'Lance les mises à jour Windows via PowerShell (installe le module PSWindowsUpdate si besoin).',
+    admin:true, type:'PS',
+    cmd:'if (!(Get-Module -ListAvailable -Name PSWindowsUpdate)) { Install-Module PSWindowsUpdate -Force -Scope CurrentUser -SkipPublisherCheck }\nImport-Module PSWindowsUpdate\nGet-WindowsUpdate -AcceptAll -Install -AutoReboot:$false',
+  },
 ];
 
 // Catégories — ordre d'affichage
 const TOOL_CATS = [
-  { id:'maint',   label:'🧹 Maintenance', tc:'y', tags:['Maint.']   },
-  { id:'windows', label:'🪟 Windows',     tc:'b', tags:['Windows']  },
-  { id:'systeme', label:'🧬 Système',     tc:'p', tags:['Système']  },
+  { id:'maint',   label:'🧹 Maintenance',   tc:'y', tags:['Maint.']   },
+  { id:'windows', label:'🪟 Windows',       tc:'b', tags:['Windows']  },
+  { id:'systeme', label:'🧬 Système',       tc:'p', tags:['Système']  },
+  { id:'updates', label:'🔄 Mises à jour',  tc:'g', tags:['Update']   },
 ];
 
 // État collapse par catégorie (session uniquement)
@@ -95,6 +115,8 @@ try {
   $ramUsed  = [math]::Round($ramTotal-$ramFree,1)
   $ramSl    = ($ram | ForEach-Object { "$([math]::Round($_.Capacity/1GB,0)) Go @ $($_.Speed) MHz" }) -join ', '
   $gpuStr   = ($gpu | Where-Object { $_.Name -notmatch 'Microsoft Basic' } | ForEach-Object { $_.Name.Trim() }) -join ' | '
+  $nvGpu    = $gpu | Where-Object { $_.Name -match 'NVIDIA' } | Select-Object -First 1
+  $nvDriver = if ($nvGpu -and $nvGpu.DriverVersion) { $nvGpu.DriverVersion.Trim() } else { '' }
   $diskStr  = ($hdd | ForEach-Object { "$($_.Model.Trim()) [$([math]::Round($_.Size/1GB,0)) Go]" }) -join ' | '
   $osStr    = ("$($os.Caption) $winVer (Build $($os.BuildNumber))").Trim()
   $bM = if ($bios -and $bios.Manufacturer) { $bios.Manufacturer.Trim() } else { '' }
@@ -103,7 +125,7 @@ try {
   $dArr = @(Get-PSDrive -PSProvider FileSystem -EA SilentlyContinue | Where-Object { $_.Used -ne $null -and ($_.Used+$_.Free) -gt 0 } | ForEach-Object { [PSCustomObject]@{ n=$_.Name; used=[math]::Round($_.Used/1GB,1); total=[math]::Round(($_.Used+$_.Free)/1GB,1) } })
   $dJson = if ($dArr.Count -gt 0) { $dArr | ConvertTo-Json -Compress } else { '[]' }
   if ($dJson -and $dJson[0] -ne '[') { $dJson = "[$dJson]" }
-  [PSCustomObject]@{ os=$osStr; cpu=$cpu.Name.Trim(); mb="$($mb.Manufacturer.Trim()) $($mb.Product.Trim())"; gpu=if($gpuStr){$gpuStr}else{'Non detecte'}; ram="$ramUsed Go / $ramTotal Go"; ramSl=$ramSl; disks=if($diskStr){$diskStr}else{'Non detecte'}; bios=$biosStr; disksArr=$dJson; tGpu='N/A'; tCpu='N/A' } | ConvertTo-Json -Compress
+  [PSCustomObject]@{ os=$osStr; cpu=$cpu.Name.Trim(); mb="$($mb.Manufacturer.Trim()) $($mb.Product.Trim())"; gpu=if($gpuStr){$gpuStr}else{'Non detecte'}; ram="$ramUsed Go / $ramTotal Go"; ramSl=$ramSl; disks=if($diskStr){$diskStr}else{'Non detecte'}; bios=$biosStr; disksArr=$dJson; nvDriver=$nvDriver; tGpu='N/A'; tCpu='N/A' } | ConvertTo-Json -Compress
 } catch { Write-Output '{"error":"Erreur WMI"}' }
 `.trim();
 
@@ -221,6 +243,7 @@ async function loadSysinfo() {
       <div class="si-block">
         <div class="si-lbl">🎮 Carte graphique</div>
         <div class="si-val">${escHtml(d.gpu||'—')}</div>
+        ${d.nvDriver ? `<div class="si-sub">🔧 Pilote : ${escHtml(d.nvDriver)}</div>` : ''}
         <div class="si-sub si-temp">🌡️ <span id="si-gpu-temp">${tempBadge(_lastGpuTemp)}</span></div>
       </div>
       <div class="si-block">

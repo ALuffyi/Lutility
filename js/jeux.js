@@ -57,7 +57,7 @@ function selectGame(id){
   document.getElementById('gdetail').innerHTML=`
     <div class="dsec">
       <div class="dsec-hdr">
-        <span class="dsec-title">⌨️ Touches</span>
+        <span class="dsec-title">${_isConsolePlat(g.plat)?'🎮':'⌨️'} Touches</span>
         <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--mono);font-size:10px;color:var(--dim2)">Cliquez pour éditer</span><button class="btn xs orange" onclick="addBind(${g.id})">+ Ligne</button></div>
       </div>
       <div class="dsec-body" id="binds-${g.id}">${g.binds.map((b,i)=>bindRowHTML(g.id,i,b,g.plat)).join('')}</div>
@@ -91,13 +91,15 @@ function selectGame(id){
     </div>`;
 }
 function _ctrlBtnsFor(plat) {
-  const p = (plat||'').toLowerCase();
-  if (p.includes('ps') || p.includes('playstation')) return ['✕','○','□','△','L1','L2','R1','R2','L3','R3','↑','↓','←','→'];
-  if (p.includes('xbox'))                             return ['A','B','X','Y','LB','LT','RB','RT','LS','RS','↑','↓','←','→'];
-  if (p.includes('switch') || p.includes('nintendo')) return ['A','B','X','Y','L','R','ZL','ZR','↑','↓','←','→'];
+  const p = (plat||'');
+  if (/\b(ps[2345]?|playstation)\b/i.test(p)) return ['✕','○','□','△','L1','L2','R1','R2','L3','R3','↑','↓','←','→'];
+  if (/\bxbox\b/i.test(p))                     return ['A','B','X','Y','LB','LT','RB','RT','LS','RS','↑','↓','←','→'];
+  if (/\b(switch|nintendo)\b/i.test(p))         return ['A','B','X','Y','L','R','ZL','ZR','↑','↓','←','→'];
   return null;
 }
-function fillKey(gid,idx,val){
+function _isConsolePlat(p) { return !!_ctrlBtnsFor(p); }
+function fillKeyFromChip(el){
+  const gid=+el.dataset.gid, idx=+el.dataset.idx, val=el.dataset.val;
   updateBind(gid,idx,'k',val);
   const inp=document.getElementById('key-'+gid+'-'+idx);
   if(inp) inp.value=val;
@@ -105,7 +107,7 @@ function fillKey(gid,idx,val){
 }
 function bindRowHTML(gid,idx,b,plat){
   const chips=_ctrlBtnsFor(plat||'');
-  const chipsHtml=chips?`<div class="ctrl-chips">${chips.map(c=>`<span class="ctrl-chip" onclick="fillKey(${gid},${idx},'${c}')">${c}</span>`).join('')}</div>`:'';
+  const chipsHtml=chips?`<div class="ctrl-chips">${chips.map(c=>`<span class="ctrl-chip" data-gid="${gid}" data-idx="${idx}" data-val="${esc(c)}" onclick="fillKeyFromChip(this)">${c}</span>`).join('')}</div>`:'';
   return `<div class="brow" draggable="true" data-gid="${gid}" data-idx="${idx}" data-type="bind"
     ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">
     <span class="drag-handle" title="Déplacer">⠿</span>

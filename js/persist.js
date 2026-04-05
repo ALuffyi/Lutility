@@ -102,8 +102,21 @@ async function resolveNoteImages(bodyEl) {
   const imgs = bodyEl.querySelectorAll('img[data-src]');
   for (const img of imgs) {
     const blobUrl = await readImgAsBlob(img.dataset.src);
-    if (blobUrl) { img.src = blobUrl; /* data-src conservé pour les rechargements futurs */ }
-    else img.alt = '⚠ Image introuvable : ' + img.dataset.src;
+    if (blobUrl) {
+      img.src = blobUrl; // data-src conservé pour rechargements futurs
+      // Si le blob expire (ex: app en arrière-plan), on recrée un blob depuis le disque
+      img.onerror = async function() {
+        this.onerror = null;
+        const retry = await readImgAsBlob(this.dataset.src);
+        if (retry) this.src = retry;
+      };
+    } else {
+      // Fichier disque introuvable — affiche le nom de fichier comme indication
+      const fname = img.dataset.src.replace('images/', '');
+      img.alt   = '⚠ ' + fname;
+      img.title = 'Fichier introuvable : ' + img.dataset.src;
+      img.style.cssText = 'min-width:80px;min-height:32px;border:1px dashed rgba(239,68,68,.5);padding:4px;font-size:10px;font-family:var(--mono);color:var(--red)';
+    }
   }
 }
 
