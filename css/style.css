@@ -613,3 +613,5 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);display:flex
 .cl-items{margin:0;padding:14px 18px 14px 34px;display:flex;flex-direction:column;gap:7px;list-style:none}
 .cl-item{font-size:13px;color:var(--text);line-height:1.5;position:relative}
 .cl-item::before{content:'—';position:absolute;left:-16px;color:var(--dim2)}
+.cl-ver-hdr-wrap{max-width:760px;margin:0 auto 14px;padding:0 2px}
+.cl-ver-hdr{font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;opacity:.8}

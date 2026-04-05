@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src https://fonts.googleapis.com https://fonts.gstatic.com">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com">
 <title>LUTILITY</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -449,6 +449,7 @@ body{flex-direction:column!important}
           <div class="ph-t" style="--pc:var(--blue)">📋 Mises à jour</div>
         </div>
         <div class="cl-scroll">
+          <div class="cl-ver-hdr-wrap"><span class="cl-ver-hdr" id="cl-ver-hdr"></span></div>
           <div class="cl-list" id="cl-list">
             <div class="cl-empty">Chargement…</div>
           </div>
