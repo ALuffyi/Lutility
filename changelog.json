@@ -1,0 +1,60 @@
+[
+  {
+    "version": "2.12.2",
+    "date": "2026-04-05",
+    "type": "fix",
+    "label": "Correctif",
+    "changes": [
+      "Icônes réelles des apps et raccourcis dans le menu Raccourcis (remplacement des émojis par l'icône du fichier)",
+      "Correctif : copie d'image dans l'éditeur — copie le contenu réel, pas le texte alt",
+      "Numérotation de version corrigée et synchronisée partout"
+    ]
+  },
+  {
+    "version": "2.12.0",
+    "date": "2026-04-05",
+    "type": "feat",
+    "label": "Nouveauté",
+    "changes": [
+      "Manette découplée de la plateforme — sélecteur ⌨️ PC / PS / Xbox / Switch par jeu",
+      "Boutons colorés avec codes visuels PlayStation (✕ ○ □ △), Xbox (A/B/X/Y), Switch (A/B/X/Y)",
+      "Sticks analogiques 🕹️ Gauche et Droit, D-Pad dans les chips de touches",
+      "Pavé tactile PlayStation divisé en zone Gauche / Droite",
+      "Suppression de jeux sans freeze (sauvegarde asynchrone)",
+      "Cases d'action à largeur automatique selon le contenu",
+      "DriversCloud.com dans les outils de mise à jour drivers",
+      "Section Mises à jour regroupée directement sous Informations Système",
+      "Téléchargement et installation des mises à jour en arrière-plan avec barre de progression",
+      "Auto-update : l'installateur se lance et remplace l'app sans intervention manuelle"
+    ]
+  },
+  {
+    "version": "2.11.0",
+    "date": "2026-04-05",
+    "type": "feat",
+    "label": "Nouveauté",
+    "changes": [
+      "Icône dans la barre des tâches système (tray) — l'app reste accessible même fenêtre fermée",
+      "Redimensionnement du panneau latéral des carnets par glisser-déposer",
+      "Correctif : images rechargées correctement depuis Lutility_SAV au redémarrage",
+      "Correctif : bouton MàJ masqué proprement, LED d'état sans clignotement en mode normal",
+      "Tooltip sur les noms de notes tronqués",
+      "Boutons manette affichés selon la plateforme détectée"
+    ]
+  },
+  {
+    "version": "2.0.0",
+    "date": "2026-04-04",
+    "type": "feat",
+    "label": "Nouveauté",
+    "changes": [
+      "Version initiale complète sous Electron (migration depuis v1.x web)",
+      "Module Jeux : bibliothèque, touches, paramètres graphiques, codes",
+      "Module Notes / Carnets : éditeur riche, tableaux, images embarquées, sous-pages",
+      "Module Outils : commandes CMD/PS, infos système, programmes recommandés, raccourcis",
+      "Sauvegarde locale portable dans Lutility_SAV (clef USB ou PC)",
+      "Mises à jour automatiques via GitHub Releases",
+      "Installation via installateur NSIS (setup .exe)"
+    ]
+  }
+]

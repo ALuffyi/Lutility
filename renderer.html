@@ -198,6 +198,8 @@ body{flex-direction:column!important}
       <button class="nav" data-p="scripts"    onclick="nav('scripts')">   <span class="ico">🛠️</span><span class="lbl">Scripts</span></button>
       <div class="navsep"></div>
       <button class="nav" data-p="tools" onclick="nav('tools')"><span class="ico">⚙️</span><span class="lbl">Outils</span></button>
+      <div class="navsep"></div>
+      <button class="nav" data-p="maj" onclick="nav('maj');loadChangelog()"><span class="ico">📋</span><span class="lbl">MàJ</span></button>
     </div>
 
     <div class="content">
@@ -441,6 +443,17 @@ body{flex-direction:column!important}
           <div id="tools-grid"></div>
         </div>
       </div>
+      <!-- MÀJ / PATCH NOTES -->
+      <div class="page" id="p-maj">
+        <div class="ph">
+          <div class="ph-t" style="--pc:var(--blue)">📋 Mises à jour</div>
+        </div>
+        <div class="cl-scroll">
+          <div class="cl-list" id="cl-list">
+            <div class="cl-empty">Chargement…</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -647,5 +660,6 @@ body{flex-direction:column!important}
 <script src="js/jeux.js"></script>
 <script src="js/notes.js"></script>
 <script src="js/tools.js"></script>
+<script src="js/changelog.js"></script>
 </body>
 </html>
