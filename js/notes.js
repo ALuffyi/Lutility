@@ -67,7 +67,7 @@ function renderNotebooks() {
     hdr.draggable = true;
     hdr.innerHTML =
       (nb.emoji ? '<span class="item-emoji">' + h(nb.emoji) + '</span>' : '') +
-      '<span class="item-lbl">' + h(nb.name) + '</span>' +
+      '<span class="item-lbl" title="' + escAttr(nb.name) + '">' + h(nb.name) + '</span>' +
       '<span class="item-edit" onclick="nbEdit(' + nb.id + ')" title="Modifier">✏️</span>' +
       '<span class="item-del"  onclick="nbDel('  + nb.id + ',event)" title="Supprimer">✕</span>';
     hdr.insertBefore(mkToggle('nb_' + nb.id), hdr.querySelector('.item-lbl'));
@@ -88,7 +88,7 @@ function renderNotebooks() {
       catEl.className = 'nb-row lvl-cat' + (S.activeCat === cat.id && S.activeNB === nb.id ? ' on' : '');
       catEl.draggable = true;
       catEl.innerHTML =
-        '<span class="item-lbl" style="padding-left:12px">' + (cat.emoji||'📂') + ' ' + h(cat.name) + '</span>' +
+        '<span class="item-lbl" style="padding-left:12px" title="' + escAttr(cat.name) + '">' + (cat.emoji||'📂') + ' ' + h(cat.name) + '</span>' +
         '<span class="item-edit" onclick="rnOpen(\'cat-edit\',' + nb.id + ',' + cat.id + ',0,0,\'' + escAttr(cat.name) + '\',0,\'' + escAttr(cat.emoji||'') + '\')" title="Renommer">✏️</span>' +
         '<span class="item-del"  onclick="catDel(' + nb.id + ',' + cat.id + ',event)" title="Supprimer">✕</span>';
       catEl.insertBefore(mkToggle('cat_' + cat.id), catEl.querySelector('.item-lbl'));
@@ -109,7 +109,7 @@ function renderNotebooks() {
         secEl.className = 'nb-row lvl-sec' + (S.activeSec === sec.id && S.activeCat === cat.id ? ' on' : '');
         secEl.draggable = true;
         secEl.innerHTML =
-          '<span class="item-lbl" style="padding-left:24px">' + (sec.emoji||'📁') + ' ' + h(sec.name) + '</span>' +
+          '<span class="item-lbl" style="padding-left:24px" title="' + escAttr(sec.name) + '">' + (sec.emoji||'📁') + ' ' + h(sec.name) + '</span>' +
           '<span class="item-edit" onclick="rnOpen(\'sec-edit\',' + nb.id + ',' + cat.id + ',' + sec.id + ',0,\'' + escAttr(sec.name) + '\',0,\'' + escAttr(sec.emoji||'') + '\')" title="Renommer">✏️</span>' +
           '<span class="item-del"  onclick="secDel(' + nb.id + ',' + cat.id + ',' + sec.id + ',event)" title="Supprimer">✕</span>';
         secEl.insertBefore(mkToggle('sec_' + sec.id), secEl.querySelector('.item-lbl'));
@@ -131,7 +131,7 @@ function renderNotebooks() {
           pageEl.className = 'nb-row lvl-page' + (pageOn ? ' on' : '');
           pageEl.draggable = true;
           pageEl.innerHTML =
-            '<span class="item-lbl" style="padding-left:36px">' + (page.emoji||'📄') + ' ' + h(page.name) + '</span>' +
+            '<span class="item-lbl" style="padding-left:36px" title="' + escAttr(page.name) + '">' + (page.emoji||'📄') + ' ' + h(page.name) + '</span>' +
             '<span class="item-edit" onclick="rnOpen(\'page-edit\',' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',\'' + escAttr(page.name) + '\',' + page.id + ',\'' + escAttr(page.emoji||'') + '\')" title="Renommer">✏️</span>' +
             '<span class="item-del"  onclick="pageDel(' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',event)" title="Supprimer">✕</span>';
           pageEl.onclick = e => {
@@ -149,7 +149,7 @@ function renderNotebooks() {
             subEl.className = 'nb-row lvl-sub' + (subOn ? ' on' : '');
             subEl.draggable = true;
             subEl.innerHTML =
-              '<span class="item-lbl" style="padding-left:48px">' + (sub.emoji||'↳') + ' ' + h(sub.name) + '</span>' +
+              '<span class="item-lbl" style="padding-left:48px" title="' + escAttr(sub.name) + '">' + (sub.emoji||'↳') + ' ' + h(sub.name) + '</span>' +
               '<span class="item-edit" onclick="rnOpen(\'sub-edit\',' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',\'' + escAttr(sub.name) + '\',' + sub.id + ',\'' + escAttr(sub.emoji||'') + '\')" title="Renommer">✏️</span>' +
               '<span class="item-del"  onclick="subDel(' + nb.id + ',' + cat.id + ',' + sec.id + ',' + page.id + ',' + sub.id + ',event)" title="Supprimer">✕</span>';
             subEl.onclick = e => {
