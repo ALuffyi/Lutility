@@ -17,7 +17,7 @@
 |---|---|
 | 🎮 **Jeux** | Liste personnelle, touches/manette par jeu (PS/Xbox/Switch/PC), codes, paramètres |
 | 📓 **Carnets** | Éditeur riche : titres, listes, tableaux, images embarquées, sous-pages |
-| 🛠️ **Outils** | Commandes CMD/PS, outils système, infos matériel, mises à jour |
+| 🛠️ **Outils** | Commandes CMD/PS, outils système, infos matériel, mises à jour, raccourcis avec icônes réelles |
 | 💾 **Sauvegarde** | Dossier `Lutility_SAV` portable (USB recommandé) |
 | 🔄 **Mises à jour** | Badge discret + notification si nouvelle version disponible |
 | 🖥️ **Système** | Infos matériel (CPU, GPU, RAM, disques), pilote NVIDIA, températures |
