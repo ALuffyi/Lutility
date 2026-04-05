@@ -1019,13 +1019,41 @@ function _moveImg(img, dir) {
   onEdit();
 }
 
-function _copyImg(img, cut) {
-  // Select the image node then execCommand copy
+async function _copyImg(img, cut) {
+  try {
+    // Récupère le blob de l'image (blob URL ou data URL)
+    const src = img.src;
+    let blob;
+    if (src.startsWith('blob:') || src.startsWith('data:')) {
+      const resp = await fetch(src);
+      blob = await resp.blob();
+    } else if (img.dataset.src) {
+      const b64 = await window.api.fileReadBinary(S.savePath, img.dataset.src);
+      if (b64) {
+        const bytes = atob(b64);
+        const arr = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+        blob = new Blob([arr], { type: 'image/jpeg' });
+      }
+    }
+    if (blob) {
+      // Convertit en PNG pour compatibilité presse-papiers
+      const bmp = await createImageBitmap(blob);
+      const canvas = document.createElement('canvas');
+      canvas.width = bmp.width; canvas.height = bmp.height;
+      canvas.getContext('2d').drawImage(bmp, 0, 0);
+      const pngBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
+      if (cut) { _deleteImg(img); toast('✂️ Image coupée — collez avec Ctrl+V'); }
+      else      { _removeImgBar(); toast('📋 Image copiée — collez avec Ctrl+V'); }
+      return;
+    }
+  } catch(e) { console.warn('_copyImg clipboard API:', e); }
+  // Fallback : sélection DOM
   const range = document.createRange();
   range.selectNode(img);
   const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(range);
+  sel.removeAllRanges(); sel.addRange(range);
   document.execCommand('copy');
   sel.removeAllRanges();
   if (cut) { _deleteImg(img); toast('✂️ Image coupée — collez avec Ctrl+V'); }

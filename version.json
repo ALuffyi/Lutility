@@ -1,5 +1,5 @@
 {
-  "version": "2.12.2",
-  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.12.2.exe",
-  "notes": "Manette découplée de la plateforme (sélecteur ⌨️/PS/Xbox/Switch), boutons colorés avec sticks analogiques, suppression jeux sans freeze, inputs action auto-sizing, DriversCloud dans les outils MàJ, mises à jour regroupées sous infos système, icônes réelles des apps dans les raccourcis."
+  "version": "2.13.0",
+  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.13.0.exe",
+  "notes": "Menu MàJ (patch notes dans l'app), icônes réelles dans les Raccourcis, copie d'image corrigée, changelog simplifié."
 }
