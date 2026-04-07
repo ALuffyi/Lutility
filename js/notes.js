@@ -544,6 +544,7 @@ async function loadNote() {
   if (!title || !body) return;
   title.disabled       = false;
   body.contentEditable = 'true';
+  body.spellcheck      = true;
   title.placeholder    = 'Titre de la note…';
   if (editor) editor.classList.remove('no-page');
 
@@ -1008,8 +1009,6 @@ function _showImgBar(img) {
 
   bar.appendChild(mkBtn('↑ Monter',    false, () => _moveImg(img, -1)));
   bar.appendChild(mkBtn('↓ Descendre', false, () => _moveImg(img,  1)));
-  bar.appendChild(mkBtn('📋 Copier',   false, () => _copyImg(img, false)));
-  bar.appendChild(mkBtn('✂️ Couper',   false, () => _copyImg(img, true)));
   bar.appendChild(mkBtn('✕ Supprimer', true,  () => _deleteImg(img)));
   document.body.appendChild(bar);
   _posImgBar(img);
@@ -1157,6 +1156,7 @@ function _tblCellMenu(e, cell) {
     const cell = e.target.closest('td, th');
     if (cell && cell.closest('table')) { _tblCellMenu(e, cell); return; }
   });
+
 
   // Navigation Tab dans les tableaux
   body.addEventListener('keydown', e => {

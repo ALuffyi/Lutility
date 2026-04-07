@@ -45,7 +45,11 @@ contextBridge.exposeInMainWorld('api', {
   // Mise à jour
   getVersion:        () => ipcRenderer.invoke('get-version'),
   checkUpdate:       () => ipcRenderer.invoke('check-update'),
-  clipboardReadImage: ()         => ipcRenderer.invoke('clipboard-read-image'),
+  clipboardReadImage:  ()        => ipcRenderer.invoke('clipboard-read-image'),
+  clipboardWriteImage: (dataUrl) => ipcRenderer.invoke('clipboard-write-image', dataUrl),
+  exportImageFile: (srcPath)       => ipcRenderer.invoke('export-image-file', srcPath),
+  exportImage:     (dataUrl)       => ipcRenderer.invoke('export-image', dataUrl),
+  exportNotePdf:  (title)          => ipcRenderer.invoke('export-note-pdf', title),
   getFileIcon:       (filePath) => ipcRenderer.invoke('get-file-icon', filePath),
   downloadUpdate:    (url) => ipcRenderer.invoke('download-update', url),
   installUpdate:     (filePath) => ipcRenderer.invoke('install-update', filePath),
@@ -53,8 +57,10 @@ contextBridge.exposeInMainWorld('api', {
 
   // Correcteur orthographique — push depuis main (context-menu natif)
   onSpellInfo:        (cb) => ipcRenderer.on('spell-info', (_e, data) => cb(data)),
-  replaceMisspelling: (w)  => ipcRenderer.invoke('replace-misspelling', w),
-  addToDictionary:    (w)  => ipcRenderer.invoke('add-to-dictionary', w),
+  replaceMisspelling:    (w) => ipcRenderer.invoke('replace-misspelling', w),
+  addToDictionary:       (w) => ipcRenderer.invoke('add-to-dictionary', w),
+  removeFromDictionary:  (w) => ipcRenderer.invoke('remove-from-dictionary', w),
+  listDictionaryWords:   ()  => ipcRenderer.invoke('list-dictionary-words'),
 
   // Comportement fermeture
   setCloseAction: (action) => ipcRenderer.send('set-close-action', action),

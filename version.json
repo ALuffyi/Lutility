@@ -1,5 +1,5 @@
 {
-  "version": "2.14.1",
-  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.14.1.exe",
-  "notes": "Correctifs : lancement scripts (double-clic), bouton Quitter, lien Corsair, tuiles Scripts unifiées avec Raccourcis."
+  "version": "2.14.2",
+  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.14.2.exe",
+  "notes": "Correctifs : correcteur orthographique français, export PDF des notes, reclassement Apps."
 }

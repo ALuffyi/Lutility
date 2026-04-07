@@ -283,10 +283,10 @@ async function loadSysinfo() {
 
 // ══ PROGRAMMES CONSEILLÉS ════════════════════════════
 const PROG_CATS = [
-  { id:'gaming',  label:'🎮 Gaming',        tc:'o' },
-  { id:'comms',   label:'💬 Communication', tc:'b' },
   { id:'nav',     label:'🌐 Navigateurs',   tc:'g' },
   { id:'periph',  label:'🖱️ Périphériques', tc:'p' },
+  { id:'gaming',  label:'🎮 Gaming',        tc:'o' },
+  { id:'comms',   label:'💬 Communication', tc:'b' },
   { id:'capture', label:'🎥 Capture',       tc:'y' },
   { id:'utils',   label:'⚡ Utilitaires',   tc:'b' },
 ];

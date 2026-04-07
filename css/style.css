@@ -640,3 +640,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);display:flex
 .cl-date{font-family:var(--mono);font-size:10px;color:var(--dim2);margin-left:auto}
 .cl-items{margin:0;padding:0 0 0 16px;display:flex;flex-direction:column;gap:4px}
 .cl-items li{font-size:12px;color:var(--dim2);line-height:1.5}
+
+/* ── Export PDF ─────────────────────────────────────────────────────────────── */
+body.pdf-exporting > *:not(#note-print-preview) { display: none !important; }
+body.pdf-exporting #note-print-preview {
+  display: block !important;
+  position: fixed; inset: 0; overflow: auto;
+  background: #fff; color: #111; z-index: 99999;
+}
+#note-print-preview h1  { font-size: 20px; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 20px; }
+#note-print-preview img { max-width: 100%; height: auto; border-radius: 4px; }
+#note-print-preview table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+#note-print-preview td, #note-print-preview th { border: 1px solid #ccc; padding: 6px 10px; }
+#note-print-preview th { background: #f0f0f0; font-weight: 600; }
+#note-print-preview pre, #note-print-preview code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
