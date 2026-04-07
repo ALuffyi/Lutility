@@ -1,5 +1,5 @@
 {
-  "version": "2.13.0",
-  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.13.0.exe",
-  "notes": "Menu MàJ (patch notes dans l'app), icônes réelles dans les Raccourcis, copie d'image corrigée, changelog simplifié."
+  "version": "2.14.0",
+  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.14.0.exe",
+  "notes": "Scripts .bat/.cmd/.ps1 dans Raccourcis, dossier SAV synchronisé avec le profil, sync profil à l'import, contenu d'exemple au premier lancement, catégories colorées."
 }
