@@ -199,13 +199,13 @@ body{flex-direction:column!important}
       </div>
       <div class="topbar-sep"></div>
       <div class="sav-chip" onclick="toggleHomeCustomize()" title="Personnaliser l'interface" id="cust-chip" style="flex-shrink:0">
-        <span>✏️</span>
+        <span>⚙️</span>
         <span>Settings</span>
       </div>
       <div class="topbar-sep"></div>
-      <div class="sav-chip" onclick="document.getElementById('folder-path-lbl').textContent=savPath||'—';openModal('modal-folder')" title="Sauvegarder" style="flex-shrink:0">
+      <div class="sav-chip" onclick="document.getElementById('folder-path-lbl').textContent=savPath||'—';openModal('modal-folder')" title="Sauvegarde" style="flex-shrink:0">
         <div class="led" id="led"></div>
-        <span id="sav-lbl">Sauvegarder</span>
+        <span id="sav-lbl">Sauvegarde</span>
       </div>
       <div class="topbar-sep"></div>
       <button id="update-btn" class="update-btn gone" onclick="openUpdatePopup(this)" title="Mise à jour disponible" style="flex-shrink:0"></button>
