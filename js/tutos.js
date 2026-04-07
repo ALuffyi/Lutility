@@ -119,7 +119,7 @@ function openTuto(id) {
             <div class="tuto-step-body">
               <div class="tuto-step-text">${_fmtText(s.text)}</div>
               ${s.note ? `<div class="tuto-step-note">${_fmtText(s.note)}</div>` : ''}
-              ${s.image ? `<img class="tuto-step-img" src="${escHtml(s.image)}" loading="lazy" alt="">` : ''}
+              ${s.image ? `<img class="tuto-step-img" src="tutorials-img/${escHtml(s.image)}" loading="lazy" alt="">` : ''}
             </div>
           </div>
         `).join('')}

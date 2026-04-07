@@ -343,5 +343,5 @@ function san(s) { return s.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').substring(0, 6
 function setLed(warn) {
   const l = document.getElementById('led'), lb = document.getElementById('sav-lbl');
   if (l)  l.classList.toggle('warn', warn);
-  if (lb) lb.textContent = warn ? 'Modifications…' : 'Settings';
+  if (lb) lb.textContent = warn ? 'Modifications…' : 'Sauvegarde';
 }
