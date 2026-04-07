@@ -1,6 +1,19 @@
 // ══ CHANGELOG ════════════════════════════════════════════
 const CHANGELOG = [
   {
+    version: '2.16.0',
+    date:    '2026-04-07',
+    type:    'feat',
+    changes: [
+      'Personnalisation de l\'interface : 7 thèmes de couleur accent, 3 tailles de texte, 3 niveaux de densité — via ⚙️ Settings',
+      'Tutoriel #17 — Activer le mode développeur Discord (avec image)',
+      'Topbar : boutons renommés ⚙️ Settings et 💾 Sauvegarde',
+      'Correction : home vide au démarrage',
+      'Correction : tutoriels invisibles en production depuis la v2.15.0',
+      'Correction : label Sauvegarde écrasé lors de l\'autosave',
+    ]
+  },
+  {
     version: '2.15.0',
     date:    '2026-04-07',
     type:    'feat',
