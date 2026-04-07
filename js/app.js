@@ -275,6 +275,7 @@ function nav(id){
   document.getElementById('p-'+id).classList.add('on');
   const b=document.querySelector(`.nav[data-p="${id}"]`);
   if(b)b.classList.add('on');
+  if(id==='tutos' && typeof loadTutos === 'function' && !_tutos.length) loadTutos();
 }
 function openModal(id){
   document.getElementById(id).classList.add('on');

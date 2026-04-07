@@ -592,6 +592,35 @@ ipcMain.handle('exec-cmd', (_e, cmd, type) => {
   });
 });
 
+// ── Tutoriels : remote-first + cache AppData ──────────────────────────────
+const TUTOS_REMOTE = 'https://raw.githubusercontent.com/ALuffyi/Lutility/main/tutorials.json';
+const TUTOS_CACHE  = path.join(USER_DATA, 'tutorials-cache.json');
+const TUTOS_LOCAL  = path.join(__dirname, 'tutorials.json');
+
+ipcMain.handle('read-tutorials', async () => {
+  // En dev : fichier local directement (les modifs sont visibles sans push)
+  if (!app.isPackaged) {
+    try { return JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {}
+    return [];
+  }
+  // En prod : 1. Fetch depuis GitHub (mise à jour sans rebuild)
+  try {
+    const res = await net.fetch(TUTOS_REMOTE, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        fs.writeFileSync(TUTOS_CACHE, JSON.stringify(data));
+        return data;
+      }
+    }
+  } catch { /* offline ou erreur réseau → fallback */ }
+  // 2. Cache AppData (dernière version connue)
+  try { return JSON.parse(fs.readFileSync(TUTOS_CACHE, 'utf8')); } catch {}
+  // 3. Fichier bundlé (fallback absolu)
+  try { return JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {}
+  return [];
+});
+
 ipcMain.handle('exec-admin', (_e, cmd, type) => {
   return new Promise(resolve => {
     let wrapped;

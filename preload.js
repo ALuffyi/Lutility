@@ -64,4 +64,7 @@ contextBridge.exposeInMainWorld('api', {
 
   // Comportement fermeture
   setCloseAction: (action) => ipcRenderer.send('set-close-action', action),
+
+  // Tutoriels
+  readTutorials: () => ipcRenderer.invoke('read-tutorials'),
 });

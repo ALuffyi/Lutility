@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com">
 <title>LUTILITY</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -229,6 +229,7 @@ body{flex-direction:column!important}
       <button class="nav" id="nav-programmes"  data-p="programmes"  onclick="nav('programmes')">  <span class="ico">📦</span><span class="lbl">Apps</span></button>
       <button class="nav" id="nav-tools"       data-p="tools"       onclick="nav('tools')">       <span class="ico">⚙️</span><span class="lbl">Outils</span></button>
       <div class="navsep"></div>
+      <button class="nav" id="nav-tutos"       data-p="tutos"       onclick="nav('tutos')">       <span class="ico">📖</span><span class="lbl">Tutos</span></button>
       <button class="nav" id="nav-maj"         data-p="maj"         onclick="nav('maj');loadChangelog()"><span class="ico">📋</span><span class="lbl">MàJ</span></button>
     </div>
 
@@ -434,6 +435,38 @@ body{flex-direction:column!important}
           <div id="updates-grid"></div>
           <!-- Outils générés par renderTools() -->
           <div id="tools-grid"></div>
+        </div>
+      </div>
+      <!-- TUTORIELS -->
+      <div class="page" id="p-tutos">
+        <div class="ph">
+          <div class="ph-t" style="--pc:var(--purple)">📖 Tutoriels</div>
+        </div>
+        <div class="tutos-layout">
+          <!-- Colonne gauche : filtres + liste -->
+          <div class="tutos-left">
+            <div class="tutos-search-wrap">
+              <input class="tutos-search" id="tutos-search" type="text" placeholder="🔍 Rechercher un tutoriel…" oninput="filterTutos()">
+            </div>
+            <div class="tutos-cats" id="tutos-cats">
+              <button class="tuto-cat-btn on" data-cat="all"       onclick="setTutoCat('all')">Tous <span id="tc-all"></span></button>
+              <button class="tuto-cat-btn"    data-cat="windows"   onclick="setTutoCat('windows')">🪟 Windows <span id="tc-windows"></span></button>
+              <button class="tuto-cat-btn"    data-cat="gaming"    onclick="setTutoCat('gaming')">🎮 Gaming <span id="tc-gaming"></span></button>
+              <button class="tuto-cat-btn"    data-cat="programme" onclick="setTutoCat('programme')">📦 Programme <span id="tc-programme"></span></button>
+              <button class="tuto-cat-btn"    data-cat="autres"    onclick="setTutoCat('autres')">📂 Autres <span id="tc-autres"></span></button>
+            </div>
+            <div class="tutos-games" id="tutos-games"></div>
+            <div class="tutos-list" id="tutos-list">
+              <div class="tutos-empty">Chargement…</div>
+            </div>
+          </div>
+          <!-- Panneau droit : détail -->
+          <div class="tutos-panel" id="tutos-panel">
+            <div class="tutos-panel-empty">
+              <span class="tutos-panel-ico">📖</span>
+              <div>Sélectionnez un tutoriel</div>
+            </div>
+          </div>
         </div>
       </div>
       <!-- MÀJ / PATCH NOTES -->
@@ -661,6 +694,7 @@ body{flex-direction:column!important}
 <script src="js/notes.js"></script>
 <script src="js/tools.js"></script>
 <script src="js/changelog.js"></script>
+<script src="js/tutos.js"></script>
 <div id="note-print-preview" style="display:none;padding:40px;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#111;max-width:820px;margin:0 auto;background:#fff"></div>
 </body>
 </html>

@@ -187,7 +187,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);display:flex
 .nav.on{border-color:var(--nc,var(--cyan));background:color-mix(in srgb,var(--nc,var(--cyan)) 10%,transparent)}
 .nav.on .lbl{color:var(--nc,var(--cyan));opacity:1}.nav.on .ico{filter:drop-shadow(0 0 6px var(--nc,var(--cyan)));opacity:1}
 .nav[data-p=home]{--nc:var(--cyan)}
-.nav[data-p=jeux]{--nc:var(--orange)}.nav[data-p=notes]{--nc:var(--cyan)}.nav[data-p=shortcuts]{--nc:var(--yellow)}.nav[data-p=scripts]{--nc:var(--purple)}.nav[data-p=programmes]{--nc:#60a5fa}.nav[data-p=tools]{--nc:var(--green)}
+.nav[data-p=jeux]{--nc:var(--orange)}.nav[data-p=notes]{--nc:var(--cyan)}.nav[data-p=tutos]{--nc:var(--purple)}.nav[data-p=shortcuts]{--nc:var(--yellow)}.nav[data-p=scripts]{--nc:var(--purple)}.nav[data-p=programmes]{--nc:#60a5fa}.nav[data-p=tools]{--nc:var(--green)}
 .navsep{width:30px;height:1px;background:var(--bord);margin:4px 0;flex-shrink:0}
 .content{flex:1;overflow:hidden;position:relative}
 .page{display:none;position:absolute;inset:0;flex-direction:column;animation:fi .2s ease}
@@ -654,3 +654,60 @@ body.pdf-exporting #note-print-preview {
 #note-print-preview td, #note-print-preview th { border: 1px solid #ccc; padding: 6px 10px; }
 #note-print-preview th { background: #f0f0f0; font-weight: 600; }
 #note-print-preview pre, #note-print-preview code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+
+/* ── Tutoriels ─────────────────────────────────────────────────────────────── */
+.tutos-layout{display:flex;flex:1;min-height:0;gap:0;overflow:hidden}
+.tutos-left{width:320px;min-width:260px;display:flex;flex-direction:column;border-right:1px solid var(--bord);overflow:hidden}
+.tutos-search-wrap{padding:14px 14px 8px}
+.tutos-search{width:100%;box-sizing:border-box;background:var(--surf);border:1px solid var(--bord);border-radius:7px;padding:7px 11px;color:var(--br);font-size:12px;outline:none}
+.tutos-search:focus{border-color:var(--purple)}
+.tutos-cats{display:flex;flex-direction:column;gap:3px;padding:0 10px 8px}
+.tuto-cat-btn{background:none;border:none;color:var(--dim2);text-align:left;padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s,color .15s}
+.tuto-cat-btn:hover{background:var(--surf);color:var(--br)}
+.tuto-cat-btn.on{background:var(--surf2);color:var(--purple);font-weight:600}
+.tuto-cat-btn span{font-size:10px;color:var(--dim2);background:var(--surf2);padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.tuto-cat-btn.on span{background:rgba(168,85,247,.15);color:var(--purple)}
+/* Filtre jeux (Gaming) */
+.tutos-games{display:flex;flex-wrap:wrap;gap:4px;padding:0 10px 8px}
+.tuto-game-btn{background:var(--surf);border:1px solid var(--bord);color:var(--dim2);padding:3px 10px;border-radius:12px;font-size:11px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.tuto-game-btn:hover{background:var(--surf2);color:var(--br)}
+.tuto-game-btn.on{background:rgba(251,191,36,.12);color:#fbbf24;border-color:rgba(251,191,36,.3);font-weight:600}
+/* Tag jeu sur les cartes */
+.tuto-game-tag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;background:rgba(251,191,36,.12);color:#fbbf24}
+.tutos-list{flex:1;overflow-y:auto;padding:4px 10px 12px}
+.tutos-empty{color:var(--dim2);font-size:12px;text-align:center;padding:24px 0}
+.tuto-card{display:flex;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:4px;transition:background .15s,border-color .15s}
+.tuto-card:hover{background:var(--surf)}
+.tuto-card.on{background:var(--surf2);border-color:var(--purple)}
+.tuto-card-ico{font-size:20px;flex-shrink:0;padding-top:1px}
+.tuto-card-body{min-width:0;flex:1}
+.tuto-card-title{font-size:12px;font-weight:600;color:var(--br);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.tuto-card-desc{font-size:11px;color:var(--dim2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:5px}
+.tuto-card-meta{display:flex;align-items:center;gap:6px}
+.tuto-cat-tag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500}
+.tuto-cat-windows{background:rgba(59,130,246,.15);color:#60a5fa}
+.tuto-cat-gaming{background:rgba(234,179,8,.15);color:#fbbf24}
+.tuto-cat-programme{background:rgba(34,197,94,.15);color:#4ade80}
+.tuto-cat-autres{background:rgba(168,85,247,.15);color:#c084fc}
+.tuto-steps-count{font-size:10px;color:var(--dim2)}
+.tuto-date{font-size:10px;color:var(--dim2);margin-left:auto;white-space:nowrap}
+.tuto-date-panel{font-size:11px;opacity:.6}
+/* Panneau droit */
+.tutos-panel{flex:1;overflow-y:auto;padding:24px 28px}
+.tutos-panel-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--dim2);font-size:13px}
+.tutos-panel-ico{font-size:48px;opacity:.3}
+.tutos-panel-content{}
+.tutos-panel-hdr{margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--bord)}
+.tutos-panel-title{font-size:18px;font-weight:700;color:var(--br);margin:8px 0 6px;font-family:var(--head);letter-spacing:.5px}
+.tutos-panel-desc{font-size:12px;color:var(--dim2);line-height:1.5;margin:0}
+.tutos-steps{display:flex;flex-direction:column;gap:16px}
+.tuto-step{display:flex;gap:14px;align-items:flex-start}
+.tuto-step-num{width:26px;height:26px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.tuto-step-body{flex:1;min-width:0}
+.tuto-step-text{font-size:13px;color:var(--br);line-height:1.6;margin-bottom:6px}
+.tuto-step-text strong{color:var(--br);font-weight:700}
+.tuto-step-note{font-size:11px;color:var(--dim2);background:var(--surf);border-left:2px solid var(--purple);padding:6px 10px;border-radius:0 5px 5px 0;margin:4px 0 8px;line-height:1.5}
+.tuto-step-note strong{color:var(--br);font-weight:600}
+.tuto-step-img{max-width:100%;border-radius:6px;border:1px solid var(--bord);margin-top:6px;display:block}
+/* Tags panneau */
+.tutos-panel-tags{display:flex;gap:6px;margin-bottom:8px;align-items:center}
