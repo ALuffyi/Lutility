@@ -578,7 +578,6 @@ ipcMain.handle('read-tutorials', async () => {
   try { cached = JSON.parse(fs.readFileSync(TUTOS_CACHE, 'utf8')); } catch {}
 
   if (cached) {
-    // Retourne le cache instantanément, met à jour en silence pour la prochaine fois
     net.fetch(TUTOS_REMOTE, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (Array.isArray(data)) fs.writeFileSync(TUTOS_CACHE, JSON.stringify(data)); })
@@ -586,7 +585,7 @@ ipcMain.handle('read-tutorials', async () => {
     return cached;
   }
 
-  // Pas de cache (première installation) : fetch bloquant
+  // Première installation : fetch bloquant
   try {
     const res = await net.fetch(TUTOS_REMOTE, { cache: 'no-store' });
     if (res.ok) {
@@ -594,8 +593,7 @@ ipcMain.handle('read-tutorials', async () => {
       if (Array.isArray(data)) { fs.writeFileSync(TUTOS_CACHE, JSON.stringify(data)); return data; }
     }
   } catch {}
-  // Fallback bundlé
-  try { return JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {}
+  try { return JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {} // fallback bundlé
   return [];
 });
 
@@ -603,14 +601,13 @@ ipcMain.handle('exec-admin', (_e, cmd, type) => {
   return new Promise(resolve => {
     let wrapped;
     if (type === 'PS') {
-      // Encode la commande en Base64 pour éviter tout problème d'échappement
       const innerScript = '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n' + cmd;
       const encoded = Buffer.from(innerScript, 'utf16le').toString('base64');
       const launchPs = `Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -EncodedCommand ${encoded}' -Wait`;
       const outerEncoded = Buffer.from(launchPs, 'utf16le').toString('base64');
       wrapped = `powershell -NoProfile -ExecutionPolicy Bypass -EncodedCommand ${outerEncoded}`;
     } else {
-      // CMD admin via Start-Process
+      // CMD admin via Start-Process (UAC)
       const cmdLine = cmd.replace(/\n/g, ' & ').replace(/"/g, '\\"');
       const launchCmd = `Start-Process cmd -Verb RunAs -ArgumentList '/c chcp 65001 > nul & ${cmdLine}' -Wait`;
       const encoded = Buffer.from(launchCmd, 'utf16le').toString('base64');
