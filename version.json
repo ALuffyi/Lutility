@@ -1,5 +1,5 @@
 {
-  "version": "2.14.0",
-  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.14.0.exe",
-  "notes": "Scripts .bat/.cmd/.ps1 dans Raccourcis, dossier SAV synchronisé avec le profil, sync profil à l'import, contenu d'exemple au premier lancement, catégories colorées."
+  "version": "2.14.1",
+  "url": "https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.14.1.exe",
+  "notes": "Correctifs : lancement scripts (double-clic), bouton Quitter, lien Corsair, tuiles Scripts unifiées avec Raccourcis."
 }

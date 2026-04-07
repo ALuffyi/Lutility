@@ -331,13 +331,16 @@ const PROGRAMMES = [
   // ── PÉRIPHÉRIQUES ────────────────────────────────────
   { cat:'periph', ico:'⌨️', name:'iCUE (Corsair)',
     desc:'RGB et configuration pour claviers, souris, headsets et RAM Corsair.',
-    url:'https://www.corsair.com/en-us/icue', fav:'corsair.com' },
+    url:'https://www.corsair.com/us/en/s/downloads', fav:'corsair.com' },
   { cat:'periph', ico:'🐍', name:'Razer Synapse',
     desc:'Configuration RGB et macros pour tous les périphériques Razer.',
     url:'https://www.razer.com/synapse-3', fav:'razer.com' },
   { cat:'periph', ico:'🎧', name:'SteelSeries GG',
     desc:'Gestion des périphériques SteelSeries — RGB, équaliseur, paramètres.',
     url:'https://steelseries.com/gg', fav:'steelseries.com' },
+  { cat:'periph', ico:'⌨️', name:'Wootility (Wooting)',
+    desc:'Configuration et firmware pour claviers analogiques Wooting.',
+    url:'https://wooting.io/wootility', fav:'wooting.io' },
   // ── CAPTURE ──────────────────────────────────────────
   { cat:'capture', ico:'🔴', name:'OBS Studio',
     desc:'Logiciel de streaming et d\'enregistrement open-source — le standard des créateurs de contenu.',
@@ -624,68 +627,54 @@ async function execCustomTool(id) {
   const btn = document.getElementById('ct-exec-' + id);
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   try {
-    // Nouveau format : path → ouvre le fichier dans un terminal visible
-    if (ct.path) {
-      const ext  = ct.path.split('.').pop().toLowerCase();
-      const type = ext === 'ps1' ? 'PS' : 'CMD';
-      const cmd  = type === 'PS'
-        ? `powershell -NoExit -ExecutionPolicy Bypass -File "${ct.path}"`
-        : `"${ct.path}"`;
-      await window.api.execCmd(cmd, type);
-      toast('▶ ' + ct.name);
-    } else if (ct.cmd) {
-      // Rétrocompat : ancienne commande inline
-      const result = await window.api.execCmd(ct.cmd, ct.type || 'CMD');
-      if (!result.ok) toast('❌ Erreur', 'warn');
-      else toast('✅ ' + ct.name);
-    }
+    const filePath = ct.path || ct.cmd;
+    if (!filePath) { toast('Aucun fichier configuré', 'warn'); return; }
+    const ok = await window.api.launchApp(filePath);
+    if (ok) toast('▶ ' + ct.name);
+    else    toast('Impossible de lancer : ' + ct.name, 'warn');
   } catch(e) {
     toast('❌ ' + e.message, 'warn');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '▶ Lancer'; }
+    if (btn) { btn.disabled = false; btn.textContent = '▶'; }
   }
 }
 
+const _ctIconCache = new Map();
+
 function renderCustomTools() {
-  const grid  = document.getElementById('cat-body-custom');
+  const wrap  = document.getElementById('cat-body-custom');
   const badge = document.getElementById('ct-count');
   if (badge) badge.textContent = (S.customTools || []).length;
-  if (!grid) return;
+  if (!wrap) return;
 
-  grid.innerHTML = '';
   if (!S.customTools || !S.customTools.length) {
-    grid.innerHTML = '<div class="si-loading ct-empty-msg">Aucun script — cliquez sur <strong>+ Script</strong>.</div>';
+    wrap.innerHTML = '<div class="sc-empty" style="width:100%">Aucun script — cliquez sur <strong>+ Script</strong>.</div>';
     return;
   }
 
-  S.customTools.forEach(ct => {
-    const filePath  = ct.path || ct.cmd || '';
-    const fileLabel = ct.path ? ct.path.split(/[/\\]/).pop() : (ct.cmd ? ct.cmd.split('\n')[0] : '—');
-    const extMatch  = ct.path && ct.path.match(/\.(bat|cmd|ps1)$/i);
-    const typeLabel = extMatch ? extMatch[1].toUpperCase() : (ct.type || '');
-    const isPS      = typeLabel === 'PS1' || typeLabel === 'PS';
-    const card = document.createElement('div');
-    card.className = 'tcard';
-    card.innerHTML = `
-      <div class="tcard-hdr">
-        <div class="tcard-ico">${escHtml(ct.ico || '⚙️')}</div>
-        <div class="tcard-name">${escHtml(ct.name)}</div>
-      </div>
-      <div class="tcard-body">
-        <div class="cmd-block">
-          <div class="cmd-hdr">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--dim2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${escHtml(filePath)}">${escHtml(fileLabel)}</span>
-            ${typeLabel ? `<span class="cmd-type ${isPS?'ps':''}">${escHtml(typeLabel)}</span>` : ''}
-          </div>
-        </div>
-        <div style="display:flex;gap:6px;margin-top:4px">
-          <button class="btn sm orange" style="flex:1;justify-content:center" id="ct-exec-${ct.id}" onclick="execCustomTool(${ct.id})">▶ Lancer</button>
-          <button class="btn sm" onclick="ctEdit(${ct.id})" title="Modifier" style="flex-shrink:0">✏️</button>
-          <button class="btn sm" onclick="ctDuplicate(${ct.id})" title="Dupliquer" style="flex-shrink:0">📋</button>
-          <button class="btn sm" onclick="ctDelete(${ct.id})" title="Supprimer" style="flex-shrink:0;color:var(--red)">🗑️</button>
-        </div>
-      </div>`;
-    grid.appendChild(card);
+  wrap.innerHTML = (S.customTools || []).map(ct => {
+    const cached  = _ctIconCache.get(ct.path);
+    const icoHtml = cached
+      ? `<img src="${cached}" class="sc-file-ico" draggable="false">`
+      : `<span class="sc-ico-fallback">${escHtml(ct.ico || '⚙️')}</span>`;
+    return `
+    <div class="sc-card">
+      <div class="sc-ico" id="ct-ico-${ct.id}">${icoHtml}</div>
+      <div class="sc-name" title="${escHtml(ct.path || '')}">${escHtml(ct.name)}</div>
+      <button class="btn sm prim sc-btn" id="ct-exec-${ct.id}" onclick="execCustomTool(${ct.id})" title="Lancer">▶</button>
+      <button class="btn sm sc-btn" onclick="ctEdit(${ct.id})" title="Modifier">✏️</button>
+      <button class="btn sm sc-btn" onclick="ctDuplicate(${ct.id})" title="Dupliquer">📋</button>
+      <button class="btn sm sc-btn sc-del" onclick="ctDelete(${ct.id})" title="Supprimer">✕</button>
+    </div>`;
+  }).join('');
+
+  (S.customTools || []).forEach(async ct => {
+    if (!ct.path || _ctIconCache.has(ct.path)) return;
+    const dataUrl = await window.api.getFileIcon(ct.path);
+    if (!dataUrl) return;
+    _ctIconCache.set(ct.path, dataUrl);
+    const el = document.getElementById('ct-ico-' + ct.id);
+    if (el) el.innerHTML = `<img src="${dataUrl}" class="sc-file-ico" draggable="false">`;
   });
 }
 

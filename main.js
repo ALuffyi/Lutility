@@ -140,7 +140,7 @@ if (!gotLock) {
   app.whenReady().then(() => { createWindow(); createTray(); });
 }
 
-app.on('window-all-closed', () => { /* Ne pas quitter — on garde la tray */ });
+app.on('window-all-closed', () => { if (app.isQuiting || _closeAction === 'quit') app.quit(); });
 app.on('before-quit', () => { app.isQuiting = true; });
 
 // ── Window controls ───────────────────────────────────
@@ -371,10 +371,20 @@ ipcMain.handle('open-url', (_e, url) => {
 });
 
 // ── Launch external app ───────────────────────────────
-ipcMain.handle('launch-app', (_e, exePath) => {
+ipcMain.handle('launch-app', async (_e, exePath) => {
   try {
-    const { spawn } = require('child_process');
-    spawn(exePath, [], { shell: true, detached: true, stdio: 'ignore' }).unref();
+    const ext = path.extname(exePath).toLowerCase();
+    if (ext === '.ps1') {
+      // PowerShell : fenêtre visible, reste ouverte
+      const { spawn } = require('child_process');
+      spawn('powershell.exe', ['-NoExit', '-ExecutionPolicy', 'Bypass', '-File', exePath], {
+        detached: true, stdio: 'ignore', windowsHide: false,
+      }).unref();
+    } else {
+      // .bat / .cmd / .exe / .lnk → ShellExecute (identique à un double-clic)
+      const err = await require('electron').shell.openPath(exePath);
+      if (err) throw new Error(err);
+    }
     return true;
   } catch(e) { return false; }
 });
