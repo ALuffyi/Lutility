@@ -16,13 +16,8 @@ async function initLaunchScreen() {
       await _showReturnCounts();
       return;
     }
-    // Dossier introuvable → wizard étape 1 pour re-confirmer le profil
-    showWizard();
-    document.getElementById('s-name').value = profile.name || '';
-    if (profile.emoji) {
-      selEmoji = profile.emoji;
-      buildEmojiGrid('setup-emoji-grid', P_EMOJIS, selEmoji);
-    }
+    // Dossier introuvable → écran rapide "Localiser" (sans refaire tout le wizard)
+    showLostCard();
     return;
   }
   showWizard();
@@ -65,6 +60,35 @@ async function _showReturnCounts() {
   } catch {
     setStatus('data', 'warn', 'Impossible de lire les données');
   }
+}
+
+// ── DOSSIER PERDU ─────────────────────────────────────────
+function showLostCard() {
+  document.getElementById('card-setup').style.display  = 'none';
+  document.getElementById('card-return').style.display = 'none';
+  document.getElementById('card-lost').style.display   = 'flex';
+  document.getElementById('lost-emoji').textContent = profile.emoji || '🎮';
+  document.getElementById('lost-name').textContent  = profile.name  || 'Joueur';
+}
+
+// Localise un Lutility_SAV existant à son nouvel emplacement (sans copie)
+async function quickLocate() {
+  const newPath = await window.api.importSavInplace();
+  if (!newPath) return;
+  savPath = newPath;
+  profile.folderHint = newPath;
+  await window.api.configSave({ savPath, profile });
+  startApp();
+}
+
+// Choisit un nouveau dossier parent et y déplace les données courantes (si dispo)
+async function quickNewFolder() {
+  const chosen = await window.api.chooseFolder();
+  if (!chosen) return;
+  savPath = chosen;
+  profile.folderHint = chosen;
+  await window.api.configSave({ savPath, profile });
+  startApp();
 }
 
 // ── WIZARD ────────────────────────────────────────────────
@@ -122,17 +146,25 @@ function fillWizSummary() {
 }
 
 async function pickFolder(isChange) {
+  await new Promise(r => setTimeout(r, 80));
+  const oldPath = savPath; // mémorise avant de changer
   const chosen = await window.api.chooseFolder();
   if (!chosen) return;
+
+  if (isChange && oldPath && oldPath !== chosen) {
+    // Copie intégrale (JSON + images + tout) vers le nouveau dossier
+    toast('📁 Copie des données…');
+    await window.api.copyFolder(oldPath, chosen);
+  }
+
   savPath = chosen;
   profile.folderHint = chosen;
   await window.api.configSave({ savPath, profile });
 
   if (isChange) {
     closeModal('modal-folder');
-    await saveAll();
     await loadAll();
-    toast('📁 Dossier mis à jour !', 'info');
+    toast('📁 Dossier mis à jour et données copiées !');
     return;
   }
   // Wizard step 2
@@ -193,6 +225,9 @@ function resetSetup() {
   S.trash = []; S.shortcuts = []; S.customTools = [];
   S.activeGame = null;
   S.activeNB = S.activeCat = S.activeSec = S.activePage = S.activeSub = null;
+  // Cache la carte "dossier perdu" si elle était visible
+  const lostCard = document.getElementById('card-lost');
+  if (lostCard) lostCard.style.display = 'none';
   showWizard();
 }
 
@@ -204,39 +239,68 @@ async function exportSav() {
   else    toast('Export annulé ou échoué', 'warn');
 }
 
+// Affiche le modal de choix d'import et retourne 'copy', 'inplace' ou null (annulé)
+let _importChoiceResolve = null;
+let _importChoiceCleanup = null;
+
+function showImportChoice() {
+  return new Promise(resolve => {
+    _importChoiceResolve = resolve;
+    const el = document.getElementById('modal-import-choice');
+
+    function onBackdrop(e) { if (e.target === el) importChoiceSelect(null); }
+    function onEsc(e)      { if (e.key === 'Escape' && _importChoiceResolve) importChoiceSelect(null); }
+
+    _importChoiceCleanup = () => {
+      el.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onEsc);
+    };
+    el.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onEsc);
+    openModal('modal-import-choice');
+  });
+}
+function importChoiceSelect(choice) {
+  closeModal('modal-import-choice');
+  if (_importChoiceCleanup) { _importChoiceCleanup(); _importChoiceCleanup = null; }
+  if (_importChoiceResolve) { _importChoiceResolve(choice); _importChoiceResolve = null; }
+}
+
 async function importSav() {
   if (!savPath) { toast('Aucun dossier configuré', 'warn'); return; }
-  const ok = await window.api.importSav(savPath);
-  if (!ok) { toast('Import annulé ou fichier invalide', 'warn'); return; }
+  closeModal('modal-folder');
+  await new Promise(r => setTimeout(r, 80));
+  const newPath = await window.api.importSavInplace();
+  if (!newPath) { toast('Import annulé', 'warn'); return; }
+  savPath = newPath;
+  profile.folderHint = newPath;
+  // Restaure le profil stocké dans la sauvegarde (nom + emoji)
+  const savedProfile = await rJSON('profile.json');
+  if (savedProfile?.name) {
+    profile.name  = savedProfile.name;
+    profile.emoji = savedProfile.emoji || profile.emoji;
+    document.getElementById('t-name').textContent  = profile.name;
+    document.getElementById('t-emoji').textContent = profile.emoji;
+  }
+  await window.api.configSave({ savPath, profile });
   await loadAll();
-  renderTools(); // re-render raccourcis + commandes importés
-  toast('✅ Données importées !');
+  if (typeof renderTools === 'function') renderTools();
+  toast('✅ Dossier chargé — profil : ' + profile.name);
 }
 
 // ── Import depuis l'écran de lancement ───────────────────
+// Simplifié : pointe directement vers un dossier Lutility_SAV existant (pas de copie)
 async function importAndStart() {
-  // Si un dossier est déjà configuré, on importe dedans sans redemander de destination
-  if (savPath) {
-    const ok = await window.api.importSav(savPath);
-    if (!ok) { toast('Import annulé ou fichier invalide', 'warn'); return; }
-    const name = document.getElementById('s-name')?.value?.trim() || profile.name || 'Joueur';
-    profile.name  = name;
-    profile.emoji = selEmoji || profile.emoji || '🎮';
-    await window.api.configSave({ savPath, profile });
-    startApp();
-    return;
-  }
-  // Premier lancement sans dossier configuré → wizard complet (source + destination)
-  const destPath = await window.api.importSavWizard();
-  if (!destPath) { toast('Import annulé ou fichier invalide', 'warn'); return; }
+  profile.name  = document.getElementById('s-name')?.value?.trim() || profile.name || 'Joueur';
+  profile.emoji = selEmoji || profile.emoji || '🎮';
 
-  savPath = destPath;
-  profile.folderHint = destPath;
+  // Délai court pour que le renderer finisse de rafraîchir avant le dialog natif
+  await new Promise(r => setTimeout(r, 80));
 
-  const name = document.getElementById('s-name')?.value?.trim() || 'Joueur';
-  profile.name  = name;
-  profile.emoji = selEmoji || '🎮';
-
+  const newPath = await window.api.importSavInplace();
+  if (!newPath) { toast('Import annulé', 'warn'); return; }
+  savPath = newPath;
+  profile.folderHint = newPath;
   await window.api.configSave({ savPath, profile });
   startApp();
 }
@@ -262,6 +326,7 @@ async function startApp() {
   // On n'appelle que renderTools() + renderProgrammes() qui ne sont pas dans loadAll()
   renderTools();
   if (typeof renderProgrammes === 'function') renderProgrammes();
+  if (typeof renderHome       === 'function') renderHome();
 
   // Guard : évite d'empiler plusieurs intervals si startApp() est appelé plusieurs fois
   if (!_autoSaveTimer)    _autoSaveTimer    = setInterval(autoSave, 30000);

@@ -148,6 +148,39 @@ async function loadAll() {
   const ctFile = await rJSON('custom-tools.json');
   S.customTools = Array.isArray(ctFile) ? ctFile : [];
 
+  // ── Contenu d'exemple au premier lancement ────────────────
+  let _exampleSaved = false;
+  if (!S.games.length) {
+    S.games = [{ id:1001, name:'The Witcher 3', plat:'PC', ico:'🗡️', ctrlType:'KB',
+      binds:[{a:'Avancer',k:'W'},{a:'Reculer',k:'S'},{a:'Gauche',k:'A'},{a:'Droite',k:'D'},
+             {a:'Sauter',k:'ESPACE'},{a:'Attaque',k:'CG'},{a:'Signe',k:'Q'},{a:'Esquive',k:'ALT'}],
+      sets:[{n:'Résolution',v:'1920×1080'},{n:'Qualité',v:'Ultra'},{n:'V-Sync',v:'OFF'},{n:'FPS Max',v:'60'}],
+      codes:[] }];
+    _exampleSaved = true;
+  }
+  if (!S.notebooks.length) {
+    const nbId=2001, catId=2002, secId=2003, pageId=2004, subId=2005;
+    S.notebooks = [{ id:nbId, name:'📖 Mes Notes', cats:[
+      { id:catId, name:'🎮 Gaming', secs:[
+        { id:secId, name:'The Witcher 3', pages:[
+          { id:pageId, name:'Build & Conseils', subpages:[
+            { id:subId, name:'Sous-page exemple' }
+          ]}
+        ]}
+      ]}
+    ]}];
+    S.notes = {
+      [pageId]: '<p><strong>Build recommandé</strong> — Signe + Alchimie</p><ul><li>Priorité aux signes Igni et Quen</li><li>Équipement École du Loup</li></ul>',
+      [subId]:  '<p>Contenu de la sous-page exemple. Modifiez-moi !</p>',
+    };
+    _exampleSaved = true;
+  }
+  if (_exampleSaved) {
+    await wJSON('games.json',     S.games);
+    await wJSON('notebooks.json', S.notebooks);
+    await wJSON('notes.json',     S.notes);
+  }
+
   // ── Session : validation stricte des IDs pour éviter les états orphelins ──
   const ses = await rJSON('session.json') || {};
 
@@ -185,6 +218,12 @@ async function loadAll() {
     }
   }
 
+  // Replie tous les carnets au chargement (protection des titres de notes sensibles)
+  // Exception : premier lancement (contenu d'exemple) → laisse ouvert pour la prévisualisation
+  if (typeof _collapsed !== 'undefined' && !_exampleSaved) {
+    S.notebooks.forEach(nb => _collapsed.add('nb_' + nb.id));
+  }
+
   renderGames(); renderNotebooks();
   if (typeof renderShortcuts   === 'function') renderShortcuts();
   if (typeof renderCustomTools === 'function') renderCustomTools();
@@ -205,6 +244,10 @@ async function saveAll() {
     await wJSON('trash.json',     S.trash);
     await wJSON('shortcuts.json',    S.shortcuts);
     await wJSON('custom-tools.json', S.customTools);
+    // Stocke le profil dans le dossier SAV pour restore automatique à l'import
+    if (typeof profile !== 'undefined' && profile?.name) {
+      await wJSON('profile.json', { name: profile.name, emoji: profile.emoji });
+    }
     await wJSON('session.json', {
       activeGame: S.activeGame, activeNB:   S.activeNB,
       activeCat:  S.activeCat,  activeSec:  S.activeSec,
@@ -246,7 +289,9 @@ function startFolderHeartbeat() {
       document.getElementById('app').style.display = 'none';
       document.getElementById('launch').classList.remove('gone');
       _savDirLost = false; // reset pour permettre un futur heartbeat propre
-      if (typeof initLaunchScreen === 'function') initLaunchScreen();
+      // Si le profil existe, affiche l'écran rapide "Localiser" plutôt que le wizard complet
+      if (profile && profile.name && typeof showLostCard === 'function') showLostCard();
+      else if (typeof initLaunchScreen === 'function') initLaunchScreen();
     } else if (ok && _savDirLost) {
       _savDirLost = false;
       hideSavBanner();
