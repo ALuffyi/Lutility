@@ -134,11 +134,42 @@ function renderHome() {
 let _homeCfg = null;
 let _custModalBuilt = false;
 
+// ── Source unique : pages affichées sur le Home ──────────────
+// Ajouter une entrée ici = apparaît automatiquement sur le Home
+const HOME_MENU = [
+  { key:'jeux',       ico:'🎮', label:'Jeux',       desc:'Fiches de jeux, keybinds, paramètres et codes par jeu.',          sec:'contenu' },
+  { key:'notes',      ico:'📝', label:'Notes',      desc:'Carnets de notes enrichis : titres, listes, tableaux, images.',    sec:'contenu' },
+  { key:'tutos',      ico:'📖', label:'Tutoriels',  desc:'Guides pratiques PC & gaming, mis à jour automatiquement.',       sec:'contenu' },
+  { key:'programmes', ico:'📦', label:'Apps',       desc:'Applications recommandées avec liens de téléchargement directs.', sec:'apps'    },
+  { key:'shortcuts',  ico:'🔗', label:'Raccourcis', desc:'Lance tes apps et scripts personnalisés en un clic.',             sec:'apps'    },
+  { key:'tools',      ico:'⚙️', label:'Outils',     desc:'Infos système, maintenance Windows, gestion des mises à jour.',  sec:'outils'  },
+];
+
 const _HOME_CFG_DEFAULT = {
-  cards: { jeux:true, notes:true, programmes:true, shortcuts:true, tools:true },
-  nav:   { jeux:true, notes:true, shortcuts:true, programmes:true, tools:true, maj:true },
+  cards: Object.fromEntries(HOME_MENU.map(m => [m.key, true])),
+  nav:   { ...Object.fromEntries(HOME_MENU.map(m => [m.key, true])), maj:true },
   prefs: { clock:true, navLabels:true },
 };
+
+// Génère les cartes du Home depuis HOME_MENU (appelé une seule fois au démarrage)
+function renderHomeCards() {
+  const _e = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const bySec = {};
+  HOME_MENU.forEach(m => { (bySec[m.sec] = bySec[m.sec] || []).push(m); });
+  for (const [sec, items] of Object.entries(bySec)) {
+    const grid = document.getElementById('home-grid-' + sec);
+    if (!grid) continue;
+    grid.className = `wgrid wgrid-${Math.min(items.length, 3)}`;
+    items.forEach(m => {
+      const d = document.createElement('div');
+      d.className = 'wcard';
+      d.dataset.p = m.key;
+      d.onclick = () => nav(m.key);
+      d.innerHTML = `<span class="wi">${m.ico}</span><div class="wt">${_e(m.label)}</div><div class="wd">${_e(m.desc)}</div>`;
+      grid.appendChild(d);
+    });
+  }
+}
 
 async function _loadHomeCfg() {
   const cfg = await window.api.configLoad();
@@ -157,7 +188,8 @@ function _saveHomeCfg() {
 // Applique : visibilité cartes/nav + préférences interface
 function applyHomeCfg() {
   if (!_homeCfg) return;
-  const secCards = { contenu:['jeux','notes'], apps:['programmes','shortcuts'], outils:['tools'] };
+  const secCards = {};
+  HOME_MENU.forEach(m => { (secCards[m.sec] = secCards[m.sec] || []).push(m.key); });
 
   // Cartes home
   for (const [sec, keys] of Object.entries(secCards)) {
@@ -201,16 +233,8 @@ function _initCustomModal() {
   const body = document.getElementById('cust-modal-body');
   if (!body) return;
 
-  const CARD_ITEMS = [
-    {key:'jeux',label:'🎮 Jeux'}, {key:'notes',label:'📝 Notes'},
-    {key:'programmes',label:'📦 Apps'}, {key:'shortcuts',label:'🔗 Raccourcis'},
-    {key:'tools',label:'⚙️ Outils'},
-  ];
-  const NAV_ITEMS = [
-    {key:'jeux',label:'🎮 Jeux'}, {key:'notes',label:'📝 Notes'},
-    {key:'shortcuts',label:'🔗 Raccourcis'}, {key:'programmes',label:'📦 Apps'},
-    {key:'tools',label:'⚙️ Outils'}, {key:'maj',label:'📋 MàJ'},
-  ];
+  const CARD_ITEMS = HOME_MENU.map(m => ({ key: m.key, label: m.ico + ' ' + m.label }));
+  const NAV_ITEMS  = [...CARD_ITEMS, { key:'maj', label:'📋 MàJ' }];
   const PREF_ITEMS = [
     {key:'clock',   label:'🕐 Horloge'},
     {key:'navLabels',label:'🔤 Labels barre latérale'},
@@ -322,6 +346,9 @@ function _updateCloseActionBtns() {
   min.classList.toggle('prim',  _closeAction === 'minimize');
   quit.classList.toggle('prim', _closeAction === 'quit');
 }
+
+// Cartes Home générées immédiatement (synchrone, avant tout await)
+renderHomeCards();
 
 // Initialise closeAction + visibilité home depuis la config au démarrage
 (async function _initCloseAction() {

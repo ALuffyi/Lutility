@@ -200,12 +200,12 @@ body{flex-direction:column!important}
       <div class="topbar-sep"></div>
       <div class="sav-chip" onclick="toggleHomeCustomize()" title="Personnaliser l'interface" id="cust-chip" style="flex-shrink:0">
         <span>✏️</span>
-        <span>Personnaliser</span>
+        <span>Settings</span>
       </div>
       <div class="topbar-sep"></div>
-      <div class="sav-chip" onclick="document.getElementById('folder-path-lbl').textContent=savPath||'—';openModal('modal-folder')" title="Settings" style="flex-shrink:0">
+      <div class="sav-chip" onclick="document.getElementById('folder-path-lbl').textContent=savPath||'—';openModal('modal-folder')" title="Sauvegarder" style="flex-shrink:0">
         <div class="led" id="led"></div>
-        <span id="sav-lbl">Settings</span>
+        <span id="sav-lbl">Sauvegarder</span>
       </div>
       <div class="topbar-sep"></div>
       <button id="update-btn" class="update-btn gone" onclick="openUpdatePopup(this)" title="Mise à jour disponible" style="flex-shrink:0"></button>
@@ -242,25 +242,17 @@ body{flex-direction:column!important}
             <!-- Section Contenu -->
             <div class="home-sec" data-sec="contenu">
               <div class="home-section-lbl">CONTENU</div>
-              <div class="wgrid wgrid-2">
-                <div class="wcard" data-p="jeux"  onclick="nav('jeux')"> <span class="wi">🎮</span><div class="wt">Jeux</div> <div class="wd">Accédez à la sauvegarde de touches de jeux vidéo.</div></div>
-                <div class="wcard" data-p="notes" onclick="nav('notes')"><span class="wi">📝</span><div class="wt">Notes</div><div class="wd">Un espace de prise de notes pour consigner vos idées.</div></div>
-              </div>
+              <div class="wgrid" id="home-grid-contenu"></div>
             </div>
             <!-- Section Apps & Raccourcis -->
             <div class="home-sec" data-sec="apps">
               <div class="home-section-lbl">APPS &amp; RACCOURCIS</div>
-              <div class="wgrid wgrid-2">
-                <div class="wcard" data-p="programmes" onclick="nav('programmes')"><span class="wi">📦</span><div class="wt">Apps</div>      <div class="wd">Une sélection d'applications Windows recommandées à télécharger et installer rapidement.</div></div>
-                <div class="wcard" data-p="shortcuts"  onclick="nav('shortcuts')"> <span class="wi">🔗</span><div class="wt">Raccourcis</div><div class="wd">Un gestionnaire pour lancer vos applications favorites ou scripts personnalisés en un clic.</div></div>
-              </div>
+              <div class="wgrid" id="home-grid-apps"></div>
             </div>
             <!-- Section Outils -->
             <div class="home-sec" data-sec="outils">
               <div class="home-section-lbl">OUTILS</div>
-              <div class="wgrid wgrid-1">
-                <div class="wcard" data-p="tools" onclick="nav('tools')"><span class="wi">⚙️</span><div class="wt">Outils Système</div><div class="wd">Un regroupement de fonctions utilitaires — infos matériel, maintenance &amp; nettoyage, gestion des mises à jour.</div></div>
-              </div>
+              <div class="wgrid" id="home-grid-outils"></div>
             </div>
           </div>
         </div>

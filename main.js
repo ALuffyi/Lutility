@@ -598,25 +598,33 @@ const TUTOS_CACHE  = path.join(USER_DATA, 'tutorials-cache.json');
 const TUTOS_LOCAL  = path.join(__dirname, 'tutorials.json');
 
 ipcMain.handle('read-tutorials', async () => {
-  // En dev : fichier local directement (les modifs sont visibles sans push)
+  // En dev : fichier local directement
   if (!app.isPackaged) {
     try { return JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {}
     return [];
   }
-  // En prod : 1. Fetch depuis GitHub (mise à jour sans rebuild)
+  // En prod : cache d'abord (affichage immédiat), fetch GitHub en arrière-plan
+  let cached = null;
+  try { cached = JSON.parse(fs.readFileSync(TUTOS_CACHE, 'utf8')); } catch {}
+
+  if (cached) {
+    // Retourne le cache instantanément, met à jour en silence pour la prochaine fois
+    net.fetch(TUTOS_REMOTE, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (Array.isArray(data)) fs.writeFileSync(TUTOS_CACHE, JSON.stringify(data)); })
+      .catch(() => {});
+    return cached;
+  }
+
+  // Pas de cache (première installation) : fetch bloquant
   try {
     const res = await net.fetch(TUTOS_REMOTE, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data)) {
-        fs.writeFileSync(TUTOS_CACHE, JSON.stringify(data));
-        return data;
-      }
+      if (Array.isArray(data)) { fs.writeFileSync(TUTOS_CACHE, JSON.stringify(data)); return data; }
     }
-  } catch { /* offline ou erreur réseau → fallback */ }
-  // 2. Cache AppData (dernière version connue)
-  try { return JSON.parse(fs.readFileSync(TUTOS_CACHE, 'utf8')); } catch {}
-  // 3. Fichier bundlé (fallback absolu)
+  } catch {}
+  // Fallback bundlé
   try { return JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {}
   return [];
 });
