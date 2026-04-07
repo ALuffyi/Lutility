@@ -663,7 +663,6 @@ function renderCustomTools() {
       <div class="sc-name" title="${escHtml(ct.path || '')}">${escHtml(ct.name)}</div>
       <button class="btn sm prim sc-btn" id="ct-exec-${ct.id}" onclick="execCustomTool(${ct.id})" title="Lancer">▶</button>
       <button class="btn sm sc-btn" onclick="ctEdit(${ct.id})" title="Modifier">✏️</button>
-      <button class="btn sm sc-btn" onclick="ctDuplicate(${ct.id})" title="Dupliquer">📋</button>
       <button class="btn sm sc-btn sc-del" onclick="ctDelete(${ct.id})" title="Supprimer">✕</button>
     </div>`;
   }).join('');
