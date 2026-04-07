@@ -57,6 +57,14 @@ function renderNotebooks() {
   if (!c) return;
   c.innerHTML = '';
 
+  // Si le carnet actif est replié, ne pas afficher de note dans l'éditeur
+  if (S.activeNB !== null && S.activeNB !== undefined &&
+      _collapsed.has('nb_' + S.activeNB) &&
+      (S.activePage !== null || S.activeSub !== null)) {
+    S.activeSec = S.activePage = S.activeSub = null;
+    clearEditor();
+  }
+
   S.notebooks.forEach(nb => {
     const grp = document.createElement('div');
     grp.className = 'nb-group';
@@ -765,22 +773,12 @@ function onPaste(e) {
       return;
     }
 
-    // Cas 2 : screenshot Windows — le bitmap est parfois exposé comme string
-    // On tente navigator.clipboard.read() comme fallback
+    // Cas 2 : screenshot Windows (bitmap CF_DIB) — fallback via IPC Electron
     e.preventDefault();
-    navigator.clipboard.read().then(async clipItems => {
-      for (const ci of clipItems) {
-        const imgType = ci.types.find(t => t.startsWith('image/'));
-        if (!imgType) continue;
-        const blob = await ci.getType(imgType);
-        const reader = new FileReader();
-        reader.onload = async ev => {
-          const dataUrl = await compressImg(ev.target.result);
-          await _insertImgDataUrl(dataUrl);
-        };
-        reader.readAsDataURL(blob);
-        return;
-      }
+    window.api.clipboardReadImage().then(async dataUrl => {
+      if (!dataUrl) return;
+      const compressed = await compressImg(dataUrl);
+      await _insertImgDataUrl(compressed);
     }).catch(() => {});
     return;
   }

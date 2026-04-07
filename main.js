@@ -63,6 +63,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      spellcheck: true,
       v8CacheOptions: 'code',        // cache bytecode → relance plus rapide
       backgroundThrottling: false,
     },
@@ -326,6 +327,15 @@ ipcMain.handle('check-update', async () => {
     const data = await res.json();
     if (!data.version || !data.url) return null;
     return data; // { version, url, notes }
+  } catch { return null; }
+});
+
+ipcMain.handle('clipboard-read-image', () => {
+  try {
+    const { clipboard } = require('electron');
+    const img = clipboard.readImage();
+    if (img.isEmpty()) return null;
+    return img.toDataURL();
   } catch { return null; }
 });
 
