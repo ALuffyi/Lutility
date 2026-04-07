@@ -1,6 +1,19 @@
 // ── Changelog / Patch Notes ───────────────────────────
 const CHANGELOG = [
   {
+    version: '2.14.1',
+    date:    '2026-04-07',
+    type:    'fix',
+    changes: [
+      'Scripts : lancement identique à un double-clic Windows (ShellExecute)',
+      'Scripts : affichage unifié avec les Raccourcis (même tuile, icône réelle)',
+      'Bouton Quitter : fermeture complète de l\'app corrigée',
+      'Lien de téléchargement Corsair iCUE corrigé',
+      'Ajout de Wootility (Wooting) dans les Périphériques',
+      'Panneau Tips supprimé de la page Raccourcis',
+    ]
+  },
+  {
     version: '2.14.0',
     date:    '2026-04-07',
     type:    'feat',
