@@ -381,10 +381,16 @@ let _spellInfo = null;
 window.api.onSpellInfo(data => { _spellInfo = data; });
 
 document.addEventListener('contextmenu', async e => {
-  e.preventDefault();
+  // Pas de preventDefault ici : Chromium envoie les params spell-check au process
+  // main SEULEMENT si le renderer ne prévient pas le menu natif. La suppression du
+  // menu natif est gérée par _evt.preventDefault() dans le handler main.
   const isEditable = e.target.isContentEditable || ['INPUT','TEXTAREA'].includes(e.target.tagName) || e.target.closest('[contenteditable]');
-  const items = [{ label: 'Presse-papiers' }];
-  if (isEditable) {
+  // Image cliquée dans l'éditeur de notes
+  const noteImg = (e.target.tagName === 'IMG' && e.target.closest('.note-body')) ? e.target : null;
+  const items = [];
+  if (isEditable && !noteImg) {
+    // Section presse-papiers — masquée quand on clique sur une image
+    items.push({ label: 'Presse-papiers' });
     items.push({ ico:'📋', text:'Coller', action: async () => { try { const t = await navigator.clipboard.readText(); document.execCommand('insertText', false, t); } catch(err) {} } });
     const sel = window.getSelection()?.toString();
     if (sel) {
@@ -402,16 +408,32 @@ document.addEventListener('contextmenu', async e => {
   // ── Suggestions orthographiques ──────────────────────────────────────────
   // L'event context-menu natif (main) arrive après le contextmenu DOM.
   // On attend 40ms — imperceptible — pour que le push spell-info soit reçu.
-  await new Promise(r => setTimeout(r, 80));
+  await new Promise(r => setTimeout(r, 200));
   const spell = _spellInfo;
   _spellInfo = null;
-  if (spell?.misspelled && spell.suggestions?.length) {
+  // Vérifier si le mot sélectionné est dans le dico perso (pour pouvoir le retirer)
+  const dictWords    = await window.api.listDictionaryWords();
+  const selectedWord = window.getSelection()?.toString().trim();
+  const inCustomDict = selectedWord && dictWords.some(w => w.toLowerCase() === selectedWord.toLowerCase());
+
+  if (spell?.misspelled) {
     items.push('sep');
     items.push({ label: '🔤 ' + spell.misspelled + ' — corrections :' });
-    spell.suggestions.forEach(w => {
-      items.push({ ico: '✓', text: w, action: () => window.api.replaceMisspelling(w) });
+    if (spell.suggestions?.length) {
+      spell.suggestions.forEach(w => {
+        items.push({ ico: '✓', text: w, action: () => window.api.replaceMisspelling(w) });
+      });
+    } else {
+      items.push({ ico: '—', text: 'Aucune suggestion', action: () => {} });
+    }
+    items.push({ ico: '＋', text: 'Ajouter au dictionnaire',
+      action: async () => { await window.api.addToDictionary(spell.misspelled); toast('✓ "' + spell.misspelled + '" ajouté'); }
     });
-    items.push({ ico: '＋', text: 'Ajouter au dictionnaire', action: () => window.api.addToDictionary(spell.misspelled) });
+  } else if (inCustomDict) {
+    items.push('sep');
+    items.push({ ico: '✕', text: 'Retirer "' + selectedWord + '" du dictionnaire', danger: true,
+      action: async () => { await window.api.removeFromDictionary(selectedWord); toast('"' + selectedWord + '" retiré du dictionnaire'); }
+    });
   }
 
   const gitem = e.target.closest('.gitem');
@@ -420,7 +442,30 @@ document.addEventListener('contextmenu', async e => {
   if (nbHdr) { const nbId = +nbHdr.dataset.id; items.push('sep'); items.push({ label:'Carnet' }); items.push({ ico:'✏️', text:'Modifier (nom + emoji)', action:()=>nbEdit(nbId) }); items.push({ ico:'🗑️', text:'Supprimer', danger:true, action:()=>nbDel(nbId,{stopPropagation:()=>{}}) }); }
   // Clic droit sur une image dans l'éditeur de notes
   const imgInNote = e.target.tagName === 'IMG' && e.target.closest('.note-body') ? e.target : null;
-  if (imgInNote) { items.push('sep'); items.push({ label:'Image' }); items.push({ ico:'↑', text:'Monter', action:()=>_moveImg(imgInNote,-1) }); items.push({ ico:'↓', text:'Descendre', action:()=>_moveImg(imgInNote,1) }); items.push({ ico:'🗑️', text:'Supprimer l\'image', danger:true, action:()=>_deleteImg(imgInNote) }); }
+  if (imgInNote) {
+    items.push('sep'); items.push({ label:'Image' });
+    items.push({ ico:'↑', text:'Monter',    action: () => _moveImg(imgInNote, -1) });
+    items.push({ ico:'↓', text:'Descendre', action: () => _moveImg(imgInNote,  1) });
+    items.push({ ico:'🗑️', text:'Supprimer l\'image', danger:true, action: () => _deleteImg(imgInNote) });
+  }
+  // Export PDF depuis l'éditeur de notes
+  const inNoteBody = e.target.closest('.note-body');
+  if (inNoteBody) {
+    items.push('sep');
+    items.push({ ico:'📄', text:'Exporter la page en PDF', action: async () => {
+      const title  = document.getElementById('note-title')?.value || 'note';
+      const bodyEl = document.getElementById('note-body');
+      const printDiv = document.getElementById('note-print-preview');
+      if (!bodyEl || !printDiv) return;
+      // Remplir le div de prévisualisation (blob: URLs déjà chargées dans cette fenêtre)
+      printDiv.innerHTML = `<h1>${escHtml(title)}</h1>` + bodyEl.innerHTML;
+      document.body.classList.add('pdf-exporting');
+      const ok = await window.api.exportNotePdf(title);
+      document.body.classList.remove('pdf-exporting');
+      printDiv.innerHTML = '';
+      if (ok) toast('✓ PDF exporté');
+    }});
+  }
   // Section/page context menu handled per-level in notes.js nbCtxMenu
   showCtx(e, items);
 });

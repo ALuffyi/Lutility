@@ -283,10 +283,10 @@ async function loadSysinfo() {
 
 // ══ PROGRAMMES CONSEILLÉS ════════════════════════════
 const PROG_CATS = [
-  { id:'gaming',  label:'🎮 Gaming',        tc:'o' },
-  { id:'comms',   label:'💬 Communication', tc:'b' },
   { id:'nav',     label:'🌐 Navigateurs',   tc:'g' },
   { id:'periph',  label:'🖱️ Périphériques', tc:'p' },
+  { id:'gaming',  label:'🎮 Gaming',        tc:'o' },
+  { id:'comms',   label:'💬 Communication', tc:'b' },
   { id:'capture', label:'🎥 Capture',       tc:'y' },
   { id:'utils',   label:'⚡ Utilitaires',   tc:'b' },
 ];
@@ -663,7 +663,6 @@ function renderCustomTools() {
       <div class="sc-name" title="${escHtml(ct.path || '')}">${escHtml(ct.name)}</div>
       <button class="btn sm prim sc-btn" id="ct-exec-${ct.id}" onclick="execCustomTool(${ct.id})" title="Lancer">▶</button>
       <button class="btn sm sc-btn" onclick="ctEdit(${ct.id})" title="Modifier">✏️</button>
-      <button class="btn sm sc-btn" onclick="ctDuplicate(${ct.id})" title="Dupliquer">📋</button>
       <button class="btn sm sc-btn sc-del" onclick="ctDelete(${ct.id})" title="Supprimer">✕</button>
     </div>`;
   }).join('');

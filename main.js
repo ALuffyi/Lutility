@@ -53,6 +53,55 @@ function writeConfig(data) {
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 
+// ── Correcteur orthographique (index léger, sans nspell) ─────────────────────
+// On lit uniquement le .dic (liste de mots), indexé par lettre initiale.
+// Edit distance via Int32Array → ~15MB en mémoire (vs ~100MB avec nspell).
+let _frIndex = null; // Map<char, string[]>
+
+function editDist(a, b) {
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > 3) return 99;
+  const prev = new Int32Array(lb + 1).map((_, i) => i);
+  const curr = new Int32Array(lb + 1);
+  for (let i = 1; i <= la; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= lb; j++)
+      curr[j] = a[i-1] === b[j-1] ? prev[j-1] : 1 + Math.min(prev[j], curr[j-1], prev[j-1]);
+    prev.set(curr);
+  }
+  return prev[lb];
+}
+
+function suggestFr(word, max = 6) {
+  if (!_frIndex || !word) return [];
+  const w = word.toLowerCase();
+  const bucket = _frIndex.get(w[0]) || [];
+  const scored = [];
+  for (const fw of bucket) {
+    if (Math.abs(fw.length - w.length) > 3) continue;
+    const d = editDist(w, fw);
+    if (d <= 3) scored.push({ word: fw, dist: d });
+  }
+  scored.sort((a, b) => a.dist - b.dist);
+  return scored.slice(0, max).map(s => s.word);
+}
+
+function loadSpeller() {
+  if (_frIndex) return;
+  const dicPath = path.join(__dirname, 'node_modules', 'dictionary-fr', 'index.dic');
+  fs.promises.readFile(dicPath, 'latin1').then(content => {
+    const index = new Map();
+    for (const line of content.split('\n').slice(1)) {
+      const word = line.split('/')[0].trim().toLowerCase();
+      if (word.length < 2) continue;
+      const k = word[0];
+      if (!index.has(k)) index.set(k, []);
+      index.get(k).push(word);
+    }
+    _frIndex = index;
+  }).catch(e => console.error('dict load error:', e.message));
+}
+
 let win;
 function createWindow() {
   win = new BrowserWindow({
@@ -63,6 +112,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      spellcheck: true,
       v8CacheOptions: 'code',        // cache bytecode → relance plus rapide
       backgroundThrottling: false,
     },
@@ -73,7 +123,7 @@ function createWindow() {
   win.once('ready-to-show', () => {
     win.maximize();
     win.show();
-    // Activer la correction orthographique (fr + en)
+    // Activer les soulignements (nspell chargé en parallèle dès app.whenReady)
     win.webContents.session.setSpellCheckerLanguages(['fr-FR', 'en-US']);
     // Autoriser la lecture du presse-papiers (pour coller des screenshots)
     win.webContents.session.setPermissionRequestHandler((_wc, permission, cb) => {
@@ -84,15 +134,20 @@ function createWindow() {
   // Suggestions orthographiques : mode PUSH (main → renderer dès que l'event arrive)
   // Plus fiable que le pull car context-menu natif peut arriver après le contextmenu DOM
   win.webContents.on('context-menu', (_evt, params) => {
+    _evt.preventDefault(); // empêche le menu natif Electron (on a le nôtre)
     if (params.misspelledWord) {
+      const frSug      = suggestFr(params.misspelledWord);
+      const suggestions = frSug.length ? frSug : (params.dictionarySuggestions || []);
       win.webContents.send('spell-info', {
         misspelled:  params.misspelledWord,
-        suggestions: params.dictionarySuggestions || [],
+        suggestions,
       });
     }
   });
-  ipcMain.handle('replace-misspelling', (_e, word) => win.webContents.replaceMisspelling(word));
-  ipcMain.handle('add-to-dictionary',   (_e, word) => win.webContents.session.addWordToSpellCheckerDictionary(word));
+  ipcMain.handle('replace-misspelling',      (_e, word) => win.webContents.replaceMisspelling(word));
+  ipcMain.handle('add-to-dictionary',        (_e, word) => win.webContents.session.addWordToSpellCheckerDictionary(word));
+  ipcMain.handle('remove-from-dictionary',   (_e, word) => win.webContents.session.removeWordFromSpellCheckerDictionary(word));
+  ipcMain.handle('list-dictionary-words',    ()         => win.webContents.session.listWordsInSpellCheckerDictionary());
   win.on('close', (e) => {
     if (!app.isQuiting) {
       if (_closeAction === 'quit') {
@@ -137,7 +192,7 @@ if (!gotLock) {
       win.webContents.focus();
     }
   });
-  app.whenReady().then(() => { createWindow(); createTray(); });
+  app.whenReady().then(() => { loadSpeller(); createWindow(); createTray(); });
 }
 
 app.on('window-all-closed', () => { if (app.isQuiting || _closeAction === 'quit') app.quit(); });
@@ -327,6 +382,64 @@ ipcMain.handle('check-update', async () => {
     if (!data.version || !data.url) return null;
     return data; // { version, url, notes }
   } catch { return null; }
+});
+
+ipcMain.handle('clipboard-read-image', () => {
+  try {
+    const { clipboard } = require('electron');
+    const img = clipboard.readImage();
+    if (img.isEmpty()) return null;
+    return img.toDataURL();
+  } catch { return null; }
+});
+
+ipcMain.handle('clipboard-write-image', (_e, dataUrl) => {
+  try {
+    const { clipboard, nativeImage } = require('electron');
+    const img = nativeImage.createFromDataURL(dataUrl);
+    clipboard.writeImage(img);
+    return true;
+  } catch { return false; }
+});
+
+ipcMain.handle('export-image-file', async (_e, srcPath) => {
+  try {
+    const ext = path.extname(srcPath).slice(1) || 'png';
+    const { canceled, filePath } = await dialog.showSaveDialog(win, {
+      defaultPath: path.basename(srcPath),
+      filters: [{ name: 'Image', extensions: [ext, 'png'] }],
+    });
+    if (canceled || !filePath) return false;
+    fs.copyFileSync(srcPath, filePath);
+    return true;
+  } catch { return false; }
+});
+
+ipcMain.handle('export-image', async (_e, dataUrl) => {
+  try {
+    const { canceled, filePath } = await dialog.showSaveDialog(win, {
+      defaultPath: 'image.png',
+      filters: [{ name: 'Image PNG', extensions: ['png'] }],
+    });
+    if (canceled || !filePath) return false;
+    const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+    fs.writeFileSync(filePath, Buffer.from(base64, 'base64'));
+    return true;
+  } catch { return false; }
+});
+
+ipcMain.handle('export-note-pdf', async (_e, title) => {
+  try {
+    const { canceled, filePath } = await dialog.showSaveDialog(win, {
+      defaultPath: (title || 'note') + '.pdf',
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+    });
+    if (canceled || !filePath) return false;
+    // printToPDF sur la fenêtre principale (blob: URLs déjà chargées, images incluses)
+    const pdfBuf = await win.webContents.printToPDF({ pageSize: 'A4', printBackground: false });
+    fs.writeFileSync(filePath, pdfBuf);
+    return true;
+  } catch (e) { console.error('export-note-pdf', e); return false; }
 });
 
 ipcMain.handle('get-file-icon', async (_e, filePath) => {

@@ -1,6 +1,19 @@
 // ── Changelog / Patch Notes ───────────────────────────
 const CHANGELOG = [
   {
+    version: '2.14.2',
+    date:    '2026-04-07',
+    type:    'fix',
+    changes: [
+      'Correcteur orthographique : suggestions françaises via dictionnaire bundlé',
+      'Correcteur : ajout et suppression de mots dans le dictionnaire personnel',
+      'Notes : export de la page en PDF (clic droit → Exporter en PDF)',
+      'Notes : barre image simplifiée (Monter / Descendre / Supprimer)',
+      'Apps : reclassement des catégories (Navigateurs, Périphériques, Gaming…)',
+      'Menu contextuel : section presse-papiers masquée au clic sur une image',
+    ]
+  },
+  {
     version: '2.14.1',
     date:    '2026-04-07',
     type:    'fix',

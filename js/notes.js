@@ -57,6 +57,14 @@ function renderNotebooks() {
   if (!c) return;
   c.innerHTML = '';
 
+  // Si le carnet actif est replié, ne pas afficher de note dans l'éditeur
+  if (S.activeNB !== null && S.activeNB !== undefined &&
+      _collapsed.has('nb_' + S.activeNB) &&
+      (S.activePage !== null || S.activeSub !== null)) {
+    S.activeSec = S.activePage = S.activeSub = null;
+    clearEditor();
+  }
+
   S.notebooks.forEach(nb => {
     const grp = document.createElement('div');
     grp.className = 'nb-group';
@@ -536,6 +544,7 @@ async function loadNote() {
   if (!title || !body) return;
   title.disabled       = false;
   body.contentEditable = 'true';
+  body.spellcheck      = true;
   title.placeholder    = 'Titre de la note…';
   if (editor) editor.classList.remove('no-page');
 
@@ -765,22 +774,12 @@ function onPaste(e) {
       return;
     }
 
-    // Cas 2 : screenshot Windows — le bitmap est parfois exposé comme string
-    // On tente navigator.clipboard.read() comme fallback
+    // Cas 2 : screenshot Windows (bitmap CF_DIB) — fallback via IPC Electron
     e.preventDefault();
-    navigator.clipboard.read().then(async clipItems => {
-      for (const ci of clipItems) {
-        const imgType = ci.types.find(t => t.startsWith('image/'));
-        if (!imgType) continue;
-        const blob = await ci.getType(imgType);
-        const reader = new FileReader();
-        reader.onload = async ev => {
-          const dataUrl = await compressImg(ev.target.result);
-          await _insertImgDataUrl(dataUrl);
-        };
-        reader.readAsDataURL(blob);
-        return;
-      }
+    window.api.clipboardReadImage().then(async dataUrl => {
+      if (!dataUrl) return;
+      const compressed = await compressImg(dataUrl);
+      await _insertImgDataUrl(compressed);
     }).catch(() => {});
     return;
   }
@@ -1010,8 +1009,6 @@ function _showImgBar(img) {
 
   bar.appendChild(mkBtn('↑ Monter',    false, () => _moveImg(img, -1)));
   bar.appendChild(mkBtn('↓ Descendre', false, () => _moveImg(img,  1)));
-  bar.appendChild(mkBtn('📋 Copier',   false, () => _copyImg(img, false)));
-  bar.appendChild(mkBtn('✂️ Couper',   false, () => _copyImg(img, true)));
   bar.appendChild(mkBtn('✕ Supprimer', true,  () => _deleteImg(img)));
   document.body.appendChild(bar);
   _posImgBar(img);
@@ -1159,6 +1156,7 @@ function _tblCellMenu(e, cell) {
     const cell = e.target.closest('td, th');
     if (cell && cell.closest('table')) { _tblCellMenu(e, cell); return; }
   });
+
 
   // Navigation Tab dans les tableaux
   body.addEventListener('keydown', e => {
