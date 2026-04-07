@@ -1,4 +1,4 @@
-// ── Tutoriels ──────────────────────────────────────────────────────────────
+// ══ TUTORIELS ════════════════════════════════════════════
 let _tutos      = [];
 let _tutoCat    = 'all';
 let _tutoGame   = 'all';
@@ -128,7 +128,7 @@ function openTuto(id) {
   `;
 }
 
-/** Formate YYYY-MM en "Mois ANNÉE" */
+// Formate YYYY-MM en "Mois ANNÉE"
 function _fmtTutoDate(str) {
   try {
     const [y, m] = str.split('-');
@@ -136,7 +136,7 @@ function _fmtTutoDate(str) {
   } catch { return str; }
 }
 
-/** Formate le texte : **gras** et sauts de ligne */
+// Formate le texte : **gras** et sauts de ligne
 function _fmtText(text) {
   if (!text) return '';
   const parts = text.split('**');

@@ -1,4 +1,4 @@
-// ── Changelog / Patch Notes ───────────────────────────
+// ══ CHANGELOG ════════════════════════════════════════════
 const CHANGELOG = [
   {
     version: '2.15.0',

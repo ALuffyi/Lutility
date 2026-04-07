@@ -1,19 +1,17 @@
 'use strict';
 
-// ══ PERSIST (Electron) ══════════════════════════════════
-// All file I/O goes through window.api (preload → main.js → Node.js fs)
-// savePath est une string stockée dans AppData/config.json (+ config.json.bak)
-// Toutes les écritures sont atomiques côté main.js (write .tmp → rename)
+// ══ PERSIST ═════════════════════════════════════════════
+// I/O via window.api → preload → main.js (Node fs, écriture atomique .tmp → rename)
+// savePath stocké dans AppData/config.json (+ .bak)
 
 let _savDirLost  = false;
-let _saving      = false;   // mutex : un seul saveAll() à la fois
-let _pendingSave = false;   // un save a été demandé pendant qu'un autre tournait
+let _saving      = false;   // mutex : un seul saveAll() en cours
+let _pendingSave = false;   // save demandé pendant qu'un autre tournait
 
 // ── JSON helpers ─────────────────────────────────────────
 async function wJSON(filename, data) {
   if (!savPath) { onSavDirLost(); return false; }
-  // Guard : JSON.stringify(undefined) renvoie undefined (pas une string)
-  // ce qui ferait planter atomicWrite côté main.js et déclencherait onSavDirLost
+  // data ?? null : JSON.stringify(undefined) renvoie undefined (planterait atomicWrite)
   const json = JSON.stringify(data ?? null, null, 2);
   const ok = await window.api.fileWrite(savPath, filename, json);
   if (!ok) { onSavDirLost(); return false; }
@@ -33,7 +31,7 @@ async function rJSON(filename) {
 
 // ── Folder lost handling ─────────────────────────────────
 function onSavDirLost() {
-  if (_savDirLost) return;   // déjà signalé, pas de doublon
+  if (_savDirLost) return;
   _savDirLost = true;
   setLed(true);
   showSavBanner();
@@ -90,7 +88,7 @@ async function readImgAsBlob(relativePath) {
     if (!b64) return null;
     const ext  = relativePath.split('.').pop().toLowerCase();
     const mime = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : 'image/' + ext;
-    // Utilise atob + Uint8Array au lieu de fetch() pour éviter les restrictions CSP connect-src
+    // atob + Uint8Array au lieu de fetch() : évite les restrictions CSP connect-src
     const binary = atob(b64);
     const bytes  = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
@@ -104,14 +102,13 @@ async function resolveNoteImages(bodyEl) {
     const blobUrl = await readImgAsBlob(img.dataset.src);
     if (blobUrl) {
       img.src = blobUrl; // data-src conservé pour rechargements futurs
-      // Si le blob expire (ex: app en arrière-plan), on recrée un blob depuis le disque
+      // Si le blob expire (app en arrière-plan), recrée depuis le disque
       img.onerror = async function() {
         this.onerror = null;
         const retry = await readImgAsBlob(this.dataset.src);
         if (retry) this.src = retry;
       };
     } else {
-      // Fichier disque introuvable — affiche le nom de fichier comme indication
       const fname = img.dataset.src.replace('images/', '');
       img.alt   = '⚠ ' + fname;
       img.title = 'Fichier introuvable : ' + img.dataset.src;
@@ -148,7 +145,7 @@ async function loadAll() {
   const ctFile = await rJSON('custom-tools.json');
   S.customTools = Array.isArray(ctFile) ? ctFile : [];
 
-  // ── Contenu d'exemple au premier lancement ────────────────
+  // Contenu d'exemple au premier lancement
   let _exampleSaved = false;
   if (!S.games.length) {
     S.games = [{ id:1001, name:'The Witcher 3', plat:'PC', ico:'🗡️', ctrlType:'KB',
@@ -181,7 +178,7 @@ async function loadAll() {
     await wJSON('notes.json',     S.notes);
   }
 
-  // ── Session : validation stricte des IDs pour éviter les états orphelins ──
+  // Session : validation stricte des IDs (évite les états orphelins)
   const ses = await rJSON('session.json') || {};
 
   const validGame = S.games.find(x => x.id === ses.activeGame);
@@ -218,8 +215,8 @@ async function loadAll() {
     }
   }
 
-  // Replie tous les carnets au chargement (protection des titres de notes sensibles)
-  // Exception : premier lancement (contenu d'exemple) → laisse ouvert pour la prévisualisation
+  // Replie tous les carnets au chargement (protection des titres sensibles)
+  // Exception : premier lancement (exemple) → laisse ouvert pour la prévisualisation
   if (typeof _collapsed !== 'undefined' && !_exampleSaved) {
     S.notebooks.forEach(nb => _collapsed.add('nb_' + nb.id));
   }
@@ -232,7 +229,6 @@ async function loadAll() {
 }
 
 async function saveAll() {
-  // ── Mutex : un seul saveAll() en cours à la fois ──────
   if (_saving) { _pendingSave = true; return; }
   _saving      = true;
   _pendingSave = false;
@@ -244,7 +240,7 @@ async function saveAll() {
     await wJSON('trash.json',     S.trash);
     await wJSON('shortcuts.json',    S.shortcuts);
     await wJSON('custom-tools.json', S.customTools);
-    // Stocke le profil dans le dossier SAV pour restore automatique à l'import
+    // Profile dans le SAV → restore automatique à l'import
     if (typeof profile !== 'undefined' && profile?.name) {
       await wJSON('profile.json', { name: profile.name, emoji: profile.emoji });
     }
@@ -258,14 +254,11 @@ async function saveAll() {
     console.error('saveAll error', e);
   } finally {
     _saving = false;
-    // Si un save a été demandé pendant qu'on sauvegardait, on le déclenche maintenant
     if (_pendingSave) saveAll();
   }
 }
 
 async function autoSave() {
-  // Le heartbeat gère déjà la détection de dossier perdu
-  // autoSave se contente de sauvegarder si tout est en ordre
   if (!savPath || _savDirLost) return;
   await saveAll();
 }
@@ -275,7 +268,7 @@ function startFolderHeartbeat() {
     if (!savPath) return;
     const ok = await window.api.folderExists(savPath);
     if (!ok && !_savDirLost) {
-      // Dossier supprimé manuellement → effacer le profil et revenir au lancement
+      // Dossier supprimé manuellement → reset et retour au lancement
       _savDirLost = true;
       hideSavBanner();
       setLed(false);
@@ -288,8 +281,7 @@ function startFolderHeartbeat() {
       S.activeNB = S.activeCat = S.activeSec = S.activePage = S.activeSub = null;
       document.getElementById('app').style.display = 'none';
       document.getElementById('launch').classList.remove('gone');
-      _savDirLost = false; // reset pour permettre un futur heartbeat propre
-      // Si le profil existe, affiche l'écran rapide "Localiser" plutôt que le wizard complet
+      _savDirLost = false;
       if (profile && profile.name && typeof showLostCard === 'function') showLostCard();
       else if (typeof initLaunchScreen === 'function') initLaunchScreen();
     } else if (ok && _savDirLost) {
@@ -300,7 +292,7 @@ function startFolderHeartbeat() {
   }, 5000);
 }
 
-// ── HTML → Markdown converter (for .md export) ───────────
+// ── HTML → Markdown (export .md) ─────────────────────────
 function h2md(html) {
   const d = document.createElement('div');
   d.innerHTML = html;

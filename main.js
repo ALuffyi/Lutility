@@ -4,9 +4,7 @@ const fs   = require('fs');
 
 let tray = null;
 
-// ── Isolation dev / prod ──────────────────────────────
-// En dev (npm start / run.bat) : userData séparé → verrou single-instance
-// indépendant + config.dev.json distincte de la version installée
+// En dev : userData séparé → config.dev.json distincte + lock single-instance indépendant
 if (!app.isPackaged) {
   app.setPath('userData', path.join(app.getPath('appData'), 'lutility-dev'));
 }
@@ -16,8 +14,7 @@ const CONFIG_NAME = app.isPackaged ? 'config' : 'config.dev';
 const CONFIG_FILE = path.join(USER_DATA, CONFIG_NAME + '.json');
 const CONFIG_BAK  = CONFIG_FILE + '.bak';
 
-// ── Atomic write ──────────────────────────────────────
-// Écrit dans un .tmp puis renomme → jamais de fichier à moitié écrit
+// ── Atomic write — .tmp → rename, jamais de fichier à moitié écrit ──────────
 function atomicWrite(filePath, content, isBinary = false) {
   const tmp = filePath + '.tmp';
   if (isBinary) fs.writeFileSync(tmp, content);
@@ -27,7 +24,7 @@ function atomicWrite(filePath, content, isBinary = false) {
 
 // ── Config ────────────────────────────────────────────
 function readConfig() {
-  // Essaie le fichier principal, puis le backup si invalide/absent
+  // Essaie CONFIG_FILE, puis .bak si invalide/absent
   for (const f of [CONFIG_FILE, CONFIG_BAK]) {
     try {
       const raw  = fs.readFileSync(f, 'utf8');
@@ -40,7 +37,7 @@ function readConfig() {
 
 function writeConfig(data) {
   fs.mkdirSync(USER_DATA, { recursive: true });
-  // Fusionne avec la config existante pour ne pas écraser les champs non fournis
+  // Fusion : ne pas écraser les champs non fournis
   const existing = readConfig() || {};
   const merged = { ...existing, ...data };
   const json = JSON.stringify(merged, null, 2);
@@ -48,14 +45,13 @@ function writeConfig(data) {
   try { fs.copyFileSync(CONFIG_FILE, CONFIG_BAK); } catch {}
 }
 
-// ── Window ────────────────────────────────────────────
-// Accélère le démarrage : cache le bytecode V8 entre les sessions
+// Cache le bytecode V8 entre les sessions (démarrage plus rapide)
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 
-// ── Correcteur orthographique (index léger, sans nspell) ─────────────────────
-// On lit uniquement le .dic (liste de mots), indexé par lettre initiale.
-// Edit distance via Int32Array → ~15MB en mémoire (vs ~100MB avec nspell).
+// ── Correcteur orthographique ─────────────────────────────────────────────────
+// .dic indexé par lettre initiale, distance d'édition via Int32Array
+// ~15MB en mémoire (vs ~100MB avec nspell)
 let _frIndex = null; // Map<char, string[]>
 
 function editDist(a, b) {
@@ -113,7 +109,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       spellcheck: true,
-      v8CacheOptions: 'code',        // cache bytecode → relance plus rapide
+      v8CacheOptions: 'code',
       backgroundThrottling: false,
     },
     icon: path.join(__dirname, 'assets', 'icon.ico'),
@@ -123,16 +119,13 @@ function createWindow() {
   win.once('ready-to-show', () => {
     win.maximize();
     win.show();
-    // Activer les soulignements (nspell chargé en parallèle dès app.whenReady)
     win.webContents.session.setSpellCheckerLanguages(['fr-FR', 'en-US']);
-    // Autoriser la lecture du presse-papiers (pour coller des screenshots)
     win.webContents.session.setPermissionRequestHandler((_wc, permission, cb) => {
       cb(permission === 'clipboard-read' || permission === 'clipboard-sanitized-write');
     });
   });
 
-  // Suggestions orthographiques : mode PUSH (main → renderer dès que l'event arrive)
-  // Plus fiable que le pull car context-menu natif peut arriver après le contextmenu DOM
+  // Push spell-info vers le renderer — plus fiable que pull (context-menu natif arrive après contextmenu DOM)
   win.webContents.on('context-menu', (_evt, params) => {
     _evt.preventDefault(); // empêche le menu natif Electron (on a le nôtre)
     if (params.misspelledWord) {
@@ -152,7 +145,6 @@ function createWindow() {
     if (!app.isQuiting) {
       if (_closeAction === 'quit') {
         app.isQuiting = true;
-        // laisse la fermeture se faire normalement
       } else {
         e.preventDefault();
         win.hide();
@@ -160,7 +152,6 @@ function createWindow() {
     }
   });
 
-  // Restaure le closeAction depuis la config au démarrage
   const savedCfg = readConfig();
   if (savedCfg?.closeAction) _closeAction = savedCfg.closeAction;
 }
@@ -179,7 +170,6 @@ function createTray() {
 }
 
 // ── Single-instance lock ──────────────────────────────
-// Empêche plusieurs instances d'écrire en même temps dans config.json
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
@@ -211,15 +201,13 @@ ipcMain.on('set-close-action', (_e, action) => { _closeAction = action; });
 ipcMain.handle('config-load', () => readConfig());
 ipcMain.handle('config-save', (_e, data) => { writeConfig(data); return true; });
 
-// ── Dialog helper — évite fenêtre noire + dialog caché (bug Electron/Windows frameless) ──
-// Problème : avec un parent, le dialog peut s'ouvrir derrière la fenêtre sur Windows.
-// Solution : ne PAS passer de parent (dialog indépendant, toujours visible),
-// puis invalider le rendu pour corriger l'écran noir après fermeture.
+// Dialog sans parent : évite qu'il s'ouvre derrière la fenêtre frameless sur Windows.
+// invalidate() force le re-rendu pour corriger l'écran noir après fermeture.
 async function showDialog(options) {
-  const r = await dialog.showOpenDialog(options);   // pas de parent = dialog en avant
+  const r = await dialog.showOpenDialog(options);
   if (win && !win.isDestroyed()) {
     win.focus();
-    win.webContents.invalidate();   // force re-rendu (corrige écran noir frameless)
+    win.webContents.invalidate();
   }
   return r;
 }
@@ -237,7 +225,7 @@ ipcMain.handle('choose-folder', async () => {
   return savePath;
 });
 
-// ── File I/O ──────────────────────────────────────────
+// ── File I/O (path traversal guard) ──────────────────
 function safeResolve(savePath, filename) {
   const base = path.resolve(savePath);
   const full = path.resolve(savePath, filename);
@@ -256,7 +244,7 @@ ipcMain.handle('file-write', (_e, savePath, filename, content) => {
   try {
     const full = safeResolve(savePath, filename);
     fs.mkdirSync(path.dirname(full), { recursive: true });
-    atomicWrite(full, content);          // écriture atomique
+    atomicWrite(full, content);
     return true;
   } catch(e) { console.error('file-write', e); return false; }
 });
@@ -265,7 +253,7 @@ ipcMain.handle('file-write-binary', (_e, savePath, filename, base64) => {
   try {
     const full = safeResolve(savePath, filename);
     fs.mkdirSync(path.dirname(full), { recursive: true });
-    atomicWrite(full, Buffer.from(base64, 'base64'), true);  // écriture atomique
+    atomicWrite(full, Buffer.from(base64, 'base64'), true);
     return true;
   } catch(e) { return false; }
 });
@@ -288,7 +276,6 @@ ipcMain.handle('file-delete', (_e, savePath, filename) => {
   } catch(e) { return false; }
 });
 
-// ── Copier un dossier entier (ex: changement de dossier SAV) ──
 ipcMain.handle('copy-folder', (_e, src, dest) => {
   try {
     fs.cpSync(src, dest, { recursive: true });
@@ -297,7 +284,6 @@ ipcMain.handle('copy-folder', (_e, src, dest) => {
 });
 
 // ── Export / Import sauvegarde ────────────────────────
-// Export : copie le dossier Lutility_SAV entier (données + images) vers [destination]/Lutility_SAV_[Profil]
 ipcMain.handle('export-sav', async (_e, savPath, profileName) => {
   const r = await showDialog({
     title: 'Choisir le dossier de destination pour la sauvegarde',
@@ -314,7 +300,6 @@ ipcMain.handle('export-sav', async (_e, savPath, profileName) => {
   } catch(e) { return false; }
 });
 
-// Import (modal profil) : choisir un dossier Lutility_SAV → écrase le dossier actuel
 ipcMain.handle('import-sav', async (_e, savPath) => {
   const r = await showDialog({
     title: 'Sélectionner le dossier Lutility_SAV à restaurer',
@@ -327,16 +312,13 @@ ipcMain.handle('import-sav', async (_e, savPath) => {
   } catch { return null; }
 });
 
-// ── Import wizard — 1) choisir le dossier source, 2) choisir le parent destination ──
 ipcMain.handle('import-sav-wizard', async () => {
-  // Étape 1 : sélection du dossier Lutility_SAV source (sauvegarde existante)
   const rSrc = await showDialog({
     title: '📂 Étape 1/2 — Sélectionner votre dossier Lutility_SAV (sauvegarde)',
     properties: ['openDirectory'],
   });
   if (rSrc.canceled || !rSrc.filePaths.length) return null;
 
-  // Étape 2 : sélection du dossier parent de destination
   const rDest = await showDialog({
     title: '📁 Étape 2/2 — Choisir où installer (ex: clé USB, Documents…) — Lutility_SAV sera créé ici',
     properties: ['openDirectory', 'createDirectory'],
@@ -350,9 +332,8 @@ ipcMain.handle('import-sav-wizard', async () => {
   } catch { return null; }
 });
 
-// Import en place : sélectionne un dossier Lutility_SAV et retourne son chemin sans copier
-// Auto-détection : si l'utilisateur sélectionne le dossier PARENT qui contient Lutility_SAV,
-// le chemin est corrigé automatiquement
+// Sélectionne un Lutility_SAV et retourne son chemin sans copier.
+// Auto-détection : si l'utilisateur sélectionne le dossier PARENT, pointe sur Lutility_SAV.
 ipcMain.handle('import-sav-inplace', async () => {
   const r = await showDialog({
     title: 'Sélectionner le dossier Lutility_SAV (ou son dossier parent)',
@@ -360,17 +341,14 @@ ipcMain.handle('import-sav-inplace', async () => {
   });
   if (r.canceled || !r.filePaths.length) return null;
   let selected = r.filePaths[0];
-  // Si le dossier choisi contient un sous-dossier Lutility_SAV, pointe dessus
   const child = path.join(selected, 'Lutility_SAV');
   if (fs.existsSync(child) && fs.statSync(child).isDirectory()) selected = child;
-  // Valide : doit contenir au moins un fichier JSON Lutility
   const hasData = ['games.json','notebooks.json','notes.json','shortcuts.json'].some(f =>
     fs.existsSync(path.join(selected, f))
   );
   return hasData ? selected : null;
 });
 
-// ── Mise à jour ───────────────────────────────────────
 const UPDATE_CHECK_URL = 'https://raw.githubusercontent.com/ALuffyi/Lutility/main/version.json';
 
 ipcMain.handle('get-version', () => app.getVersion());
@@ -380,7 +358,7 @@ ipcMain.handle('check-update', async () => {
     if (!res.ok) return null;
     const data = await res.json();
     if (!data.version || !data.url) return null;
-    return data; // { version, url, notes }
+    return data; // { version, url, notes? }
   } catch { return null; }
 });
 
@@ -435,7 +413,7 @@ ipcMain.handle('export-note-pdf', async (_e, title) => {
       filters: [{ name: 'PDF', extensions: ['pdf'] }],
     });
     if (canceled || !filePath) return false;
-    // printToPDF sur la fenêtre principale (blob: URLs déjà chargées, images incluses)
+    // printToPDF sur la fenêtre principale (blob: URLs déjà chargées → images incluses)
     const pdfBuf = await win.webContents.printToPDF({ pageSize: 'A4', printBackground: false });
     fs.writeFileSync(filePath, pdfBuf);
     return true;
@@ -477,7 +455,6 @@ ipcMain.handle('install-update', (_e, filePath) => {
   app.quit();
 });
 
-// ── Ouvrir URL / lien Store ───────────────────────────
 ipcMain.handle('open-url', (_e, url) => {
   try { require('electron').shell.openExternal(url); return true; }
   catch(e) { return false; }
@@ -488,13 +465,12 @@ ipcMain.handle('launch-app', async (_e, exePath) => {
   try {
     const ext = path.extname(exePath).toLowerCase();
     if (ext === '.ps1') {
-      // PowerShell : fenêtre visible, reste ouverte
       const { spawn } = require('child_process');
       spawn('powershell.exe', ['-NoExit', '-ExecutionPolicy', 'Bypass', '-File', exePath], {
         detached: true, stdio: 'ignore', windowsHide: false,
       }).unref();
     } else {
-      // .bat / .cmd / .exe / .lnk → ShellExecute (identique à un double-clic)
+      // .bat / .cmd / .exe / .lnk → ShellExecute (double-clic Windows)
       const err = await require('electron').shell.openPath(exePath);
       if (err) throw new Error(err);
     }
@@ -502,7 +478,6 @@ ipcMain.handle('launch-app', async (_e, exePath) => {
   } catch(e) { return false; }
 });
 
-// ── Choose .exe / .bat / .lnk ────────────────────────
 ipcMain.handle('choose-exe', async () => {
   const r = await showDialog({
     title: 'Choisir un programme',
@@ -512,7 +487,6 @@ ipcMain.handle('choose-exe', async () => {
   return (r.canceled || !r.filePaths.length) ? null : r.filePaths[0];
 });
 
-// ── Choose script (.bat / .cmd / .ps1) ───────────────
 ipcMain.handle('choose-script', async () => {
   const r = await showDialog({
     title: 'Choisir un script',
@@ -522,7 +496,6 @@ ipcMain.handle('choose-script', async () => {
   return (r.canceled || !r.filePaths.length) ? null : r.filePaths[0];
 });
 
-// ── Renommer le dossier SAV (changement de profil) ────
 ipcMain.handle('rename-savfolder', (_e, oldPath, newName) => {
   try {
     if (!oldPath || !fs.existsSync(oldPath)) return { ok: false, path: oldPath };
@@ -538,10 +511,9 @@ ipcMain.handle('rename-savfolder', (_e, oldPath, newName) => {
 // ── Execute system commands ───────────────────────────
 const { exec } = require('child_process');
 
-// PowerShell via Base64 — force UTF-8 output pour éviter les caractères garbled
+// PowerShell via Base64 — UTF-8 forcé pour éviter les caractères garbled
 ipcMain.handle('exec-ps-script', (_e, script) => {
   return new Promise(resolve => {
-    // On préfixe chaque script PS avec le forçage UTF-8 output AVANT l'encodage Base64
     const fullScript = '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n' + script;
     const encoded = Buffer.from(fullScript, 'utf16le').toString('base64');
     exec(
@@ -561,7 +533,6 @@ ipcMain.handle('exec-cmd', (_e, cmd, type) => {
     const os  = require('os');
 
     if (type === 'PS') {
-      // PowerShell : ouvre une fenêtre PowerShell visible + reste ouverte (-NoExit)
       const psScript = '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n' + cmd;
       const encoded  = Buffer.from(psScript, 'utf16le').toString('base64');
       try {
@@ -575,7 +546,7 @@ ipcMain.handle('exec-cmd', (_e, cmd, type) => {
         resolve({ ok: false, out: e.message });
       }
     } else {
-      // CMD : copie dans un .bat temporaire, ouvre un terminal visible (/k = reste ouvert)
+      // CMD : .bat temporaire, /k = terminal reste ouvert
       const tmp = path.join(os.tmpdir(), `lutility_${Date.now()}.bat`);
       try {
         fs.writeFileSync(tmp, '@chcp 65001 > nul 2>&1\r\n' + cmd, 'utf8');
@@ -592,18 +563,17 @@ ipcMain.handle('exec-cmd', (_e, cmd, type) => {
   });
 });
 
-// ── Tutoriels : remote-first + cache AppData ──────────────────────────────
+// ── Tutoriels : remote-first, cache AppData ──────────────────────────────
 const TUTOS_REMOTE = 'https://raw.githubusercontent.com/ALuffyi/Lutility/main/tutorials.json';
 const TUTOS_CACHE  = path.join(USER_DATA, 'tutorials-cache.json');
 const TUTOS_LOCAL  = path.join(__dirname, 'tutorials.json');
 
 ipcMain.handle('read-tutorials', async () => {
-  // En dev : fichier local directement
-  if (!app.isPackaged) {
+  if (!app.isPackaged) { // dev : fichier local
     try { return JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {}
     return [];
   }
-  // En prod : cache d'abord (affichage immédiat), fetch GitHub en arrière-plan
+  // Prod : cache d'abord (immédiat), fetch GitHub en arrière-plan pour la prochaine fois
   let cached = null;
   try { cached = JSON.parse(fs.readFileSync(TUTOS_CACHE, 'utf8')); } catch {}
 

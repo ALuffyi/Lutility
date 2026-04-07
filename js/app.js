@@ -1,6 +1,6 @@
 'use strict';
 
-// ══ MISE À JOUR ══════════════════════════════════════════
+// ══ MISE À JOUR ═════════════════════════════════════════
 let _updateData = null;
 
 function semverGt(a, b) {
@@ -44,7 +44,6 @@ function openUpdatePopup(btn) {
   btn.parentElement.style.position = 'relative';
   btn.parentElement.appendChild(p);
   _updPopup = p;
-  // Écoute la progression (une seule fois par session)
   if (!_updProgressBound) {
     _updProgressBound = true;
     window.api.onUpdateProgress(pct => {
@@ -92,7 +91,6 @@ function _installUpdate() {
   const panel  = document.getElementById('nb-panel');
   if (!handle || !panel) return;
 
-  // Restore saved width
   const saved = localStorage.getItem('nb-panel-width');
   if (saved) panel.style.width = saved + 'px';
 
@@ -125,10 +123,7 @@ function _installUpdate() {
 })();
 
 // ══ HOME DASHBOARD ══════════════════════════════════════
-function renderHome() {
-  // Les descriptions des cartes sont statiques dans le HTML.
-  // Pas de mise à jour dynamique ici.
-}
+function renderHome() {}
 
 // ══ APPARENCE ════════════════════════════════════════════
 const THEMES = [
@@ -155,13 +150,10 @@ let _appPrefs = { theme:'', density:'normal', textSize:'md' };
 
 function applyAppPrefs() {
   const b = document.body;
-  // Thème
   THEMES.forEach(t => b.classList.remove('theme-' + t.key));
   if (_appPrefs.theme) b.classList.add('theme-' + _appPrefs.theme);
-  // Densité
   DENSITY.forEach(d => b.classList.remove('density-' + d.key));
   if (_appPrefs.density && _appPrefs.density !== 'normal') b.classList.add('density-' + _appPrefs.density);
-  // Taille texte
   TEXT_SIZES.forEach(s => b.classList.remove('text-' + s.key));
   if (_appPrefs.textSize && _appPrefs.textSize !== 'md') b.classList.add('text-' + _appPrefs.textSize);
 }
@@ -174,7 +166,6 @@ function _saveAppPrefs() {
 let _homeCfg = null;
 let _custModalBuilt = false;
 
-// ── Source unique : pages affichées sur le Home ──────────────
 // Ajouter une entrée ici = apparaît automatiquement sur le Home
 const HOME_MENU = [
   { key:'jeux',       ico:'🎮', label:'Jeux',       desc:'Fiches de jeux, keybinds, paramètres et codes par jeu.',          sec:'contenu' },
@@ -191,7 +182,6 @@ const _HOME_CFG_DEFAULT = {
   prefs: { clock:true, navLabels:true },
 };
 
-// Génère les cartes du Home depuis HOME_MENU (appelé une seule fois au démarrage)
 function renderHomeCards() {
   const _e = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const bySec = {};
@@ -225,13 +215,11 @@ function _saveHomeCfg() {
   window.api.configSave({ homeViz: _homeCfg });
 }
 
-// Applique : visibilité cartes/nav + préférences interface
 function applyHomeCfg() {
   if (!_homeCfg) return;
   const secCards = {};
   HOME_MENU.forEach(m => { (secCards[m.sec] = secCards[m.sec] || []).push(m.key); });
 
-  // Cartes home
   for (const [sec, keys] of Object.entries(secCards)) {
     let any = false;
     keys.forEach(key => {
@@ -250,11 +238,9 @@ function applyHomeCfg() {
     if (btn) btn.style.display = _homeCfg.nav[key] !== false ? '' : 'none';
   });
 
-  // Horloge
   const clock = document.getElementById('clock');
   if (clock) clock.style.display = _homeCfg.prefs.clock !== false ? '' : 'none';
 
-  // Labels sidebar
   const sidebar = document.querySelector('.sidebar');
   if (sidebar) sidebar.classList.toggle('no-labels', _homeCfg.prefs.navLabels === false);
 }
@@ -302,7 +288,6 @@ function _initCustomModal() {
     return wrap;
   }
 
-  // ── Section Apparence ──────────────────────────────────
   function makeApprRow(label, items, getVal, setVal, btnClass) {
     const wrap = document.createElement('div');
     wrap.className = 'appr-row';
@@ -327,7 +312,6 @@ function _initCustomModal() {
         setVal(item.key);
         applyAppPrefs();
         _saveAppPrefs();
-        // Refresh active state
         row.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('on', b.dataset.k === item.key));
       });
       row.appendChild(el);
@@ -350,12 +334,10 @@ function _initCustomModal() {
   apprWrap.appendChild(apprRows);
   body.appendChild(apprWrap);
 
-  // ── Affichage Home ─────────────────────────────────────
   body.appendChild(makeSection('Cartes du tableau de bord', CARD_ITEMS, 'cards', applyHomeCfg));
   body.appendChild(makeSection('Barre latérale', NAV_ITEMS, 'nav', applyHomeCfg));
   body.appendChild(makeSection('Interface', PREF_ITEMS, 'prefs', applyHomeCfg));
 
-  // Comportement à la fermeture
   const fermeture = document.createElement('div');
   fermeture.innerHTML = `
     <div class="home-cust-group-lbl">Comportement à la fermeture</div>
@@ -380,7 +362,6 @@ function toast(msg,type=''){const t=document.getElementById('toast');t.textConte
 
 // ══ NAV / MODALS ════════════════════════════════════════
 function nav(id){
-  // Stop température auto-refresh si on quitte tools
   if (typeof stopTempRefresh === 'function' && id !== 'tools') stopTempRefresh();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nav').forEach(b=>b.classList.remove('on'));
@@ -400,7 +381,6 @@ function openModal(id){
 }
 function closeModal(id){
   document.getElementById(id).classList.remove('on');
-  // Remettre le focus sur l'éditeur de notes si une page est active
   setTimeout(() => {
     const body = document.getElementById('note-body');
     if (body && body.contentEditable === 'true') body.focus();
@@ -416,8 +396,8 @@ function closeModal(id){
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on')}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.overlay.on').forEach(o=>o.classList.remove('on'));hideTbl();}});
 
-// ══ CLOSE ACTION ════════════════════════════════════════
-let _closeAction = 'minimize'; // 'minimize' | 'quit'
+// ══ CLOSE ACTION — 'minimize' | 'quit' ══════════════════
+let _closeAction = 'minimize';
 
 function setCloseAction(action) {
   _closeAction = action;
@@ -435,10 +415,8 @@ function _updateCloseActionBtns() {
   quit.classList.toggle('prim', _closeAction === 'quit');
 }
 
-// Cartes Home générées immédiatement (synchrone, avant tout await)
 renderHomeCards();
 
-// Initialise closeAction + apparence + visibilité home depuis la config au démarrage
 (async function _initCloseAction() {
   const cfg = await window.api.configLoad();
   if (cfg?.closeAction) _closeAction = cfg.closeAction;
@@ -457,7 +435,6 @@ async function saveProfile(){
   profile.name  = newName;
   profile.emoji = selEmoji;
 
-  // Si le nom change et qu'un dossier SAV existe, tenter de le renommer
   if (newName !== oldName && savPath) {
     const folderBasename = savPath.split(/[/\\]/).pop();
     if (folderBasename.startsWith('Lutility_SAV')) {
@@ -494,20 +471,17 @@ function showCtx(e,items){
 function hideCtx(){ctxEl.classList.remove('on');}
 document.addEventListener('click',()=>hideCtx());
 
-// Stocke les suggestions ortho dès que le main process les envoie (push)
 let _spellInfo = null;
 window.api.onSpellInfo(data => { _spellInfo = data; });
 
 document.addEventListener('contextmenu', async e => {
   // Pas de preventDefault ici : Chromium envoie les params spell-check au process
-  // main SEULEMENT si le renderer ne prévient pas le menu natif. La suppression du
-  // menu natif est gérée par _evt.preventDefault() dans le handler main.
+  // main SEULEMENT si le renderer ne prévient pas le menu natif.
+  // La suppression du menu natif est gérée par _evt.preventDefault() dans le handler main.
   const isEditable = e.target.isContentEditable || ['INPUT','TEXTAREA'].includes(e.target.tagName) || e.target.closest('[contenteditable]');
-  // Image cliquée dans l'éditeur de notes
   const noteImg = (e.target.tagName === 'IMG' && e.target.closest('.note-body')) ? e.target : null;
   const items = [];
   if (isEditable && !noteImg) {
-    // Section presse-papiers — masquée quand on clique sur une image
     items.push({ label: 'Presse-papiers' });
     items.push({ ico:'📋', text:'Coller', action: async () => { try { const t = await navigator.clipboard.readText(); document.execCommand('insertText', false, t); } catch(err) {} } });
     const sel = window.getSelection()?.toString();
@@ -523,13 +497,10 @@ document.addEventListener('contextmenu', async e => {
     else      items.push({ ico:'—',  text:'Rien à copier',       action: () => {} });
   }
 
-  // ── Suggestions orthographiques ──────────────────────────────────────────
-  // L'event context-menu natif (main) arrive après le contextmenu DOM.
-  // On attend 40ms — imperceptible — pour que le push spell-info soit reçu.
+  // Attend que le push spell-info du main process soit reçu (context-menu natif arrive après contextmenu DOM)
   await new Promise(r => setTimeout(r, 200));
   const spell = _spellInfo;
   _spellInfo = null;
-  // Vérifier si le mot sélectionné est dans le dico perso (pour pouvoir le retirer)
   const dictWords    = await window.api.listDictionaryWords();
   const selectedWord = window.getSelection()?.toString().trim();
   const inCustomDict = selectedWord && dictWords.some(w => w.toLowerCase() === selectedWord.toLowerCase());
@@ -558,7 +529,6 @@ document.addEventListener('contextmenu', async e => {
   if (gitem) { items.push('sep'); items.push({ label:'Jeu' }); items.push({ ico:'🗑️', text:'Supprimer ce jeu', danger:true, action:()=>{ delGame(+gitem.dataset.gid); } }); }
   const nbHdr = e.target.closest('.nb-hdr');
   if (nbHdr) { const nbId = +nbHdr.dataset.id; items.push('sep'); items.push({ label:'Carnet' }); items.push({ ico:'✏️', text:'Modifier (nom + emoji)', action:()=>nbEdit(nbId) }); items.push({ ico:'🗑️', text:'Supprimer', danger:true, action:()=>nbDel(nbId,{stopPropagation:()=>{}}) }); }
-  // Clic droit sur une image dans l'éditeur de notes
   const imgInNote = e.target.tagName === 'IMG' && e.target.closest('.note-body') ? e.target : null;
   if (imgInNote) {
     items.push('sep'); items.push({ label:'Image' });
@@ -566,7 +536,6 @@ document.addEventListener('contextmenu', async e => {
     items.push({ ico:'↓', text:'Descendre', action: () => _moveImg(imgInNote,  1) });
     items.push({ ico:'🗑️', text:'Supprimer l\'image', danger:true, action: () => _deleteImg(imgInNote) });
   }
-  // Export PDF depuis l'éditeur de notes
   const inNoteBody = e.target.closest('.note-body');
   if (inNoteBody) {
     items.push('sep');
@@ -575,7 +544,6 @@ document.addEventListener('contextmenu', async e => {
       const bodyEl = document.getElementById('note-body');
       const printDiv = document.getElementById('note-print-preview');
       if (!bodyEl || !printDiv) return;
-      // Remplir le div de prévisualisation (blob: URLs déjà chargées dans cette fenêtre)
       printDiv.innerHTML = `<h1>${escHtml(title)}</h1>` + bodyEl.innerHTML;
       document.body.classList.add('pdf-exporting');
       const ok = await window.api.exportNotePdf(title);
@@ -584,7 +552,6 @@ document.addEventListener('contextmenu', async e => {
       if (ok) toast('✓ PDF exporté');
     }});
   }
-  // Section/page context menu handled per-level in notes.js nbCtxMenu
   showCtx(e, items);
 });
 
