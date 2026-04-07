@@ -123,7 +123,7 @@ body{flex-direction:column!important}
     </div>
   </div>
 
-  <!-- ── RETOUR (utilisateur connu) ── -->
+  <!-- ── RETOUR (utilisateur connu, dossier OK) ── -->
   <div class="lcard" id="card-return" style="display:none;max-width:520px">
     <div class="return-greeting">
       <span class="return-emoji" id="r-emoji">🎮</span>
@@ -161,6 +161,29 @@ body{flex-direction:column!important}
       </div>
     </div>
   </div>
+
+  <!-- ── DOSSIER PERDU (profil connu, dossier introuvable) ── -->
+  <div class="lcard" id="card-lost" style="display:none;max-width:520px">
+    <div class="return-greeting">
+      <span class="return-emoji" id="lost-emoji">🎮</span>
+      <div>
+        <div class="return-name" id="lost-name">Joueur</div>
+        <div class="return-sub" style="color:var(--red)">⚠ Dossier Lutility_SAV introuvable</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--dim2);margin:0 0 16px">Le dossier de sauvegarde a été déplacé ou n'est plus accessible (clé USB débranchée ?). Indiquez où il se trouve maintenant — aucune donnée ne sera perdue.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn prim" style="width:100%;justify-content:center;font-size:13px" onclick="quickLocate()">
+        📂 Localiser Lutility_SAV
+      </button>
+      <button class="btn" style="width:100%;justify-content:center;font-size:13px" onclick="quickNewFolder()">
+        📁 Choisir un nouveau dossier
+      </button>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:12px">
+      <div class="return-reset" onclick="resetSetup()">⚙ Reconfigurer depuis zéro</div>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════
@@ -170,16 +193,23 @@ body{flex-direction:column!important}
   <div class="topbar">
     <div class="logo">L<span class="u-orange">U</span>TILITY</div>
     <div class="topbar-r">
-      <div class="profile-chip" onclick="openModal('modal-profile')" title="Modifier le profil">
+      <div class="profile-chip" onclick="openModal('modal-profile')" title="Modifier le profil" style="flex-shrink:0">
         <span class="t-emoji" id="t-emoji">🎮</span>
         <div class="t-name" id="t-name">Profil</div>
       </div>
-      <div class="sav-chip" onclick="document.getElementById('folder-path-lbl').textContent=savPath||'—';openModal('modal-folder')" title="Settings">
+      <div class="topbar-sep"></div>
+      <div class="sav-chip" onclick="toggleHomeCustomize()" title="Personnaliser l'interface" id="cust-chip" style="flex-shrink:0">
+        <span>✏️</span>
+        <span>Personnaliser</span>
+      </div>
+      <div class="topbar-sep"></div>
+      <div class="sav-chip" onclick="document.getElementById('folder-path-lbl').textContent=savPath||'—';openModal('modal-folder')" title="Settings" style="flex-shrink:0">
         <div class="led" id="led"></div>
         <span id="sav-lbl">Settings</span>
       </div>
-      <button id="update-btn" class="update-btn gone" onclick="openUpdatePopup(this)" title="Mise à jour disponible"></button>
-      <div class="clock" id="clock">--:--:--</div>
+      <div class="topbar-sep"></div>
+      <button id="update-btn" class="update-btn gone" onclick="openUpdatePopup(this)" title="Mise à jour disponible" style="flex-shrink:0"></button>
+      <div class="clock" id="clock" style="flex-shrink:0">--:--:--</div>
     </div>
   </div>
 
@@ -188,42 +218,58 @@ body{flex-direction:column!important}
       <!-- HOME -->
       <button class="nav on" data-p="home" onclick="nav('home')"><span class="ico">🏠</span><span class="lbl">Home</span></button>
       <div class="navsep"></div>
-      <!-- CONTENU -->
-      <button class="nav" data-p="jeux"  onclick="nav('jeux')"> <span class="ico">🎮</span><span class="lbl">Jeux</span></button>
-      <button class="nav" data-p="notes" onclick="nav('notes')"><span class="ico">📝</span><span class="lbl">Notes</span></button>
+      <!-- JEUX + NOTES -->
+      <button class="nav" id="nav-jeux"        data-p="jeux"        onclick="nav('jeux')">        <span class="ico">🎮</span><span class="lbl">Jeux</span></button>
+      <button class="nav" id="nav-notes"       data-p="notes"       onclick="nav('notes')">       <span class="ico">📝</span><span class="lbl">Notes</span></button>
       <div class="navsep"></div>
-      <!-- OUTILS -->
-      <button class="nav" data-p="programmes" onclick="nav('programmes')"><span class="ico">📦</span><span class="lbl">Apps</span></button>
-      <button class="nav" data-p="shortcuts"  onclick="nav('shortcuts')"> <span class="ico">🔗</span><span class="lbl">Raccourcis</span></button>
-      <button class="nav" data-p="scripts"    onclick="nav('scripts')">   <span class="ico">🛠️</span><span class="lbl">Scripts</span></button>
+      <!-- RACCOURCIS (+ Scripts fusionnés) -->
+      <button class="nav" id="nav-shortcuts"   data-p="shortcuts"   onclick="nav('shortcuts')">   <span class="ico">🔗</span><span class="lbl">Raccourcis</span></button>
       <div class="navsep"></div>
-      <button class="nav" data-p="tools" onclick="nav('tools')"><span class="ico">⚙️</span><span class="lbl">Outils</span></button>
+      <!-- APPS + OUTILS -->
+      <button class="nav" id="nav-programmes"  data-p="programmes"  onclick="nav('programmes')">  <span class="ico">📦</span><span class="lbl">Apps</span></button>
+      <button class="nav" id="nav-tools"       data-p="tools"       onclick="nav('tools')">       <span class="ico">⚙️</span><span class="lbl">Outils</span></button>
       <div class="navsep"></div>
-      <button class="nav" data-p="maj" onclick="nav('maj');loadChangelog()"><span class="ico">📋</span><span class="lbl">MàJ</span></button>
+      <button class="nav" id="nav-maj"         data-p="maj"         onclick="nav('maj');loadChangelog()"><span class="ico">📋</span><span class="lbl">MàJ</span></button>
     </div>
 
     <div class="content">
       <!-- HOME -->
       <div class="page on" id="p-home">
-        <div class="wlogo">L<span class="u-orange">U</span>TILITY</div>
-        <!-- Groupe Contenu -->
-        <div class="home-section-lbl">CONTENU</div>
-        <div class="wgrid wgrid-2">
-          <div class="wcard" data-p="jeux"  onclick="nav('jeux')"> <span class="wi">🎮</span><div class="wt">Jeux</div> <div class="wd">Touches, graphismes et configs — tout éditable</div></div>
-          <div class="wcard" data-p="notes" onclick="nav('notes')"><span class="wi">📝</span><div class="wt">Notes</div><div class="wd">OneNote style · Tableaux · Images · .md</div></div>
+        <div class="home-scroll">
+          <div class="home-inner">
+            <div class="wlogo">L<span class="u-orange">U</span>TILITY</div>
+            <!-- Section Contenu -->
+            <div class="home-sec" data-sec="contenu">
+              <div class="home-section-lbl">CONTENU</div>
+              <div class="wgrid wgrid-2">
+                <div class="wcard" data-p="jeux"  onclick="nav('jeux')"> <span class="wi">🎮</span><div class="wt">Jeux</div> <div class="wd">Accédez à la sauvegarde de touches de jeux vidéo.</div></div>
+                <div class="wcard" data-p="notes" onclick="nav('notes')"><span class="wi">📝</span><div class="wt">Notes</div><div class="wd">Un espace de prise de notes pour consigner vos idées.</div></div>
+              </div>
+            </div>
+            <!-- Section Apps & Raccourcis -->
+            <div class="home-sec" data-sec="apps">
+              <div class="home-section-lbl">APPS &amp; RACCOURCIS</div>
+              <div class="wgrid wgrid-2">
+                <div class="wcard" data-p="programmes" onclick="nav('programmes')"><span class="wi">📦</span><div class="wt">Apps</div>      <div class="wd">Une sélection d'applications Windows recommandées à télécharger et installer rapidement.</div></div>
+                <div class="wcard" data-p="shortcuts"  onclick="nav('shortcuts')"> <span class="wi">🔗</span><div class="wt">Raccourcis</div><div class="wd">Un gestionnaire pour lancer vos applications favorites ou scripts personnalisés en un clic.</div></div>
+              </div>
+            </div>
+            <!-- Section Outils -->
+            <div class="home-sec" data-sec="outils">
+              <div class="home-section-lbl">OUTILS</div>
+              <div class="wgrid wgrid-1">
+                <div class="wcard" data-p="tools" onclick="nav('tools')"><span class="wi">⚙️</span><div class="wt">Outils Système</div><div class="wd">Un regroupement de fonctions utilitaires — infos matériel, maintenance &amp; nettoyage, gestion des mises à jour.</div></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <!-- Groupe Outils -->
-        <div class="home-section-lbl">OUTILS</div>
-        <div class="wgrid wgrid-4">
-          <div class="wcard" data-p="programmes" onclick="nav('programmes')"><span class="wi">📦</span><div class="wt">Apps</div>      <div class="wd">Apps Windows conseillées</div></div>
-          <div class="wcard" data-p="shortcuts"  onclick="nav('shortcuts')"> <span class="wi">🔗</span><div class="wt">Raccourcis</div><div class="wd">Lancez vos apps en un clic</div></div>
-          <div class="wcard" data-p="scripts"    onclick="nav('scripts')">   <span class="wi">🛠️</span><div class="wt">Scripts</div>   <div class="wd">CMD &amp; PowerShell personnalisés</div></div>
-          <div class="wcard" data-p="tools"      onclick="nav('tools')">     <span class="wi">⚙️</span><div class="wt">Outils</div>    <div class="wd">Sys Info · Maintenance · Optimisation</div></div>
+        <!-- Discord — toujours centré en bas -->
+        <div class="home-footer">
+          <a class="discord-btn" onclick="window.api.openUrl('https://discord.gg/sjguZWfgK9')">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+            Rejoindre le Discord
+          </a>
         </div>
-        <a class="discord-btn" onclick="window.api.openUrl('https://discord.gg/sjguZWfgK9')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-          Discord
-        </a>
       </div>
 
       <!-- JEUX -->
@@ -338,76 +384,59 @@ body{flex-direction:column!important}
         </div>
       </div>
 
-      <!-- RACCOURCIS -->
+      <!-- RACCOURCIS & SCRIPTS -->
       <div class="page" id="p-shortcuts">
         <div class="ph">
-          <div class="ph-t" style="--pc:var(--yellow)">🔗 Raccourcis</div>
-          <button class="btn orange" onclick="openAddShortcut()">+ Ajouter</button>
+          <div class="ph-t" style="--pc:var(--yellow)">🔗 Raccourcis &amp; Scripts</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn orange" onclick="openAddShortcut()">+ Raccourci</button>
+            <button class="btn orange" onclick="openAddCustomTool()">+ Script</button>
+          </div>
         </div>
         <div class="tools-scroll" style="padding:0;gap:0">
           <div class="page-with-panel">
             <div class="page-with-panel-main">
+              <!-- Raccourcis -->
+              <div class="sc-section-hdr">🔗 Raccourcis</div>
               <div class="sc-wrap" id="sc-wrap"></div>
+              <!-- Scripts -->
+              <div class="sc-section-hdr" style="margin-top:20px">
+                🛠️ Scripts <span class="tool-cat-badge" id="ct-count" style="margin-left:6px">0</span>
+              </div>
+              <div class="tools-inner-grid" id="cat-body-custom" style="margin-top:8px"></div>
             </div>
             <div class="tuto-panel">
               <div class="tuto-ttl">🔗 Raccourcis</div>
               <div>
                 <div class="tuto-lbl">À quoi ça sert</div>
-                <p class="tuto-p">Accédez à vos <strong>apps, dossiers et fichiers</strong> favoris directement depuis Lutility.</p>
-              </div>
-              <div>
-                <div class="tuto-lbl">Ajouter</div>
-                <p class="tuto-p">→ Cliquez <strong>+ Ajouter</strong><br>→ Choisissez un emoji<br>→ Collez le chemin ou parcourez</p>
+                <p class="tuto-p">Accédez à vos <strong>apps, dossiers et fichiers</strong> favoris en un clic.</p>
               </div>
               <div>
                 <div class="tuto-lbl">Compatible</div>
-                <div class="tuto-code">.exe &nbsp;.bat &nbsp;.lnk<br>dossiers / URLs</div>
+                <div class="tuto-code">.exe &nbsp;.bat &nbsp;.lnk</div>
               </div>
               <div class="example-wrap">
-                <div class="example-lbl">— Exemple —</div>
+                <div class="example-lbl">— Exemple raccourci —</div>
                 <div class="example-sc">
                   <div class="example-sc-ico">⌨️</div>
                   <div class="example-sc-name">Invite de commande</div>
                 </div>
                 <p class="tuto-p" style="margin-top:6px;font-size:11px">Chemin : <code style="font-family:var(--mono);color:var(--cyan)">cmd.exe</code></p>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SCRIPTS (ex Mes Commandes) -->
-      <div class="page" id="p-scripts">
-        <div class="ph">
-          <div class="ph-t" style="--pc:var(--purple)">🛠️ Scripts</div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span class="tool-cat-badge" id="ct-count">0</span>
-            <button class="btn orange" onclick="openAddCustomTool()">+ Ajouter</button>
-          </div>
-        </div>
-        <div class="tools-scroll" style="padding:0;gap:0">
-          <div class="page-with-panel">
-            <div class="page-with-panel-main">
-              <div class="tools-inner-grid" id="cat-body-custom"></div>
-            </div>
-            <div class="tuto-panel">
-              <div class="tuto-ttl">🛠️ Scripts</div>
-              <div>
-                <div class="tuto-lbl">À quoi ça sert</div>
-                <p class="tuto-p">Créez et lancez vos <strong>commandes personnalisées</strong> en un clic, sans ouvrir de terminal.</p>
-              </div>
-              <div>
-                <div class="tuto-lbl">Types</div>
-                <p class="tuto-p"><strong style="color:var(--cyan)">CMD</strong> — Invite de commande<br><strong style="color:var(--purple)">PS</strong> &nbsp;— PowerShell</p>
-              </div>
-              <div>
-                <div class="tuto-lbl">Conseils</div>
-                <p class="tuto-p">→ Cochez <strong>Admin</strong> pour les tâches système<br>→ <strong>Dupliquer</strong> pour créer des variantes<br>→ Scripts liés à votre profil</p>
-              </div>
-              <div class="example-wrap">
-                <div class="example-lbl">— Exemple CMD —</div>
-                <div class="tuto-code">ipconfig /flushdns</div>
-                <p class="tuto-p" style="margin-top:6px;font-size:11px">Vide le cache DNS Windows pour résoudre des problèmes de connexion.</p>
+              <div style="margin-top:16px">
+                <div class="tuto-ttl">🛠️ Scripts</div>
+                <div>
+                  <div class="tuto-lbl">À quoi ça sert</div>
+                  <p class="tuto-p">Lancez vos <strong>.bat</strong>, <strong>.cmd</strong> ou <strong>.ps1</strong> en un clic — s'ouvre dans un terminal visible.</p>
+                </div>
+                <div>
+                  <div class="tuto-lbl">Comment ajouter</div>
+                  <p class="tuto-p">→ Cliquez <strong>+ Script</strong><br>→ Choisissez votre fichier<br>→ Donnez-lui un nom et une icône</p>
+                </div>
+                <div>
+                  <div class="tuto-lbl">Exécution</div>
+                  <p class="tuto-p">→ <strong>.bat / .cmd</strong> → terminal CMD<br>→ <strong>.ps1</strong> → terminal PowerShell<br>→ Terminal reste ouvert après exécution</p>
+                </div>
               </div>
             </div>
           </div>
@@ -517,7 +546,34 @@ body{flex-direction:column!important}
 </div>
 
 
-<!-- MODAL NOTEBOOK (create + edit) -->
+<!-- MODAL PERSONNALISER -->
+<div class="overlay" id="modal-customize">
+  <div class="modal" style="width:500px;max-width:92vw">
+    <div class="modal-t" style="--mc:var(--cyan)">✏️ Personnaliser</div>
+    <div id="cust-modal-body" style="display:flex;flex-direction:column;gap:20px;max-height:60vh;overflow-y:auto;padding-right:4px"></div>
+    <div class="macts"><button class="btn sm" onclick="closeModal('modal-customize')">Fermer</button></div>
+  </div>
+</div>
+
+<!-- MODAL IMPORT CHOICE -->
+<div class="overlay" id="modal-import-choice">
+  <div class="modal" style="width:400px">
+    <div class="modal-t">📥 Importer des données</div>
+    <div style="font-size:13px;color:var(--dim2);line-height:1.7;margin-bottom:16px">Comment souhaitez-vous utiliser ces données ?</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div onclick="importChoiceSelect('copy')" style="cursor:pointer;padding:14px 16px;border-radius:8px;border:1px solid var(--cyan);background:rgba(0,212,255,.07);transition:background .15s" onmouseover="this.style.background='rgba(0,212,255,.15)'" onmouseout="this.style.background='rgba(0,212,255,.07)'">
+        <div style="font-family:var(--head);font-size:13px;font-weight:700;color:var(--cyan);letter-spacing:1px;margin-bottom:4px">📋 COPIER ICI</div>
+        <div style="font-size:11px;color:var(--dim2);font-family:var(--body);line-height:1.5">Copie les données dans votre dossier de sauvegarde actuel</div>
+      </div>
+      <div onclick="importChoiceSelect('inplace')" style="cursor:pointer;padding:14px 16px;border-radius:8px;border:1px solid var(--green);background:rgba(34,197,94,.07);transition:background .15s" onmouseover="this.style.background='rgba(34,197,94,.15)'" onmouseout="this.style.background='rgba(34,197,94,.07)'">
+        <div style="font-family:var(--head);font-size:13px;font-weight:700;color:var(--green);letter-spacing:1px;margin-bottom:4px">📂 CHARGER DEPUIS LEUR EMPLACEMENT</div>
+        <div style="font-size:11px;color:var(--dim2);font-family:var(--body);line-height:1.5">Utilise le dossier directement — aucune copie effectuée</div>
+      </div>
+    </div>
+    <div class="macts"><button class="btn sm" onclick="importChoiceSelect(null)">Annuler</button></div>
+  </div>
+</div>
+
 <div class="overlay" id="modal-nb">
   <div class="modal">
     <input type="hidden" id="nb-mode" value="create">
@@ -594,13 +650,13 @@ body{flex-direction:column!important}
   </div>
 </div>
 
-<!-- MODAL CUSTOM TOOL -->
+<!-- MODAL CUSTOM TOOL (script fichier) -->
 <div class="overlay" id="modal-custom-tool">
-  <div class="modal" style="width:500px">
-    <div class="modal-t" id="ct-modal-title">⚙️ Nouvelle commande</div>
+  <div class="modal" style="width:440px">
+    <div class="modal-t" id="ct-modal-title">⚙️ Nouveau script</div>
     <div class="frow">
       <label class="flbl">Nom</label>
-      <input class="fin" id="ct-name" maxlength="48" placeholder="Mon outil…"
+      <input class="fin" id="ct-name" maxlength="48" placeholder="Mon script…"
         onkeydown="if(event.key==='Enter')ctConfirm()">
     </div>
     <div class="frow" style="margin-bottom:13px">
@@ -613,30 +669,10 @@ body{flex-direction:column!important}
       </div>
     </div>
     <div class="frow">
-      <label class="flbl">Description</label>
-      <input class="fin" id="ct-desc" maxlength="120" placeholder="Ce que fait cette commande…">
-    </div>
-    <div class="frow">
-      <label class="flbl">Commande</label>
-      <textarea class="fin" id="ct-cmd" rows="4"
-        style="resize:vertical;font-family:var(--mono);font-size:12px;line-height:1.5"
-        placeholder="Entrez votre commande CMD ou PowerShell…"></textarea>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0">
-      <div>
-        <label class="flbl">Type</label>
-        <select class="fin" id="ct-type">
-          <option value="CMD">CMD</option>
-          <option value="PS">PowerShell</option>
-        </select>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;padding-top:20px">
-        <input type="checkbox" id="ct-admin"
-          style="width:16px;height:16px;accent-color:var(--orange);cursor:pointer;flex-shrink:0">
-        <label for="ct-admin"
-          style="font-family:var(--mono);font-size:10px;color:var(--dim2);letter-spacing:1px;cursor:pointer">
-          🛡️ Requiert Admin
-        </label>
+      <label class="flbl">Fichier</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="fin" id="ct-path-display" style="flex:1;font-family:var(--mono);font-size:11px;color:var(--dim2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default" title="">—</div>
+        <button class="btn sm" type="button" onclick="_ctPickFile()" style="flex-shrink:0">📂 Changer</button>
       </div>
     </div>
     <div class="macts">

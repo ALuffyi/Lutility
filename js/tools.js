@@ -48,10 +48,16 @@ const TOOLS = [
     cmd:'iwr -useb https://git.io/debloat | iex',
   },
   {
-    ico:'🛡️', name:'AdwCleaner', tag:'Système', tc:'p',
+    ico:'🛡️', fav:'malwarebytes.com', name:'AdwCleaner', tag:'Système', tc:'p',
     desc:'Ouvre la page de téléchargement AdwCleaner — supprime adwares, PUPs et toolbars (Malwarebytes).',
     admin:false, type:'CMD',
     cmd:'start https://www.malwarebytes.com/adwcleaner',
+  },
+  {
+    ico:'🎮', fav:'systemrequirementslab.com', name:'Can You Run It ?', tag:'Système', tc:'p',
+    desc:'Vérifie si votre PC peut faire tourner un jeu — détection automatique de votre configuration matérielle.',
+    admin:false, type:'CMD',
+    cmd:'start https://www.systemrequirementslab.com/cyri',
   },
   // ── MISES À JOUR ─────────────────────────────────────
   {
@@ -61,13 +67,13 @@ const TOOLS = [
     cmd:'Start-Process powershell -ArgumentList \'-NoExit -ExecutionPolicy Bypass -Command "Write-Host \'\'Mise a jour via winget...\'\' -ForegroundColor Cyan; winget upgrade --all --accept-package-agreements --accept-source-agreements"\'',
   },
   {
-    ico:'🖥️', name:'Mettre à jour les drivers (DriversCloud)', tag:'Update', tc:'g',
+    ico:'🖥️', fav:'driverscloud.com', name:'Mettre à jour les drivers (DriversCloud)', tag:'Update', tc:'g',
     desc:'Ouvre DriversCloud dans le navigateur : détection automatique des drivers manquants ou obsolètes.',
     admin:false, type:'CMD',
     cmd:'start https://www.driverscloud.com/fr',
   },
   {
-    ico:'🟢', name:'Mettre à jour les pilotes NVIDIA', tag:'Update', tc:'g',
+    ico:'🟢', fav:'nvidia.com', name:'Mettre à jour les pilotes NVIDIA', tag:'Update', tc:'g',
     desc:'Lance GeForce Experience pour mettre à jour les pilotes NVIDIA. Ouvre la page de téléchargement si GFE n\'est pas installé.',
     admin:false, type:'PS',
     cmd:'$paths=@("C:\\Program Files\\NVIDIA Corporation\\NVIDIA GeForce Experience\\NVIDIA GeForce Experience.exe","C:\\Program Files (x86)\\NVIDIA Corporation\\NVIDIA GeForce Experience\\NVIDIA GeForce Experience.exe");$exe=$paths|Where-Object{Test-Path $_}|Select-Object -First 1;if($exe){Start-Process $exe}else{Start-Process "https://www.nvidia.com/fr-fr/geforce/drivers/"}',
@@ -82,10 +88,10 @@ const TOOLS = [
 
 // Catégories — ordre d'affichage
 const TOOL_CATS = [
+  { id:'updates', label:'🔄 Mises à jour',  tc:'g', tags:['Update']   },
   { id:'maint',   label:'🧹 Maintenance',   tc:'y', tags:['Maint.']   },
   { id:'windows', label:'🪟 Windows',       tc:'b', tags:['Windows']  },
   { id:'systeme', label:'🧬 Système',       tc:'p', tags:['Système']  },
-  { id:'updates', label:'🔄 Mises à jour',  tc:'g', tags:['Update']   },
 ];
 
 // État collapse par catégorie (session uniquement)
@@ -277,12 +283,12 @@ async function loadSysinfo() {
 
 // ══ PROGRAMMES CONSEILLÉS ════════════════════════════
 const PROG_CATS = [
-  { id:'gaming',  label:'🎮 Gaming'        },
-  { id:'comms',   label:'💬 Communication' },
-  { id:'nav',     label:'🌐 Navigateurs'   },
-  { id:'periph',  label:'🖱️ Périphériques' },
-  { id:'capture', label:'🎥 Capture'       },
-  { id:'utils',   label:'⚡ Utilitaires'   },
+  { id:'gaming',  label:'🎮 Gaming',        tc:'o' },
+  { id:'comms',   label:'💬 Communication', tc:'b' },
+  { id:'nav',     label:'🌐 Navigateurs',   tc:'g' },
+  { id:'periph',  label:'🖱️ Périphériques', tc:'p' },
+  { id:'capture', label:'🎥 Capture',       tc:'y' },
+  { id:'utils',   label:'⚡ Utilitaires',   tc:'b' },
 ];
 
 const PROGRAMMES = [
@@ -362,12 +368,12 @@ function renderProgrammes() {
   PROG_CATS.forEach(cat => {
     const progs = PROGRAMMES.filter(p => p.cat === cat.id);
     if (!progs.length) return;
-    const collapsed = !!_catCollapsed['prog_' + cat.id];
+    const collapsed = _catCollapsed['prog_' + cat.id] ?? true;
 
     const catEl = document.createElement('div');
     catEl.className = 'tool-cat';
     catEl.innerHTML = `
-      <div class="tool-cat-hdr" onclick="toggleCat('prog_${cat.id}')">
+      <div class="tool-cat-hdr" data-tc="${cat.tc||''}" onclick="toggleCat('prog_${cat.id}')">
         <span class="tool-cat-lbl">${escHtml(cat.label)}</span>
         <span class="tool-cat-badge">${progs.length}</span>
         <span class="tool-cat-arr" id="cat-icon-prog_${cat.id}">${collapsed ? '▸' : '▾'}</span>
@@ -380,16 +386,11 @@ function renderProgrammes() {
       const link    = prog.store || prog.url;
       const card    = document.createElement('div');
       card.className = 'tcard';
-
-      // Favicon via Google S2, emoji en fallback
-      const favUrl  = `https://www.google.com/s2/favicons?sz=32&domain=${prog.fav || ''}`;
-      const icoHtml = prog.fav
-        ? `<img src="${favUrl}" width="24" height="24" style="border-radius:5px;object-fit:contain;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='block'" alt=""><span style="display:none;font-size:20px">${escHtml(prog.ico)}</span>`
-        : `<span style="font-size:20px">${escHtml(prog.ico)}</span>`;
+      if (cat.tc) card.dataset.tc = cat.tc;
 
       card.innerHTML = `
         <div class="tcard-hdr">
-          <div class="tcard-ico" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0">${icoHtml}</div>
+          <div class="tcard-ico" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;font-size:22px">${escHtml(prog.ico)}</div>
           <div class="tcard-name">${escHtml(prog.name)}</div>
         </div>
         <div class="tcard-body">
@@ -518,10 +519,11 @@ function renderShortcuts() {
   });
 }
 
-// ══ MES COMMANDES (outils personnalisés) ══════════════
+// ══ SCRIPTS (fichiers .bat / .cmd / .ps1) ═════════════
 const CT_EMOJIS = ['⚙️','🔧','🛠️','💻','🖥️','⚡','🚀','🔒','🌐','🎮','🧹','💽','🗑️','🔄','📡','🛡️','💾','🔍','📋','🗂️','🧬','🔌','🖱️','⌨️','📊','🧰','🔑','🗝️','💡','🔐'];
-let _ctEditId  = null;
-let _ctIcoSel  = '⚙️';
+let _ctEditId   = null;
+let _ctIcoSel   = '⚙️';
+let _ctFilePath = '';
 
 function _ctBuildEmojiGrid() {
   const grid = document.getElementById('ct-ico-grid');
@@ -538,16 +540,27 @@ function _ctPickIco(e) {
   document.querySelectorAll('.ct-ico-btn').forEach(b => b.classList.toggle('sel', b.textContent === e));
 }
 
-function openAddCustomTool() {
+function _ctSetPath(p) {
+  _ctFilePath = p || '';
+  const el = document.getElementById('ct-path-display');
+  if (el) { el.textContent = p || '—'; el.title = p || ''; }
+}
+
+async function _ctPickFile() {
+  const p = await window.api.chooseScript();
+  if (p) _ctSetPath(p);
+}
+
+async function openAddCustomTool() {
+  const filePath = await window.api.chooseScript();
+  if (!filePath) return;
   _ctEditId = null;
   _ctIcoSel = '⚙️';
-  document.getElementById('ct-modal-title').textContent = '⚙️ Nouvelle commande';
-  document.getElementById('ct-name').value    = '';
-  document.getElementById('ct-ico').value     = '⚙️';
-  document.getElementById('ct-desc').value    = '';
-  document.getElementById('ct-cmd').value     = '';
-  document.getElementById('ct-type').value    = 'CMD';
-  document.getElementById('ct-admin').checked = false;
+  const fileName = filePath.split(/[/\\]/).pop().replace(/\.(bat|cmd|ps1)$/i, '');
+  document.getElementById('ct-modal-title').textContent = '⚙️ Nouveau script';
+  document.getElementById('ct-name').value = fileName;
+  document.getElementById('ct-ico').value  = '⚙️';
+  _ctSetPath(filePath);
   _ctBuildEmojiGrid();
   openModal('modal-custom-tool');
 }
@@ -557,13 +570,10 @@ function ctEdit(id) {
   if (!ct) return;
   _ctEditId = id;
   _ctIcoSel = ct.ico || '⚙️';
-  document.getElementById('ct-modal-title').textContent = '✏️ Modifier la commande';
-  document.getElementById('ct-name').value    = ct.name;
-  document.getElementById('ct-ico').value     = _ctIcoSel;
-  document.getElementById('ct-desc').value    = ct.desc || '';
-  document.getElementById('ct-cmd').value     = ct.cmd;
-  document.getElementById('ct-type').value    = ct.type || 'CMD';
-  document.getElementById('ct-admin').checked = !!ct.admin;
+  document.getElementById('ct-modal-title').textContent = '✏️ Modifier le script';
+  document.getElementById('ct-name').value = ct.name;
+  document.getElementById('ct-ico').value  = _ctIcoSel;
+  _ctSetPath(ct.path || ct.cmd || '');
   _ctBuildEmojiGrid();
   openModal('modal-custom-tool');
 }
@@ -575,23 +585,15 @@ async function ctDuplicate(id) {
   S.customTools.push(copy);
   await saveAll();
   renderCustomTools();
-  toast('📋 Commande dupliquée !');
+  toast('📋 Script dupliqué !');
 }
 
 async function ctConfirm() {
   const name = document.getElementById('ct-name').value.trim();
-  const cmd  = document.getElementById('ct-cmd').value.trim();
-  if (!name) { toast('Entrez un nom', 'warn'); document.getElementById('ct-name').focus(); return; }
-  if (!cmd)  { toast('Entrez une commande', 'warn'); document.getElementById('ct-cmd').focus(); return; }
+  if (!name)        { toast('Entrez un nom', 'warn'); document.getElementById('ct-name').focus(); return; }
+  if (!_ctFilePath) { toast('Choisissez un fichier', 'warn'); return; }
 
-  const obj = {
-    name,
-    ico:   document.getElementById('ct-ico').value.trim()  || '⚙️',
-    desc:  document.getElementById('ct-desc').value.trim() || '',
-    cmd,
-    type:  document.getElementById('ct-type').value || 'CMD',
-    admin: document.getElementById('ct-admin').checked,
-  };
+  const obj = { name, ico: document.getElementById('ct-ico').value.trim() || '⚙️', path: _ctFilePath };
 
   if (_ctEditId !== null) {
     const idx = (S.customTools || []).findIndex(t => t.id === _ctEditId);
@@ -604,16 +606,16 @@ async function ctConfirm() {
   await saveAll();
   closeModal('modal-custom-tool');
   renderCustomTools();
-  toast(_ctEditId !== null ? '✅ Commande modifiée !' : '✅ Commande ajoutée !');
+  toast(_ctEditId !== null ? '✅ Script modifié !' : '✅ Script ajouté !');
   _ctEditId = null;
 }
 
 async function ctDelete(id) {
-  if (!confirm('Supprimer cette commande ?')) return;
+  if (!confirm('Supprimer ce script ?')) return;
   S.customTools = (S.customTools || []).filter(t => t.id !== id);
   await saveAll();
   renderCustomTools();
-  toast('Commande supprimée');
+  toast('Script supprimé');
 }
 
 async function execCustomTool(id) {
@@ -622,16 +624,25 @@ async function execCustomTool(id) {
   const btn = document.getElementById('ct-exec-' + id);
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   try {
-    const result = ct.admin
-      ? await window.api.execAdmin(ct.cmd, ct.type)
-      : await window.api.execCmd(ct.cmd, ct.type);
-    showResult(ct.name, result.ok, result.out);
-    if (result.ok) toast('✅ ' + ct.name);
-    else           toast('❌ Erreur — voir résultat', 'warn');
+    // Nouveau format : path → ouvre le fichier dans un terminal visible
+    if (ct.path) {
+      const ext  = ct.path.split('.').pop().toLowerCase();
+      const type = ext === 'ps1' ? 'PS' : 'CMD';
+      const cmd  = type === 'PS'
+        ? `powershell -NoExit -ExecutionPolicy Bypass -File "${ct.path}"`
+        : `"${ct.path}"`;
+      await window.api.execCmd(cmd, type);
+      toast('▶ ' + ct.name);
+    } else if (ct.cmd) {
+      // Rétrocompat : ancienne commande inline
+      const result = await window.api.execCmd(ct.cmd, ct.type || 'CMD');
+      if (!result.ok) toast('❌ Erreur', 'warn');
+      else toast('✅ ' + ct.name);
+    }
   } catch(e) {
-    showResult(ct.name, false, e.message);
+    toast('❌ ' + e.message, 'warn');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '▶ Exécuter' + (ct.admin ? ' (Admin)' : ''); }
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Lancer'; }
   }
 }
 
@@ -643,30 +654,32 @@ function renderCustomTools() {
 
   grid.innerHTML = '';
   if (!S.customTools || !S.customTools.length) {
-    grid.innerHTML = '<div class="si-loading ct-empty-msg">Aucune commande — cliquez sur <strong>+ Ajouter</strong>.</div>';
+    grid.innerHTML = '<div class="si-loading ct-empty-msg">Aucun script — cliquez sur <strong>+ Script</strong>.</div>';
     return;
   }
 
   S.customTools.forEach(ct => {
-    const preview = ct.cmd.split('\n')[0] + (ct.cmd.includes('\n') ? ' …' : '');
+    const filePath  = ct.path || ct.cmd || '';
+    const fileLabel = ct.path ? ct.path.split(/[/\\]/).pop() : (ct.cmd ? ct.cmd.split('\n')[0] : '—');
+    const extMatch  = ct.path && ct.path.match(/\.(bat|cmd|ps1)$/i);
+    const typeLabel = extMatch ? extMatch[1].toUpperCase() : (ct.type || '');
+    const isPS      = typeLabel === 'PS1' || typeLabel === 'PS';
     const card = document.createElement('div');
     card.className = 'tcard';
     card.innerHTML = `
       <div class="tcard-hdr">
         <div class="tcard-ico">${escHtml(ct.ico || '⚙️')}</div>
         <div class="tcard-name">${escHtml(ct.name)}</div>
-        ${ct.admin ? '<span title="Requiert Admin" style="font-size:10px;color:var(--orange);flex-shrink:0">🛡</span>' : ''}
       </div>
       <div class="tcard-body">
-        ${ct.desc ? `<div class="tdesc">${escHtml(ct.desc)}</div>` : ''}
         <div class="cmd-block">
           <div class="cmd-hdr">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--dim2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escHtml(preview)}</span>
-            <span class="cmd-type ${ct.type==='PS'?'ps':''}">${escHtml(ct.type)}</span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--dim2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${escHtml(filePath)}">${escHtml(fileLabel)}</span>
+            ${typeLabel ? `<span class="cmd-type ${isPS?'ps':''}">${escHtml(typeLabel)}</span>` : ''}
           </div>
         </div>
         <div style="display:flex;gap:6px;margin-top:4px">
-          <button class="btn sm orange" style="flex:1;justify-content:center" id="ct-exec-${ct.id}" onclick="execCustomTool(${ct.id})">▶ Exécuter${ct.admin?' (Admin)':''}</button>
+          <button class="btn sm orange" style="flex:1;justify-content:center" id="ct-exec-${ct.id}" onclick="execCustomTool(${ct.id})">▶ Lancer</button>
           <button class="btn sm" onclick="ctEdit(${ct.id})" title="Modifier" style="flex-shrink:0">✏️</button>
           <button class="btn sm" onclick="ctDuplicate(${ct.id})" title="Dupliquer" style="flex-shrink:0">📋</button>
           <button class="btn sm" onclick="ctDelete(${ct.id})" title="Supprimer" style="flex-shrink:0;color:var(--red)">🗑️</button>
@@ -679,7 +692,8 @@ function renderCustomTools() {
 // ══ OUTILS SYSTÈME ═══════════════════════════════════
 
 function toggleCat(id) {
-  _catCollapsed[id] = !_catCollapsed[id];
+  // ?? true : état initial undefined → considéré comme replié (true)
+  _catCollapsed[id] = !(_catCollapsed[id] ?? true);
   const body = document.getElementById('cat-body-' + id);
   const icon = document.getElementById('cat-icon-' + id);
   if (body) body.style.display = _catCollapsed[id] ? 'none' : 'grid';
@@ -758,28 +772,18 @@ function renderTools() {
   if (!container) return;
   container.innerHTML = '';
 
-  const updatesContainer = document.getElementById('updates-grid');
-  if (updatesContainer) updatesContainer.innerHTML = '';
-
   const toolSec = document.createElement('div');
   toolSec.className = 'ts';
-  toolSec.innerHTML = '';
 
   TOOL_CATS.forEach(cat => {
     const tools = TOOLS.filter(t => cat.tags.includes(t.tag));
     if (!tools.length) return;
-    const collapsed = !!_catCollapsed[cat.id];
-
-    // La catégorie Mises à jour va dans updates-grid (entre sysinfo et le reste)
-    const isUpdates = cat.id === 'updates';
-    const targetSec = isUpdates && updatesContainer
-      ? (() => { const s = document.createElement('div'); s.className = 'ts'; return s; })()
-      : toolSec;
+    const collapsed = _catCollapsed[cat.id] ?? true;
 
     const catEl = document.createElement('div');
     catEl.className = 'tool-cat';
     catEl.innerHTML = `
-      <div class="tool-cat-hdr" onclick="toggleCat('${cat.id}')">
+      <div class="tool-cat-hdr" data-tc="${cat.tc||''}" onclick="toggleCat('${cat.id}')">
         <span class="tool-cat-lbl">${escHtml(cat.label)}</span>
         <span class="tool-cat-badge">${tools.length}</span>
         <span class="tool-cat-arr" id="cat-icon-${cat.id}">${collapsed ? '▸' : '▾'}</span>
@@ -788,25 +792,20 @@ function renderTools() {
 
     const grid = catEl.querySelector('#cat-body-' + cat.id);
     tools.forEach(t => {
-      const ti      = TOOLS.indexOf(t);
-      const preview = t.cmd.split('\n')[0] + (t.cmd.includes('\n') ? ' …' : '');
-      const card    = document.createElement('div');
+      const ti   = TOOLS.indexOf(t);
+      const card = document.createElement('div');
       card.className = 'tcard';
+      if (t.tc) card.dataset.tc = t.tc;
+      const toolIco = escHtml(t.ico);
       card.innerHTML = `
         <div class="tcard-hdr">
-          <div class="tcard-ico ${t.tc||''}">${escHtml(t.ico)}</div>
+          <div class="tcard-ico ${t.tc||''}">${toolIco}</div>
           <div class="tcard-name">${escHtml(t.name)}</div>
-          <span class="tag ${t.tc||''}">${escHtml(t.tag)}</span>
-          ${t.admin ? '<span title="Requiert Admin" style="font-size:10px;color:var(--orange);flex-shrink:0">🛡</span>' : ''}
+          <span class="cmd-type ${t.type==='PS'?'ps':''}" style="flex-shrink:0">${escHtml(t.type)}</span>
+          ${t.admin ? '<span title="Requiert Admin" style="font-size:11px;color:var(--orange);flex-shrink:0">🛡</span>' : ''}
         </div>
         <div class="tcard-body">
           <div class="tdesc">${escHtml(t.desc)}</div>
-          <div class="cmd-block">
-            <div class="cmd-hdr">
-              <span style="font-family:var(--mono);font-size:10px;color:var(--dim2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escHtml(preview)}</span>
-              <span class="cmd-type ${t.type==='PS'?'ps':''}">${escHtml(t.type)}</span>
-            </div>
-          </div>
           <div style="display:flex;gap:8px;margin-top:4px">
             <button class="btn sm orange" style="flex:1;justify-content:center" id="exec-btn-${ti}" onclick="execTool(${ti})">▶ Exécuter${t.admin?' (Admin)':''}</button>
             <button class="btn sm" id="copy-btn-${ti}" onclick="cpCmd(${ti})" style="flex-shrink:0">Copier</button>
@@ -815,8 +814,7 @@ function renderTools() {
       grid.appendChild(card);
     });
 
-    targetSec.appendChild(catEl);
-    if (isUpdates && updatesContainer) updatesContainer.appendChild(targetSec);
+    toolSec.appendChild(catEl);
   });
 
   container.appendChild(toolSec);

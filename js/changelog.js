@@ -1,6 +1,21 @@
 // ── Changelog / Patch Notes ───────────────────────────
 const CHANGELOG = [
   {
+    version: '2.14.0',
+    date:    '2026-04-07',
+    type:    'feat',
+    changes: [
+      'Scripts fusionnés dans Raccourcis — sélection de fichier .bat/.cmd/.ps1 uniquement',
+      'Scripts : s\'ouvrent dans un terminal visible, indépendant de l\'app',
+      'Changement de dossier : copie intégrale des données + images',
+      'Dossier SAV synchronisé avec le nom du profil (renommage automatique)',
+      'Synchronisation du profil (nom + emoji) à l\'import d\'une sauvegarde',
+      'Contenu d\'exemple au premier lancement (jeu + carnet structuré)',
+      'Catégories Outils et Apps fermées par défaut, ouverture en un clic',
+      'Différenciation visuelle des catégories par couleur (Outils + Apps)',
+    ]
+  },
+  {
     version: '2.13.0',
     date:    '2026-04-05',
     type:    'feat',

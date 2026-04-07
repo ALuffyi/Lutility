@@ -124,6 +124,137 @@ function _installUpdate() {
   });
 })();
 
+// ══ HOME DASHBOARD ══════════════════════════════════════
+function renderHome() {
+  // Les descriptions des cartes sont statiques dans le HTML.
+  // Pas de mise à jour dynamique ici.
+}
+
+// ══ HOME PERSONNALISATION ════════════════════════════════
+let _homeCfg = null;
+let _custModalBuilt = false;
+
+const _HOME_CFG_DEFAULT = {
+  cards: { jeux:true, notes:true, programmes:true, shortcuts:true, tools:true },
+  nav:   { jeux:true, notes:true, shortcuts:true, programmes:true, tools:true, maj:true },
+  prefs: { clock:true, navLabels:true },
+};
+
+async function _loadHomeCfg() {
+  const cfg = await window.api.configLoad();
+  const saved = cfg?.homeViz || {};
+  _homeCfg = {
+    cards: { ..._HOME_CFG_DEFAULT.cards, ...(saved.cards || {}) },
+    nav:   { ..._HOME_CFG_DEFAULT.nav,   ...(saved.nav   || {}) },
+    prefs: { ..._HOME_CFG_DEFAULT.prefs, ...(saved.prefs || {}) },
+  };
+}
+
+function _saveHomeCfg() {
+  window.api.configSave({ homeViz: _homeCfg });
+}
+
+// Applique : visibilité cartes/nav + préférences interface
+function applyHomeCfg() {
+  if (!_homeCfg) return;
+  const secCards = { contenu:['jeux','notes'], apps:['programmes','shortcuts'], outils:['tools'] };
+
+  // Cartes home
+  for (const [sec, keys] of Object.entries(secCards)) {
+    let any = false;
+    keys.forEach(key => {
+      const card = document.querySelector(`.wcard[data-p="${key}"]`);
+      const on = _homeCfg.cards[key] !== false;
+      if (card) card.style.display = on ? '' : 'none';
+      if (on) any = true;
+    });
+    const secEl = document.querySelector(`.home-sec[data-sec="${sec}"]`);
+    if (secEl) secEl.style.display = any ? '' : 'none';
+  }
+
+  // Boutons nav
+  ['jeux','notes','shortcuts','programmes','tools','maj'].forEach(key => {
+    const btn = document.getElementById('nav-' + key);
+    if (btn) btn.style.display = _homeCfg.nav[key] !== false ? '' : 'none';
+  });
+
+  // Horloge
+  const clock = document.getElementById('clock');
+  if (clock) clock.style.display = _homeCfg.prefs.clock !== false ? '' : 'none';
+
+  // Labels sidebar
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar) sidebar.classList.toggle('no-labels', _homeCfg.prefs.navLabels === false);
+}
+
+// Rétro-compat (ancien nom appelé depuis launch.js)
+function applyHomeVisibility() { applyHomeCfg(); }
+
+function toggleHomeCustomize() {
+  _initCustomModal();
+  openModal('modal-customize');
+}
+
+function _initCustomModal() {
+  if (_custModalBuilt) return;
+  _custModalBuilt = true;
+  const body = document.getElementById('cust-modal-body');
+  if (!body) return;
+
+  const CARD_ITEMS = [
+    {key:'jeux',label:'🎮 Jeux'}, {key:'notes',label:'📝 Notes'},
+    {key:'programmes',label:'📦 Apps'}, {key:'shortcuts',label:'🔗 Raccourcis'},
+    {key:'tools',label:'⚙️ Outils'},
+  ];
+  const NAV_ITEMS = [
+    {key:'jeux',label:'🎮 Jeux'}, {key:'notes',label:'📝 Notes'},
+    {key:'shortcuts',label:'🔗 Raccourcis'}, {key:'programmes',label:'📦 Apps'},
+    {key:'tools',label:'⚙️ Outils'}, {key:'maj',label:'📋 MàJ'},
+  ];
+  const PREF_ITEMS = [
+    {key:'clock',   label:'🕐 Horloge'},
+    {key:'navLabels',label:'🔤 Labels barre latérale'},
+  ];
+
+  function makeSection(title, items, type, changeCb) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="home-cust-group-lbl">${title}</div>`;
+    const grid = document.createElement('div');
+    grid.className = 'home-cust-grid';
+    items.forEach(({ key, label }) => {
+      const isOn = _homeCfg[type][key] !== false;
+      const tog = document.createElement('label');
+      tog.className = 'home-cust-tog' + (isOn ? ' on' : '');
+      tog.innerHTML = `<input type="checkbox" ${isOn?'checked':''} style="display:none"><span>${label}</span>`;
+      tog.querySelector('input').addEventListener('change', function() {
+        _homeCfg[type][key] = this.checked;
+        tog.classList.toggle('on', this.checked);
+        changeCb && changeCb();
+        _saveHomeCfg();
+      });
+      grid.appendChild(tog);
+    });
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  // Affichage Home
+  body.appendChild(makeSection('Cartes du tableau de bord', CARD_ITEMS, 'cards', applyHomeCfg));
+  body.appendChild(makeSection('Barre latérale', NAV_ITEMS, 'nav', applyHomeCfg));
+  body.appendChild(makeSection('Interface', PREF_ITEMS, 'prefs', applyHomeCfg));
+
+  // Comportement à la fermeture
+  const fermeture = document.createElement('div');
+  fermeture.innerHTML = `
+    <div class="home-cust-group-lbl">Comportement à la fermeture</div>
+    <div style="display:flex;gap:8px">
+      <button id="close-action-min"  class="btn sm" onclick="setCloseAction('minimize')" style="flex:1;justify-content:center">🗕 Réduire dans la barre</button>
+      <button id="close-action-quit" class="btn sm" onclick="setCloseAction('quit')"     style="flex:1;justify-content:center">✕ Quitter</button>
+    </div>`;
+  body.appendChild(fermeture);
+  _updateCloseActionBtns();
+}
+
 // ══ CLOCK ═══════════════════════════════════════════════
 setInterval(() => {
   const n=new Date(),p=v=>String(v).padStart(2,'0');
@@ -147,6 +278,7 @@ function nav(id){
 }
 function openModal(id){
   document.getElementById(id).classList.add('on');
+  if(id==='modal-customize') { _initCustomModal(); _updateCloseActionBtns(); }
   if(id==='modal-profile'){
     document.getElementById('p-name').value=profile.name;
     selEmoji=profile.emoji;
@@ -171,14 +303,56 @@ function closeModal(id){
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on')}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.overlay.on').forEach(o=>o.classList.remove('on'));hideTbl();}});
 
+// ══ CLOSE ACTION ════════════════════════════════════════
+let _closeAction = 'minimize'; // 'minimize' | 'quit'
+
+function setCloseAction(action) {
+  _closeAction = action;
+  window.api.configSave({ savPath, profile, closeAction: action });
+  _updateCloseActionBtns();
+  toast(action === 'quit' ? '✕ Fermeture = Quitter' : '🗕 Fermeture = Réduire dans la barre');
+}
+
+function _updateCloseActionBtns() {
+  const min  = document.getElementById('close-action-min');
+  const quit = document.getElementById('close-action-quit');
+  if (!min || !quit) return;
+  min.classList.toggle('prim',  _closeAction === 'minimize');
+  quit.classList.toggle('prim', _closeAction === 'quit');
+}
+
+// Initialise closeAction + visibilité home depuis la config au démarrage
+(async function _initCloseAction() {
+  const cfg = await window.api.configLoad();
+  if (cfg?.closeAction) _closeAction = cfg.closeAction;
+  window.api.setCloseAction(_closeAction);
+  _updateCloseActionBtns();
+  await _loadHomeCfg();
+  applyHomeVisibility();
+})();
+
 // ══ PROFILE ═════════════════════════════════════════════
-function saveProfile(){
-  profile.name=document.getElementById('p-name').value.trim()||'Joueur';
-  profile.emoji=selEmoji;
-  // Electron: persist profile via IPC (no localStorage)
+async function saveProfile(){
+  const newName = document.getElementById('p-name').value.trim() || 'Joueur';
+  const oldName = profile.name;
+  profile.name  = newName;
+  profile.emoji = selEmoji;
+
+  // Si le nom change et qu'un dossier SAV existe, tenter de le renommer
+  if (newName !== oldName && savPath) {
+    const folderBasename = savPath.split(/[/\\]/).pop();
+    if (folderBasename.startsWith('Lutility_SAV')) {
+      const result = await window.api.renameSavFolder(savPath, newName);
+      if (result.ok && result.path !== savPath) {
+        savPath = result.path;
+        toast('📁 Dossier renommé → ' + savPath.split(/[/\\]/).pop());
+      }
+    }
+  }
+
   window.api.configSave({ savPath, profile });
-  document.getElementById('t-name').textContent=profile.name;
-  document.getElementById('t-emoji').textContent=profile.emoji;
+  document.getElementById('t-name').textContent  = profile.name;
+  document.getElementById('t-emoji').textContent = profile.emoji;
   closeModal('modal-profile');
   toast('✅ Profil mis à jour !');
 }
@@ -201,30 +375,53 @@ function showCtx(e,items){
 function hideCtx(){ctxEl.classList.remove('on');}
 document.addEventListener('click',()=>hideCtx());
 
-document.addEventListener('contextmenu',e=>{
+// Stocke les suggestions ortho dès que le main process les envoie (push)
+let _spellInfo = null;
+window.api.onSpellInfo(data => { _spellInfo = data; });
+
+document.addEventListener('contextmenu', async e => {
   e.preventDefault();
-  const isEditable=e.target.isContentEditable||['INPUT','TEXTAREA'].includes(e.target.tagName)||e.target.closest('[contenteditable]');
-  const items=[{label:'Presse-papiers'}];
-  if(isEditable){
-    items.push({ico:'📋',text:'Coller',action:async()=>{try{const t=await navigator.clipboard.readText();document.execCommand('insertText',false,t);}catch(err){}}});
-    const sel=window.getSelection()?.toString();
-    if(sel){items.push({ico:'📄',text:'Copier',action:()=>navigator.clipboard.writeText(sel)});items.push({ico:'✂️',text:'Couper',action:()=>{navigator.clipboard.writeText(sel);document.execCommand('delete');}});}
+  const isEditable = e.target.isContentEditable || ['INPUT','TEXTAREA'].includes(e.target.tagName) || e.target.closest('[contenteditable]');
+  const items = [{ label: 'Presse-papiers' }];
+  if (isEditable) {
+    items.push({ ico:'📋', text:'Coller', action: async () => { try { const t = await navigator.clipboard.readText(); document.execCommand('insertText', false, t); } catch(err) {} } });
+    const sel = window.getSelection()?.toString();
+    if (sel) {
+      items.push({ ico:'📄', text:'Copier',  action: () => navigator.clipboard.writeText(sel) });
+      items.push({ ico:'✂️', text:'Couper',  action: () => { navigator.clipboard.writeText(sel); document.execCommand('delete'); } });
+    }
     items.push('sep');
-    items.push({ico:'🔤',text:'Tout sélectionner',action:()=>document.execCommand('selectAll')});
-  }else{
-    const sel=window.getSelection()?.toString();
-    if(sel)items.push({ico:'📄',text:'Copier la sélection',action:()=>navigator.clipboard.writeText(sel)});
-    else items.push({ico:'—',text:'Rien à copier',action:()=>{}});
+    items.push({ ico:'🔤', text:'Tout sélectionner', action: () => document.execCommand('selectAll') });
+  } else {
+    const sel = window.getSelection()?.toString();
+    if (sel) items.push({ ico:'📄', text:'Copier la sélection', action: () => navigator.clipboard.writeText(sel) });
+    else      items.push({ ico:'—',  text:'Rien à copier',       action: () => {} });
   }
-  const gitem=e.target.closest('.gitem');
-  if(gitem){items.push('sep');items.push({label:'Jeu'});items.push({ico:'🗑️',text:'Supprimer ce jeu',danger:true,action:()=>{delGame(+gitem.dataset.gid);}});}
-  const nbHdr=e.target.closest('.nb-hdr');
-  if(nbHdr){const nbId=+nbHdr.dataset.id;const nb=S.notebooks.find(x=>x.id===nbId);items.push('sep');items.push({label:'Carnet'});items.push({ico:'✏️',text:'Modifier (nom + emoji)',action:()=>nbEdit(nbId)});items.push({ico:'🗑️',text:'Supprimer',danger:true,action:()=>nbDel(nbId,{stopPropagation:()=>{}})});}
+
+  // ── Suggestions orthographiques ──────────────────────────────────────────
+  // L'event context-menu natif (main) arrive après le contextmenu DOM.
+  // On attend 40ms — imperceptible — pour que le push spell-info soit reçu.
+  await new Promise(r => setTimeout(r, 80));
+  const spell = _spellInfo;
+  _spellInfo = null;
+  if (spell?.misspelled && spell.suggestions?.length) {
+    items.push('sep');
+    items.push({ label: '🔤 ' + spell.misspelled + ' — corrections :' });
+    spell.suggestions.forEach(w => {
+      items.push({ ico: '✓', text: w, action: () => window.api.replaceMisspelling(w) });
+    });
+    items.push({ ico: '＋', text: 'Ajouter au dictionnaire', action: () => window.api.addToDictionary(spell.misspelled) });
+  }
+
+  const gitem = e.target.closest('.gitem');
+  if (gitem) { items.push('sep'); items.push({ label:'Jeu' }); items.push({ ico:'🗑️', text:'Supprimer ce jeu', danger:true, action:()=>{ delGame(+gitem.dataset.gid); } }); }
+  const nbHdr = e.target.closest('.nb-hdr');
+  if (nbHdr) { const nbId = +nbHdr.dataset.id; items.push('sep'); items.push({ label:'Carnet' }); items.push({ ico:'✏️', text:'Modifier (nom + emoji)', action:()=>nbEdit(nbId) }); items.push({ ico:'🗑️', text:'Supprimer', danger:true, action:()=>nbDel(nbId,{stopPropagation:()=>{}}) }); }
   // Clic droit sur une image dans l'éditeur de notes
-  const imgInNote = e.target.tagName==='IMG' && e.target.closest('.note-body') ? e.target : null;
-  if(imgInNote){items.push('sep');items.push({label:'Image'});items.push({ico:'↑',text:'Monter',action:()=>_moveImg(imgInNote,-1)});items.push({ico:'↓',text:'Descendre',action:()=>_moveImg(imgInNote,1)});items.push({ico:'🗑️',text:'Supprimer l\'image',danger:true,action:()=>_deleteImg(imgInNote)});}
+  const imgInNote = e.target.tagName === 'IMG' && e.target.closest('.note-body') ? e.target : null;
+  if (imgInNote) { items.push('sep'); items.push({ label:'Image' }); items.push({ ico:'↑', text:'Monter', action:()=>_moveImg(imgInNote,-1) }); items.push({ ico:'↓', text:'Descendre', action:()=>_moveImg(imgInNote,1) }); items.push({ ico:'🗑️', text:'Supprimer l\'image', danger:true, action:()=>_deleteImg(imgInNote) }); }
   // Section/page context menu handled per-level in notes.js nbCtxMenu
-  showCtx(e,items);
+  showCtx(e, items);
 });
 
 // ══ INIT ════════════════════════════════════════════════

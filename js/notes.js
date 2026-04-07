@@ -620,12 +620,66 @@ let _tv = false;
 function showTblPopup(e) { const p=document.getElementById('tbl-popup'); if(_tv){hideTbl();return;} const r=e.target.getBoundingClientRect(); p.style.top=(r.bottom+6)+'px'; p.style.left=r.left+'px'; p.classList.add('on'); _tv=true; }
 function hideTbl() { document.getElementById('tbl-popup').classList.remove('on'); _tv=false; }
 function insertTable() {
-  const cols=Math.max(1,Math.min(10,+document.getElementById('tbl-cols').value||3));
-  const rows=Math.max(1,Math.min(20,+document.getElementById('tbl-rows').value||3));
-  let h='<table><thead><tr>'; for(let c=0;c<cols;c++)h+=`<th contenteditable="true">Col ${c+1}</th>`; h+='</tr></thead><tbody>';
-  for(let r=0;r<rows;r++){h+='<tr>';for(let c=0;c<cols;c++)h+='<td contenteditable="true">&nbsp;</td>';h+='</tr>';}
-  h+='</tbody></table><p></p>';
-  document.getElementById('note-body').focus(); document.execCommand('insertHTML',false,h); hideTbl(); onEdit();
+  const cols = Math.max(1, Math.min(10, +document.getElementById('tbl-cols').value || 3));
+  const rows = Math.max(1, Math.min(20, +document.getElementById('tbl-rows').value || 3));
+
+  // Insertion DOM directe — execCommand('insertHTML') supprime les attributs
+  // contenteditable sur les cellules dans Chromium, rendant le tableau non éditable
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const hRow  = document.createElement('tr');
+  for (let c = 0; c < cols; c++) {
+    const th = document.createElement('th');
+    th.textContent = 'Col ' + (c + 1);
+    hRow.appendChild(th);
+  }
+  thead.appendChild(hRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  for (let r = 0; r < rows; r++) {
+    const tr = document.createElement('tr');
+    for (let c = 0; c < cols; c++) {
+      const td = document.createElement('td');
+      td.innerHTML = '<br>';
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+
+  const body = document.getElementById('note-body');
+  body.focus();
+
+  // Insère après la sélection courante ou à la fin
+  const sel = window.getSelection();
+  let inserted = false;
+  if (sel && sel.rangeCount) {
+    const range = sel.getRangeAt(0);
+    // Remonte jusqu'au bloc direct enfant de note-body
+    let anchor = range.commonAncestorContainer;
+    while (anchor.parentNode && anchor.parentNode !== body) anchor = anchor.parentNode;
+    if (anchor.parentNode === body) {
+      anchor.insertAdjacentElement('afterend', table);
+      const p = document.createElement('p');
+      p.innerHTML = '<br>';
+      table.insertAdjacentElement('afterend', p);
+      // Place le curseur dans la première cellule
+      const first = table.querySelector('th, td');
+      if (first) {
+        const r2 = document.createRange();
+        r2.setStart(first, 0); r2.collapse(true);
+        sel.removeAllRanges(); sel.addRange(r2);
+      }
+      inserted = true;
+    }
+  }
+  if (!inserted) {
+    const p = document.createElement('p'); p.innerHTML = '<br>';
+    body.appendChild(table); body.appendChild(p);
+  }
+
+  hideTbl(); onEdit();
 }
 
 function pickImg() { document.getElementById('img-input').click(); }
@@ -1104,6 +1158,28 @@ function _tblCellMenu(e, cell) {
   body.addEventListener('contextmenu', e => {
     const cell = e.target.closest('td, th');
     if (cell && cell.closest('table')) { _tblCellMenu(e, cell); return; }
+  });
+
+  // Navigation Tab dans les tableaux
+  body.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const cell = e.target.closest ? e.target.closest('td, th') : null;
+    if (!cell) return;
+    e.preventDefault();
+    const table = cell.closest('table');
+    if (!table) return;
+    const allCells = Array.from(table.querySelectorAll('th, td'));
+    const idx = allCells.indexOf(cell);
+    const next = e.shiftKey ? allCells[idx - 1] : allCells[idx + 1];
+    if (next) {
+      next.focus();
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(next);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
   });
   // Ferme la barre si clic hors de la zone
   document.addEventListener('mousedown', e => {

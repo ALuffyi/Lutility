@@ -14,6 +14,9 @@ contextBridge.exposeInMainWorld('api', {
   chooseFolder: ()     => ipcRenderer.invoke('choose-folder'),
   folderExists: (p)    => ipcRenderer.invoke('folder-exists', p),
 
+  // Folder copy
+  copyFolder: (src, dest) => ipcRenderer.invoke('copy-folder', src, dest),
+
   // Files
   fileRead:        (p, f)    => ipcRenderer.invoke('file-read', p, f),
   fileWrite:       (p, f, c) => ipcRenderer.invoke('file-write', p, f, c),
@@ -29,12 +32,15 @@ contextBridge.exposeInMainWorld('api', {
   // External programs
   openUrl:   (url)  => ipcRenderer.invoke('open-url',   url),
   launchApp: (path) => ipcRenderer.invoke('launch-app', path),
-  chooseExe: ()     => ipcRenderer.invoke('choose-exe'),
+  chooseExe:    ()             => ipcRenderer.invoke('choose-exe'),
+  chooseScript: ()             => ipcRenderer.invoke('choose-script'),
+  renameSavFolder: (old, name) => ipcRenderer.invoke('rename-savfolder', old, name),
 
   // Export / Import
   exportSav: (savPath, name)     => ipcRenderer.invoke('export-sav', savPath, name),
-  importSav:       (savPath) => ipcRenderer.invoke('import-sav',        savPath),
-  importSavWizard: ()        => ipcRenderer.invoke('import-sav-wizard'),
+  importSav:        (savPath) => ipcRenderer.invoke('import-sav',         savPath),
+  importSavWizard:  ()        => ipcRenderer.invoke('import-sav-wizard'),
+  importSavInplace: ()        => ipcRenderer.invoke('import-sav-inplace'),
 
   // Mise à jour
   getVersion:        () => ipcRenderer.invoke('get-version'),
@@ -43,4 +49,12 @@ contextBridge.exposeInMainWorld('api', {
   downloadUpdate:    (url) => ipcRenderer.invoke('download-update', url),
   installUpdate:     (filePath) => ipcRenderer.invoke('install-update', filePath),
   onUpdateProgress:  (cb) => ipcRenderer.on('update-progress', (_e, pct) => cb(pct)),
+
+  // Correcteur orthographique — push depuis main (context-menu natif)
+  onSpellInfo:        (cb) => ipcRenderer.on('spell-info', (_e, data) => cb(data)),
+  replaceMisspelling: (w)  => ipcRenderer.invoke('replace-misspelling', w),
+  addToDictionary:    (w)  => ipcRenderer.invoke('add-to-dictionary', w),
+
+  // Comportement fermeture
+  setCloseAction: (action) => ipcRenderer.send('set-close-action', action),
 });
