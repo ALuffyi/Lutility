@@ -1,4 +1,4 @@
-# LUTILITY v2.15.0
+# LUTILITY v2.16.0
 
 > T'as tes paramètres de jeu dans un coin de Discord, tes scripts sur le bureau et tes notes éparpillées partout ? **Lutility regroupe tout ça.**
 
@@ -21,7 +21,7 @@ Fiches de jeux, carnets de notes, tutoriels PC/gaming, lanceur de scripts et out
 
 ## Téléchargement
 
-👉 [Lutility-Setup-2.15.0.exe](https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.15.0.exe)
+👉 [Lutility-Setup-2.16.0.exe](https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.16.0.exe)
 
 ---
 

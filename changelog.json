@@ -1,5 +1,20 @@
 [
   {
+    "version": "2.16.0",
+    "date": "2026-04-07",
+    "type": "feat",
+    "label": "Nouveautés",
+    "changes": [
+      "Personnalisation de l'interface : 7 thèmes de couleur accent, 3 tailles de texte, 3 niveaux de densité — accessible via ⚙️ Settings",
+      "Topbar renommée : boutons Settings et Sauvegarde",
+      "Tutoriel #17 — Activer le mode développeur Discord (avec image)",
+      "Correction : home vide au démarrage (cartes générées de façon synchrone)",
+      "Correction : tutoriels invisibles en production après la v2.15.0",
+      "Correction : label Sauvegarde écrasé lors de l'autosave",
+      "Nettoyage du code et ajout du guide développeur DEV.md"
+    ]
+  },
+  {
     "version": "2.12.2",
     "date": "2026-04-05",
     "type": "fix",
