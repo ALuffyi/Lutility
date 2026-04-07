@@ -130,6 +130,46 @@ function renderHome() {
   // Pas de mise à jour dynamique ici.
 }
 
+// ══ APPARENCE ════════════════════════════════════════════
+const THEMES = [
+  { key:'',       color:'#00d4ff', label:'Cyan (défaut)' },
+  { key:'blue',   color:'#60a5fa', label:'Bleu'  },
+  { key:'violet', color:'#a855f7', label:'Violet' },
+  { key:'green',  color:'#4ade80', label:'Vert'   },
+  { key:'orange', color:'#fb923c', label:'Orange' },
+  { key:'red',    color:'#f87171', label:'Rouge'  },
+  { key:'rose',   color:'#f472b6', label:'Rose'   },
+];
+const DENSITY = [
+  { key:'compact', label:'Compact' },
+  { key:'normal',  label:'Normal'  },
+  { key:'comfort', label:'Confort' },
+];
+const TEXT_SIZES = [
+  { key:'sm', label:'Petit'  },
+  { key:'md', label:'Moyen'  },
+  { key:'lg', label:'Grand'  },
+];
+
+let _appPrefs = { theme:'', density:'normal', textSize:'md' };
+
+function applyAppPrefs() {
+  const b = document.body;
+  // Thème
+  THEMES.forEach(t => b.classList.remove('theme-' + t.key));
+  if (_appPrefs.theme) b.classList.add('theme-' + _appPrefs.theme);
+  // Densité
+  DENSITY.forEach(d => b.classList.remove('density-' + d.key));
+  if (_appPrefs.density && _appPrefs.density !== 'normal') b.classList.add('density-' + _appPrefs.density);
+  // Taille texte
+  TEXT_SIZES.forEach(s => b.classList.remove('text-' + s.key));
+  if (_appPrefs.textSize && _appPrefs.textSize !== 'md') b.classList.add('text-' + _appPrefs.textSize);
+}
+
+function _saveAppPrefs() {
+  window.api.configSave({ appPrefs: _appPrefs });
+}
+
 // ══ HOME PERSONNALISATION ════════════════════════════════
 let _homeCfg = null;
 let _custModalBuilt = false;
@@ -262,7 +302,55 @@ function _initCustomModal() {
     return wrap;
   }
 
-  // Affichage Home
+  // ── Section Apparence ──────────────────────────────────
+  function makeApprRow(label, items, getVal, setVal, btnClass) {
+    const wrap = document.createElement('div');
+    wrap.className = 'appr-row';
+    wrap.innerHTML = `<div class="appr-label">${label}</div>`;
+    const row = document.createElement('div');
+    row.className = btnClass || 'appr-btns';
+    items.forEach(item => {
+      let el;
+      if (btnClass === 'appr-swatches') {
+        el = document.createElement('button');
+        el.className = 'appr-swatch' + (getVal() === item.key ? ' on' : '');
+        el.style.background = item.color;
+        el.title = item.label;
+        el.dataset.k = item.key;
+      } else {
+        el = document.createElement('button');
+        el.className = 'appr-btn' + (getVal() === item.key ? ' on' : '');
+        el.textContent = item.label;
+        el.dataset.k = item.key;
+      }
+      el.addEventListener('click', () => {
+        setVal(item.key);
+        applyAppPrefs();
+        _saveAppPrefs();
+        // Refresh active state
+        row.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('on', b.dataset.k === item.key));
+      });
+      row.appendChild(el);
+    });
+    wrap.appendChild(row);
+    return wrap;
+  }
+
+  const apprWrap = document.createElement('div');
+  apprWrap.innerHTML = `<div class="home-cust-group-lbl">Apparence</div>`;
+  apprWrap.style.cssText = 'display:flex;flex-direction:column;gap:14px';
+  const apprRows = document.createElement('div');
+  apprRows.style.cssText = 'display:flex;flex-direction:column;gap:12px';
+  apprRows.appendChild(makeApprRow('Couleur accent', THEMES,
+    () => _appPrefs.theme, v => _appPrefs.theme = v, 'appr-swatches'));
+  apprRows.appendChild(makeApprRow('Taille du texte', TEXT_SIZES,
+    () => _appPrefs.textSize, v => _appPrefs.textSize = v, 'appr-btns'));
+  apprRows.appendChild(makeApprRow('Densité', DENSITY,
+    () => _appPrefs.density, v => _appPrefs.density = v, 'appr-btns'));
+  apprWrap.appendChild(apprRows);
+  body.appendChild(apprWrap);
+
+  // ── Affichage Home ─────────────────────────────────────
   body.appendChild(makeSection('Cartes du tableau de bord', CARD_ITEMS, 'cards', applyHomeCfg));
   body.appendChild(makeSection('Barre latérale', NAV_ITEMS, 'nav', applyHomeCfg));
   body.appendChild(makeSection('Interface', PREF_ITEMS, 'prefs', applyHomeCfg));
@@ -350,12 +438,14 @@ function _updateCloseActionBtns() {
 // Cartes Home générées immédiatement (synchrone, avant tout await)
 renderHomeCards();
 
-// Initialise closeAction + visibilité home depuis la config au démarrage
+// Initialise closeAction + apparence + visibilité home depuis la config au démarrage
 (async function _initCloseAction() {
   const cfg = await window.api.configLoad();
   if (cfg?.closeAction) _closeAction = cfg.closeAction;
   window.api.setCloseAction(_closeAction);
   _updateCloseActionBtns();
+  if (cfg?.appPrefs) _appPrefs = { ..._appPrefs, ...cfg.appPrefs };
+  applyAppPrefs();
   await _loadHomeCfg();
   applyHomeVisibility();
 })();

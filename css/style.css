@@ -711,3 +711,51 @@ body.pdf-exporting #note-print-preview {
 .tuto-step-img{max-width:100%;border-radius:6px;border:1px solid var(--bord);margin-top:6px;display:block}
 /* Tags panneau */
 .tutos-panel-tags{display:flex;gap:6px;margin-bottom:8px;align-items:center}
+
+/* ══════════════════════════════════════════════════════
+   PERSONNALISATION — APPARENCE
+══════════════════════════════════════════════════════ */
+
+/* ── Themes (couleur accent) ────────────────────────── */
+body.theme-blue   { --cyan:#60a5fa }
+body.theme-violet { --cyan:#a855f7 }
+body.theme-green  { --cyan:#4ade80 }
+body.theme-orange { --cyan:#fb923c }
+body.theme-red    { --cyan:#f87171 }
+body.theme-rose   { --cyan:#f472b6 }
+
+/* ── Taille du texte ────────────────────────────────── */
+body.text-sm { font-size:12px }
+body.text-lg { font-size:16px }
+
+/* ── Densité ─────────────────────────────────────────── */
+body.density-compact .nav { height:46px; gap:3px }
+body.density-compact .nav .ico { font-size:22px }
+body.density-compact .wcard { padding:12px 14px; gap:5px }
+body.density-compact .wcard .wi { font-size:22px }
+body.density-compact .wcard .wt { font-size:14px }
+body.density-comfort .nav { height:68px; gap:7px }
+body.density-comfort .nav .ico { font-size:30px }
+body.density-comfort .wcard { padding:24px 22px; gap:11px }
+body.density-comfort .wcard .wi { font-size:32px }
+body.density-comfort .wcard .wt { font-size:18px }
+
+/* ── Sélecteurs dans le modal Settings ─────────────── */
+.appr-row  { display:flex; flex-direction:column; gap:6px }
+.appr-label{ font-family:var(--mono); font-size:10px; color:var(--dim2); letter-spacing:1px; text-transform:uppercase }
+.appr-swatches { display:flex; gap:8px; flex-wrap:wrap }
+.appr-swatch {
+  width:26px; height:26px; border-radius:50%; border:2px solid transparent;
+  cursor:pointer; transition:transform .15s, border-color .15s;
+  outline:none; flex-shrink:0;
+}
+.appr-swatch:hover { transform:scale(1.15) }
+.appr-swatch.on { border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.25) }
+.appr-btns { display:flex; gap:6px }
+.appr-btn {
+  flex:1; padding:5px 8px; border-radius:7px; border:1px solid var(--bord2);
+  background:var(--surf2); color:var(--dim2); font-size:12px; cursor:pointer;
+  transition:all .15s; text-align:center;
+}
+.appr-btn:hover { border-color:var(--cyan); color:var(--br) }
+.appr-btn.on { background:rgba(0,212,255,.1); border-color:var(--cyan); color:var(--cyan) }
