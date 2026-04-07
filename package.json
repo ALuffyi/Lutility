@@ -1,6 +1,6 @@
 {
   "name": "lutility",
-  "version": "2.14.2",
+  "version": "2.15.0",
   "description": "Lutility — utilitaire personnel gaming",
   "author": "Lutility",
   "main": "main.js",
@@ -33,6 +33,7 @@
       "main.js",
       "preload.js",
       "renderer.html",
+      "tutorials.json",
       "css/**",
       "js/**",
       "assets/**"

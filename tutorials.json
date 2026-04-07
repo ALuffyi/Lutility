@@ -1,0 +1,375 @@
+[
+  {
+    "id": 1,
+    "title": "Activer le God Mode Windows",
+    "category": "windows",
+    "date": "2025-04",
+    "description": "Accède à tous les paramètres Windows cachés depuis un seul dossier.",
+    "steps": [
+      {
+        "text": "**Clic droit** sur le Bureau → **Nouveau** → **Dossier**."
+      },
+      {
+        "text": "Renommez ce dossier **exactement** ainsi (copier-coller) :\n\nGodMode.{ED7BA470-8E54-465E-825C-99712043E01C}",
+        "note": "💡 Le nom avant le point peut être ce que tu veux — c'est le GUID entre accolades qui compte."
+      },
+      {
+        "text": "**Double-cliquez** dessus : tous les paramètres Windows (300+) sont accessibles depuis un seul endroit, classés par catégorie.",
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Créer un point de restauration",
+    "category": "windows",
+    "date": "2025-04",
+    "description": "Protège ton système en créant un snapshot avant une modification importante.",
+    "steps": [
+      {
+        "text": "Tape **Créer un point de restauration** dans la barre de recherche Windows et ouvre le résultat."
+      },
+      {
+        "text": "Dans l'onglet **Protection du système**, sélectionne le lecteur **C:** et clique **Créer…**",
+        "note": "⚠️ Si le bouton est grisé, clique **Configurer** et active la protection du système."
+      },
+      {
+        "text": "Donne un **nom explicite** au point de restauration (ex : _Avant installation X_) et clique **Créer**.\nLa création prend 1 à 2 minutes."
+      },
+      {
+        "text": "En cas de problème, reviens ici et clique **Restauration du système** pour choisir ton point de retour."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Optimiser Windows pour le gaming",
+    "category": "gaming",
+    "date": "2025-04",
+    "game": "Général",
+    "description": "Quelques réglages simples pour réduire les latences et améliorer les FPS.",
+    "steps": [
+      {
+        "text": "**Mode Performances élevées** : Paramètres → Système → Alimentation et mise en veille → Paramètres d'alimentation supplémentaires → sélectionne **Performances élevées**.",
+        "note": "💡 Sur laptop, ce mode consomme plus de batterie — ne l'activer que branché."
+      },
+      {
+        "text": "**Mode Jeu Windows** : Paramètres → Jeux → **Mode Jeu** → activez le bouton."
+      },
+      {
+        "text": "**Désactiver les apps au démarrage** : Gestionnaire des tâches (Ctrl+Maj+Échap) → onglet **Démarrage** → désactive tout ce qui est inutile.",
+        "note": "🎯 Chaque app désactivée libère de la RAM au démarrage."
+      },
+      {
+        "text": "**Désactiver Xbox Game Bar** si tu ne l'utilises pas : Paramètres → Jeux → **Xbox Game Bar** → désactiver.\nGagne quelques ms de latence."
+      },
+      {
+        "text": "**Option alimentation Performance Optimale** (avancé) — ouvre un CMD en administrateur et colle :\n\npowercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14740eb61\n\nEnsuite sélectionne ce nouveau plan dans les options d'alimentation.",
+        "note": "⚠️ Ce plan désactive tous les états d'économie d'énergie. Idéal pour desktop gaming, déconseillé sur laptop."
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Configurer Discord pour le gaming",
+    "category": "gaming",
+    "date": "2025-04",
+    "game": "Discord",
+    "description": "Optimise Discord pour réduire la charge CPU et améliorer la qualité audio.",
+    "steps": [
+      {
+        "text": "**Désactiver l'accélération matérielle** si tu as des lags : Paramètres Discord → **Avancé** → Accélération matérielle → **Désactivé**.\nRelance Discord après."
+      },
+      {
+        "text": "**Qualité audio** : Paramètres → **Voix & Vidéo** → désactive **Krisp** (réduction de bruit IA) si tu as un bon micro — ça consomme du CPU.",
+        "note": "💡 Krisp est utile en environnement bruyant. Si tu es dans une pièce calme, désactive-le."
+      },
+      {
+        "text": "**Activer l'activité de jeu** : Paramètres → **Activité** → Afficher l'activité de jeu actuelle → **Activé**.\nTes amis voient ce que tu joues."
+      },
+      {
+        "text": "**Réduire la charge CPU** : Paramètres → **Apparence** → désactive les animations et passe en **mode compact** si tu as un PC modeste."
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Installer et configurer OBS Studio",
+    "category": "programme",
+    "date": "2025-04",
+    "description": "Mise en place rapide d'OBS pour le streaming ou l'enregistrement.",
+    "steps": [
+      {
+        "text": "Télécharge **OBS Studio** depuis **obsproject.com** et lance l'installation."
+      },
+      {
+        "text": "Au premier lancement, l'**assistant de configuration automatique** s'ouvre.\nChoisis : **Optimiser pour l'enregistrement** (ou streaming si tu stream).",
+        "note": "💡 L'assistant règle automatiquement le bitrate, l'encodeur et la résolution selon ton PC."
+      },
+      {
+        "text": "Dans la zone **Sources** (bas de l'écran), clique **+** :\n• **Capture d'écran** → capture tout ton écran\n• **Capture de jeu** → capture un jeu spécifique (meilleure performance)"
+      },
+      {
+        "text": "Clique **Démarrer l'enregistrement** pour tester. Les fichiers sont sauvegardés dans **Vidéos** par défaut.\nTu peux changer le dossier dans Paramètres → **Sortie**."
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Booster sa productivité avec PowerToys",
+    "category": "programme",
+    "date": "2025-04",
+    "description": "Utilise PowerToys pour personnaliser Windows et gagner du temps au quotidien.",
+    "steps": [
+      {
+        "text": "Télécharge **PowerToys** depuis le **Microsoft Store** (gratuit) ou depuis GitHub : `microsoft/PowerToys`."
+      },
+      {
+        "text": "**PowerToys Run** (Alt+Espace) : un lanceur rapide pour ouvrir apps, fichiers et calculer directement.\n→ Remplace avantageusement le menu Démarrer.",
+        "note": "💡 Tape `=` dans PowerToys Run pour utiliser la calculatrice intégrée."
+      },
+      {
+        "text": "**FancyZones** : crée des **zones de fenêtres** personnalisées. Maintiens **Maj** en déplaçant une fenêtre pour la snapper dans une zone."
+      },
+      {
+        "text": "**Colour Picker** (**Win+Maj+C**) : identifie n'importe quelle couleur à l'écran et copie son code HEX/RGB en un clic."
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "title": "CS2 — Paramètres optimaux",
+    "category": "gaming",
+    "date": "2025-04",
+    "game": "CS2",
+    "description": "Config complète : Nvidia & Windows, paramètres en jeu et launch options Steam pour maximiser les FPS et la lisibilité.",
+    "steps": [
+      {
+        "text": "**Paramètres Windows & Nvidia :**\n\n1. Option d'alimentation → **Puissance optimisée**\n2. Game Mode → **ON**\n3. Préférence des performances graphiques → **Max**\n4. Panneau Nvidia → Gérer les paramètres 3D → **Aperçu : Performance**\n5. Propriétés souris → Options du pointeur → **Améliorer la précision du pointeur : OFF**\n6. Propriétés souris → Options du pointeur → **Vitesse du pointeur : -2**",
+        "note": "⚠️ Désactiver la précision du pointeur donne une vitesse de souris linéaire — essentiel pour un bon aim en FPS."
+      },
+      {
+        "text": "**Paramètres en jeu :**\n\n• Résolution : **1440×960 [4/3]** ou **1920×1080 [16/9]**\n• r_fullscreen_gamma : **2.85**\n• Luminosité : **95%**\n• Contraste subjectif accru : **ON**",
+        "note": "💡 Le format 4/3 en 1440×960 étire les modèles et les rend plus larges/visibles — préféré de beaucoup de pros."
+      },
+      {
+        "text": "**Launch options Steam :**\n\nClic droit sur CS2 → Propriétés → Options de lancement, colle :\n\n-nojoy -novid -high -threads 11 +violence_hblood 0 +cl_forcepreload 1 +fps_max 0 -fullscreen -console -refresh 280",
+        "note": "💡 Adapte **-threads** au nombre de threads de ton CPU. **-refresh 280** = utile seulement si ton écran supporte 280Hz."
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Désactiver les raccourcis de changement de langue",
+    "category": "windows",
+    "date": "2025-04",
+    "description": "Empêche Windows de changer de langue au clavier de façon intempestive (Alt+Maj ou Win+Espace).",
+    "steps": [
+      {
+        "text": "Ouvre les **Paramètres** Windows (**Win + I**)."
+      },
+      {
+        "text": "Navigue vers : **Heure et langue** → **Saisie** → **Paramètres avancés du clavier**."
+      },
+      {
+        "text": "Clique sur **Options avancées de clavier**, puis sur **Raccourcis de la barre de langue**.\nUne ancienne fenêtre Windows s'ouvre.",
+        "note": "💡 Cette fenêtre ressemble à l'interface Windows 7/8 — c'est normal."
+      },
+      {
+        "text": "Dans l'onglet **Changement de langue**, sélectionne chaque action et clique **Modifier la touche de raccourci** → définis sur **Non affecté** pour désactiver."
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "title": "Nouveau Windows — Check-list complète",
+    "category": "windows",
+    "date": "2025-04",
+    "description": "Tout ce qu'il faut faire après une installation fraîche de Windows 10/11.",
+    "steps": [
+      {
+        "text": "**Désinstaller les apps inutiles** (selon usage) :\n\n• Candy Crush et jeux préinstallés\n• Xbox Game Bar / Xbox Console Companions (si pas utilisé)\n• OneDrive (si pas besoin du cloud Microsoft)\n• Cortana\n• Téléchargements préinstallés du Microsoft Store\n\nOutil rapide : installe **Wintoys** depuis le Microsoft Store.",
+        "note": "⚠️ Ne désinstalle pas à l'aveugle — certaines apps système sont nécessaires."
+      },
+      {
+        "text": "**Services à désactiver** (Gestionnaire de services → `services.msc`) :\n\n• **DiagTrack** / Connected User Experiences → télémétrie\n• **Windows Search** → si peu utilisé (ralentit la recherche mais libère RAM)\n• **Print Spooler** → si aucune imprimante\n• **SysMain** / Superfetch → peut aider sur les PC avec peu de RAM",
+        "note": "⚠️ SysMain et NDU (dans le registre) sont à désactiver avec précaution. Crée un point de restauration avant."
+      },
+      {
+        "text": "**Mises à jour à faire en priorité :**\n\n1. Windows Update → installe **toutes** les mises à jour\n2. Drivers : carte graphique, chipset, réseau, audio\n3. Microsoft Store → met les apps système à jour\n4. Navigateur préféré → Chrome, Edge, Firefox…\n5. Antivirus → Windows Defender ou solution tierce"
+      },
+      {
+        "text": "**Vérifications importantes :**\n\n☑ Windows est activé (compte Microsoft ou clé produit)\n☑ BitLocker ou antivirus actif\n☑ SSD/HDD bien reconnus\n☑ Santé du disque vérifiée (CrystalDiskInfo)\n☑ BIOS/UEFI : mode AHCI pour SSD, Secure Boot activé\n☑ Plan d'alimentation adapté\n☑ Confidentialité : télémétrie, localisation, pubs désactivés",
+        "note": "💡 **Raccourci pratique :** Assistance rapide = **Ctrl+Win+Q** | Capture d'écran = **Win+Maj+S**"
+      },
+      {
+        "text": "**Bypass internet à la réinstallation** (OOBE) :\n\nSi Windows t'oblige à te connecter à internet pendant l'installation, ouvre le CMD (**Maj+F10**) et tape :\n\nOOBE\\BYPASSNRO\n\nLe PC redémarre et l'option \"Je n'ai pas internet\" réapparaît.",
+        "note": "💡 Fonctionne sur Windows 11 22H2 et antérieur. Sur les versions récentes, utilise un compte local via les paramètres après installation."
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "title": "Formater un disque avec DiskPart",
+    "category": "windows",
+    "date": "2025-04",
+    "description": "Outil en ligne de commande Windows pour gérer, partitionner et formater les disques.",
+    "steps": [
+      {
+        "text": "Ouvre un **CMD en administrateur** (Rechercher → cmd → Exécuter en administrateur) et tape :\n\ndiskpart",
+        "note": "⚠️ DiskPart est puissant et irréversible. Vérifie deux fois avant toute commande."
+      },
+      {
+        "text": "Liste tous les disques connectés :\n\nlist disk\n\n→ Identifie le **numéro** de ton disque cible (colonne Taille pour t'aider)."
+      },
+      {
+        "text": "Sélectionne le disque (remplace **n** par le bon numéro) :\n\nselect disk n"
+      },
+      {
+        "text": "Liste les partitions du disque sélectionné :\n\nlist partition\n\n→ Identifie le **numéro** de la partition à formater."
+      },
+      {
+        "text": "Sélectionne la partition (remplace **m** par le bon numéro) :\n\nselect partition m"
+      },
+      {
+        "text": "Formate la partition :\n\n• **FAT32** → `format fs=fat32 quick`\n• **NTFS** → `format fs=ntfs quick`\n• **exFAT** (clés USB, disques externes) → `format fs=exfat quick`",
+        "note": "💡 `quick` = formatage rapide. Sans `quick` = formatage complet (très long, mais vérifie les secteurs défectueux)."
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "title": "Créer une clé USB bootable",
+    "category": "windows",
+    "date": "2025-04",
+    "description": "Comparatif des 3 outils pour créer des clés USB boot : Rufus, BalenaEtcher et Ventoy.",
+    "steps": [
+      {
+        "text": "**🔵 Rufus** — Le plus complet pour Windows\n\n• Windows uniquement\n• Compatible Windows, Linux, macOS via ISO\n• Gère UEFI et Legacy\n• Léger, sans installation\n• **Idéal pour : installer un OS depuis une clé USB**\n\nTélécharge sur : rufus.ie",
+        "note": "💡 Rufus permet aussi de contourner les exigences TPM/Secure Boot de Windows 11 directement depuis l'interface."
+      },
+      {
+        "text": "**🟠 BalenaEtcher** — Le plus simple\n\n• Multiplateforme (Windows, macOS, Linux)\n• Interface ultra simple : Choisir ISO → Choisir clé → Flash\n• Vérifie l'intégrité du fichier après écriture\n• Moins d'options avancées que Rufus\n• **Idéal pour : créer des clés live USB Linux**\n\nTélécharge sur : etcher.balena.io"
+      },
+      {
+        "text": "**🟢 Ventoy** — Le plus pratique pour plusieurs ISO\n\n• Installe Ventoy sur la clé **une seule fois**\n• Ensuite : copier-coller les ISO directement sur la clé, aucun reflash\n• Plusieurs ISO sur une seule clé, menu de boot automatique\n• Gère UEFI, Legacy, MBR et GPT\n• **Idéal pour : techniciens, tests multi-OS**\n\nTélécharge sur : ventoy.net",
+        "note": "💡 Avec Ventoy, ajouter un nouvel OS = copier l'ISO sur la clé. C'est tout."
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "title": "Organiser son SSD & HDD",
+    "category": "windows",
+    "date": "2025-04",
+    "description": "Savoir quoi mettre sur le SSD (vitesse) et quoi garder sur le HDD (stockage).",
+    "steps": [
+      {
+        "text": "**💨 SSD (rapide) — Tout ce qui demande de la performance :**\n\n• **Windows** (obligatoire)\n• Navigateur, Antivirus, Drivers\n• Logiciels souvent utilisés\n• **Jeux gourmands** (FPS compétitifs, AAA récents)\n• **Jeux compétitifs/multi** (temps de chargement = désavantage)\n• Jeux où le chargement est fréquent\n\n🎯 Objectif : vitesse, réactivité, chargements rapides"
+      },
+      {
+        "text": "**🗄️ HDD (grande capacité) — Stockage et archive :**\n\n• Jeux solo moins gourmands, jeux anciens, jeux indés\n• Programmes secondaires / peu utilisés\n• Documents, Photos, Vidéos\n• Téléchargements\n• Sauvegardes\n\n🎯 Objectif : espace et stockage à moindre coût",
+        "note": "💡 Règle simple : si tu perçois un temps de chargement, mets l'app/jeu sur SSD."
+      },
+      {
+        "text": "**Vérifier la santé de tes disques :**\n\nTélécharge **CrystalDiskInfo** (gratuit) → il affiche l'état de santé de chaque disque (Bon / Attention / Mauvais) et la température en temps réel.",
+        "note": "⚠️ Un disque en état **Attention** = sauvegarde tes données immédiatement, il peut lâcher à tout moment."
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "title": "OBS Studio — Configuration AMD",
+    "category": "programme",
+    "date": "2025-04",
+    "description": "Réglages encodeur, plugins et scripts recommandés pour une config AMD (AMF).",
+    "steps": [
+      {
+        "text": "**Paramètres → Sortie → Mode Avancé → Encodeur :**\n\n• Encodeur : **H264 (AMD HW – AMF)**\n• Preset : **Quality**\n• Profil : **High**\n• Keyframe : **2**\n• B-frames : **2**\n• Look-ahead : **Désactivé**\n• Psycho Visual Tuning : **Activé**\n• Format couleur : **NV12**\n• Espace couleur : **Rec.709**\n• Plage : **Limitée**"
+      },
+      {
+        "text": "**Bitrate recommandé :**\n\n• Streaming 1080p60 → **6 000 kb/s**\n• Enregistrement local → **20 000 – 30 000 kb/s**",
+        "note": "💡 Pour l'enregistrement, plus = mieux (le disque est la seule limite). Pour le stream, vérifie la limite de ta plateforme (Twitch : 6000, YouTube : 15000+)."
+      },
+      {
+        "text": "**Plugins utiles :**\n\n• **Deckboard Pro** → Streamdeck à 3€ sur smartphone\n• **Starscape Creator Studio** → gestionnaire de plugins OBS\n• **Input Overlay** (by Universalp) → affiche clavier/souris à l'écran\n• **OBS-websockets** (by Palakis) → liaison Deckboard ↔ OBS\n• **Win-capture-audio** → séparer les pistes audio par app\n• **Audio Wave Visualizer** → visualiseur de son animé"
+      },
+      {
+        "text": "**Scripts utiles** (Outils → Scripts) :\n\n• **Automute.lua** → se muter automatiquement entre certaines scènes\n• **Countdown.lua** → compte à rebours en avant-scène\n• **Obschotification.lua** → son d'alerte au changement de scène\n• **Livetime.py** → affiche l'uptime du live en overlay",
+        "note": "💡 Les scripts Python nécessitent d'installer Python et de le pointer dans OBS (Outils → Scripts → Paramètres Python)."
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "title": "Réparer Discord figé / qui ne démarre plus",
+    "category": "programme",
+    "date": "2025-04",
+    "description": "Fix complet quand Discord freeze, plante au démarrage ou ne répond plus.",
+    "steps": [
+      {
+        "text": "**Étape 1 — Forcer la fermeture :**\n\nOuvre le CMD et tape :\n\ntaskkill /F /IM discord.exe\n\nOu via le Gestionnaire des tâches : clic droit sur Discord → Fin de tâche.",
+        "note": "💡 Discord peut rester actif en arrière-plan même si la fenêtre est fermée."
+      },
+      {
+        "text": "**Étape 2 — Supprimer le cache Discord :**\n\nOuvre l'Explorateur et navigue vers :\n\nC:\\Users\\[tonnom]\\AppData\\Roaming\\Discord\n\nSupprime **tout le contenu** de ce dossier (pas le dossier lui-même).",
+        "note": "💡 AppData est un dossier caché. Pour l'afficher : Affichage → Éléments masqués, ou tape `%appdata%` dans la barre d'adresse."
+      },
+      {
+        "text": "**Étape 3 — Désinstaller Discord :**\n\nOuvre **Ajouter ou supprimer des programmes** → trouve Discord → Désinstaller."
+      },
+      {
+        "text": "**Étape 4 — Vider le DNS :**\n\nOuvre un CMD et tape :\n\nipconfig /flushdns"
+      },
+      {
+        "text": "**Étape 5 — Resynchroniser l'heure :**\n\nOuvre **Paramètres → Heure et langue → Date et heure** → clique **Synchroniser maintenant**, puis désactive/réactive **Régler l'heure automatiquement**.",
+        "note": "💡 Une heure système décalée peut empêcher Discord de se connecter (certificats SSL invalides)."
+      },
+      {
+        "text": "**Étape 6 — Réinstaller Discord :**\n\nTélécharge la dernière version sur **discord.com** et installe."
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "title": "Twitch — Commandes de modération",
+    "category": "autres",
+    "date": "2026-04",
+    "description": "Toutes les commandes chat utiles pour modérer un live Twitch efficacement.",
+    "steps": [
+      {
+        "text": "**Commandes de sanction :**\n\n• `/timeout [pseudo] [secondes]` → **Exclusion temporaire** (défaut : 10 min)\n• `/ban [pseudo]` → **Bannissement permanent**\n• `/unban [pseudo]` → Lever un ban",
+        "note": "💡 Pour effacer un message rapidement : `/timeout [pseudo]` sans durée — le message disparaît sans bannir définitivement."
+      },
+      {
+        "text": "**Commandes de gestion du chat :**\n\n• `/clear` → **Efface tout l'historique** visible pour tout le monde\n• `/restrict [pseudo]` → **Filtrage manuel** — chaque message passe en validation\n• `/monitor [pseudo]` → **Surveillance** — met en relief ses messages\n• `/user [pseudo]` → **Fiche spectateur** — historique, logs, notes de modération"
+      },
+      {
+        "text": "**Commandes d'engagement :**\n\n• `/poll` → **Sondage** — crée un vote en direct\n• `/prediction` → **Pari de points** — pronostics sur le live\n• `/announce [texte]` → **Annonce** — message coloré mis en évidence\n• `/commercial` → **Pub** — lance une pause pub (30s, 60s, 90s…)"
+      },
+      {
+        "text": "**Commandes de fin de stream :**\n\n• `/raid [chaîne]` → **Raid** — envoie ton audience vers une autre chaîne\n• `/marker [texte]` → **Marqueur VOD** — indique un moment important pour le montage",
+        "note": "💡 Les marqueurs VOD sont visibles dans le gestionnaire de vidéos Twitch — facilitent beaucoup l'edit de highlights."
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "title": "Débuter sur Twitch — Paramètres de stream",
+    "category": "autres",
+    "date": "2026-04",
+    "description": "Débits recommandés par résolution pour un stream Twitch fluide à 60, 50 ou 30 FPS.",
+    "steps": [
+      {
+        "text": "**Choix de la résolution selon ta connexion :**\n\nPour streamer, ton **upload** est la limite principale.\n\n• **1080p 60fps** → 6 000 – 8 500 kb/s *(Twitch limite à 6 000 sans partenariat)*\n• **720p 60fps** → 3 000 – 4 500 kb/s\n• **720p 30fps** → 2 000 – 3 000 kb/s\n• **480p 30fps** → 1 000 – 1 500 kb/s",
+        "note": "💡 Vérifie ton upload sur **speedtest.net** — prends 80% de ta valeur max pour le bitrate stream."
+      },
+      {
+        "text": "**Paramètres OBS recommandés pour Twitch :**\n\n• Bitrate vidéo : selon tableau ci-dessus\n• Encodeur : **NVENC** (Nvidia) / **AMF** (AMD) / **x264** si pas de GPU dédié\n• Keyframe interval : **2**\n• Preset : **Quality** (NVENC/AMF) ou **veryfast** (x264)\n• Audio : **160 kb/s** minimum, **320 kb/s** recommandé"
+      },
+      {
+        "text": "**Conseils pour bien démarrer :**\n\n• **Titre clair** → décrit ce que tu fais exactement\n• **Catégorie correcte** → impact fort sur la découvrabilité\n• **Horaires réguliers** → fidélise une audience\n• **Interagis avec le chat** même s'il est vide au début\n• **Deckboard** → transforme ton smartphone en Streamdeck (3€)",
+        "note": "💡 Les premiers streams servent à tester et apprendre — ne vise pas la perfection technique tout de suite."
+      }
+    ]
+  }
+]

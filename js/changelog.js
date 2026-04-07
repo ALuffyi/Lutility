@@ -1,6 +1,19 @@
 // ── Changelog / Patch Notes ───────────────────────────
 const CHANGELOG = [
   {
+    version: '2.15.0',
+    date:    '2026-04-07',
+    type:    'feat',
+    changes: [
+      'Tutoriels : nouvelle page dédiée avec catégories, recherche et panneau latéral',
+      'Tutoriels : 16 guides intégrés (Windows, Gaming, Programme, Autres)',
+      'Tutoriels : filtre par jeu dans la catégorie Gaming',
+      'Tutoriels : support images, texte gras et notes callout dans les étapes',
+      'Tutoriels : fetch automatique depuis GitHub (màj sans rebuild)',
+      'Navigation : Tutos repositionné au-dessus de MàJ dans la barre latérale',
+    ]
+  },
+  {
     version: '2.14.2',
     date:    '2026-04-07',
     type:    'fix',

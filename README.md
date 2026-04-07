@@ -1,4 +1,4 @@
-# LUTILITY v2.14.2
+# LUTILITY v2.15.0
 
 > Utilitaire personnel gaming sous Electron — Windows uniquement.
 > Interface dark, données sauvegardées localement (clef USB ou PC).
@@ -7,7 +7,7 @@
 
 ## Téléchargement
 
-👉 [Lutility-Setup-2.14.2.exe](https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.14.2.exe)
+👉 [Lutility-Setup-2.15.0.exe](https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.15.0.exe)
 
 ---
 
@@ -17,6 +17,7 @@
 |---|---|
 | 🎮 **Jeux** | Liste personnelle, touches/manette par jeu (PS/Xbox/Switch/PC), codes, paramètres |
 | 📓 **Carnets** | Éditeur riche : titres, listes, tableaux, images embarquées, sous-pages |
+| 📖 **Tutoriels** | Guides intégrés par catégorie (Windows, Gaming, Programme, Autres), recherche, images, fetch GitHub automatique |
 | 🛠️ **Outils** | Outils système, infos matériel, mises à jour, maintenance Windows |
 | ⚡ **Raccourcis** | Lanceur d'applications et scripts (.bat/.cmd/.ps1) personnalisés |
 | 💾 **Sauvegarde** | Dossier `Lutility_SAV` portable (USB recommandé), export/import intégral |
@@ -27,7 +28,7 @@
 
 ## Installation
 
-1. Télécharger `Lutility-Setup-2.14.2.exe`
+1. Télécharger `Lutility-Setup-2.15.0.exe`
 2. Lancer l'installateur (choix du répertoire, raccourcis bureau/démarrer)
 3. Démarrer Lutility → wizard de premier lancement (profil + dossier SAV)
 
@@ -52,7 +53,7 @@ Double-clic sur run.bat
 ```
 Double-clic sur build.bat
 ```
-Produit : `dist/Lutility-Setup-2.14.2.exe` (NSIS x64)
+Produit : `dist/Lutility-Setup-2.15.0.exe` (NSIS x64)
 
 ---
 
@@ -60,21 +61,25 @@ Produit : `dist/Lutility-Setup-2.14.2.exe` (NSIS x64)
 
 ```
 Lutility-electron/
-├── main.js           ← Process principal Electron (IPC, fichiers, système)
-├── preload.js        ← Pont contextBridge (window.api)
-├── renderer.html     ← Interface complète
-├── version.json      ← Vérification des mises à jour
-├── package.json      ← Config npm + electron-builder
-├── css/style.css     ← Styles globaux
-├── assets/icon.ico   ← Icône application
+├── main.js              ← Process principal Electron (IPC, fichiers, système)
+├── preload.js           ← Pont contextBridge (window.api)
+├── renderer.html        ← Interface complète
+├── version.json         ← Vérification des mises à jour
+├── package.json         ← Config npm + electron-builder
+├── tutorials.json       ← Tutoriels bundlés (fallback hors-ligne)
+├── tutorials-img/       ← Images des tutoriels
+├── css/style.css        ← Styles globaux
+├── assets/icon.ico      ← Icône application
 └── js/
-    ├── state.js      ← État global + constantes
-    ├── launch.js     ← Wizard démarrage (4 étapes) + carte retour
-    ├── persist.js    ← Lecture/écriture fichiers via IPC
-    ├── app.js        ← Navigation, modals, profil, horloge, MAJ
-    ├── jeux.js       ← Module Jeux
-    ├── notes.js      ← Module Carnets / Notes
-    └── tools.js      ← Module Outils (raccourcis, commandes, programmes)
+    ├── state.js         ← État global + constantes
+    ├── launch.js        ← Wizard démarrage (4 étapes) + carte retour
+    ├── persist.js       ← Lecture/écriture fichiers via IPC
+    ├── app.js           ← Navigation, modals, profil, horloge, MAJ
+    ├── jeux.js          ← Module Jeux
+    ├── notes.js         ← Module Carnets / Notes
+    ├── tools.js         ← Module Outils (raccourcis, commandes, programmes)
+    ├── tutos.js         ← Module Tutoriels
+    └── changelog.js     ← Historique des versions
 ```
 
 ---
@@ -83,7 +88,7 @@ Lutility-electron/
 
 - `contextIsolation: true` + `nodeIntegration: false`
 - Accès système uniquement via `preload.js` (surface minimale)
-- CSP stricte dans `renderer.html`
+- CSP dans `renderer.html`
 - Commandes admin via `Start-Process -Verb RunAs` (UAC Windows)
 
 ---
