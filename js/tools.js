@@ -331,7 +331,7 @@ const PROGRAMMES = [
   // ── PÉRIPHÉRIQUES ────────────────────────────────────
   { cat:'periph', ico:'⌨️', name:'iCUE (Corsair)',
     desc:'RGB et configuration pour claviers, souris, headsets et RAM Corsair.',
-    url:'https://www.corsair.com/en-us/icue', fav:'corsair.com' },
+    url:'https://www.corsair.com/us/en/s/downloads', fav:'corsair.com' },
   { cat:'periph', ico:'🐍', name:'Razer Synapse',
     desc:'Configuration RGB et macros pour tous les périphériques Razer.',
     url:'https://www.razer.com/synapse-3', fav:'razer.com' },

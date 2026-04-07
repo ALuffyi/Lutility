@@ -140,7 +140,7 @@ if (!gotLock) {
   app.whenReady().then(() => { createWindow(); createTray(); });
 }
 
-app.on('window-all-closed', () => { /* Ne pas quitter — on garde la tray */ });
+app.on('window-all-closed', () => { if (app.isQuiting || _closeAction === 'quit') app.quit(); });
 app.on('before-quit', () => { app.isQuiting = true; });
 
 // ── Window controls ───────────────────────────────────
