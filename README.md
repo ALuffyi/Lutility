@@ -1,26 +1,21 @@
 # LUTILITY v2.15.0
 
-T'as tes paramètres de jeu dans un coin de Discord, tes scripts sur le bureau et tes notes éparpillées partout ? Lutility regroupe tout ça.
+> T'as tes paramètres de jeu dans un coin de Discord, tes scripts sur le bureau et tes notes éparpillées partout ? **Lutility regroupe tout ça.**
 
-Fiches de jeux, carnets de notes, tutoriels PC/gaming, lanceur de scripts et outils système — dans une interface dark, offline et portable sur clé USB.
+Fiches de jeux, carnets de notes, tutoriels PC/gaming, lanceur de scripts et outils système — dans une interface dark, **offline et portable sur clé USB**.
 
-Pourquoi c'est différent?
+&nbsp;
 
-1. Pas de compte. Pas de cloud. Tes données restent chez toi.
-2. Tes données t'appartiennent.
-3. Tout est stocké localement — sur ton PC ou une clé USB. Pas de compte, pas de cloud, pas d'abonnement. Tu reformates ? Tu branches ta clé. C'est tout.
+| | |
+|---|---|
+| ⚡ **Rapide** | Lance en quelques secondes, interface fluide |
+| 🔌 **Portable** | Fonctionne depuis une clé USB |
+| 🔒 **Offline** | 100% local, aucune donnée envoyée |
+| 🆓 **Gratuit** | Open source, pour toujours |
 
-⚡ Rapide — Lance en 5 secondes, interface fluide
-🔌 Portable — Fonctionne depuis une clé USB
-🔒 Offline — 100% local, aucune donnée envoyée
-🆓 Gratuit — Open source, pour toujours
+&nbsp;
 
-Pour qui ?
-
-✅ Tu joues sur PC et tu veux garder tes configs organisées
-✅ Tu streames et tu gères OBS, Twitch, Discord au quotidien
-✅ Tu reformates souvent et tu en as marre de tout reconfigurer
-✅ Tu veux un outil personnel sans dépendre d'un service en ligne
+**Pas de compte. Pas de cloud. Tes données restent chez toi.**
 
 ---
 
