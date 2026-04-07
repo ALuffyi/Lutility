@@ -493,13 +493,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);display:flex
 .sc-card{
   display:flex;align-items:center;gap:8px;
   background:var(--surf);border:1px solid var(--bord);border-radius:10px;
-  padding:10px 12px;transition:border-color .18s;min-width:180px;max-width:280px;flex:1;
+  padding:10px 12px;transition:border-color .18s;min-width:180px;flex:0 0 auto;
 }
 .sc-card:hover{border-color:var(--bord2)}
 .sc-ico{font-size:22px;flex-shrink:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
 .sc-file-ico{width:28px;height:28px;object-fit:contain;border-radius:4px}
 .sc-ico-fallback{font-size:22px;line-height:1}
-.sc-name{flex:1;min-width:0;font-family:var(--head);font-size:13px;font-weight:600;color:var(--br);letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-name{font-family:var(--head);font-size:13px;font-weight:600;color:var(--br);letter-spacing:.5px;white-space:nowrap}
 .sc-btn{padding:4px 8px!important;flex-shrink:0}
 .sc-del{opacity:.5}.sc-del:hover{opacity:1;color:var(--red)!important;border-color:var(--red)!important}
 
