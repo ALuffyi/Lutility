@@ -86,7 +86,6 @@ const TOOLS = [
   },
 ];
 
-// Catégories — ordre d'affichage
 const TOOL_CATS = [
   { id:'updates', label:'🔄 Mises à jour',  tc:'g', tags:['Update']   },
   { id:'maint',   label:'🧹 Maintenance',   tc:'y', tags:['Maint.']   },
@@ -94,10 +93,8 @@ const TOOL_CATS = [
   { id:'systeme', label:'🧬 Système',       tc:'p', tags:['Système']  },
 ];
 
-// État collapse par catégorie (session uniquement)
-const _catCollapsed = {};
+const _catCollapsed = {}; // état collapse par catégorie (session)
 
-// ── Helpers ───────────────────────────────────────────
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -110,7 +107,7 @@ function tempBadge(str) {
   return `<span style="color:${col};font-weight:700">${escHtml(str)}</span>`;
 }
 
-// Script infos matérielles (lancé manuellement) — températures gérées par PS_TEMP
+// Script PowerShell — infos matérielles (lancé manuellement)
 const PS_SYSINFO = `
 try {
   $os  = Get-CimInstance Win32_OperatingSystem
@@ -141,7 +138,7 @@ try {
 } catch { Write-Output '{"error":"Erreur WMI"}' }
 `.trim();
 
-// Script léger — GPU + CPU temp (auto-refresh), sort JSON
+// Script PowerShell léger — GPU + CPU temp (auto-refresh toutes les 30s)
 const PS_TEMP = `
 $res = @{ tGpu = 'N/A'; tCpu = 'N/A' }
 $nvPaths = @('nvidia-smi','C:\\Program Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe')
@@ -168,8 +165,8 @@ let _lastCpuTemp = 'N/A';
 
 function startTempRefresh() {
   stopTempRefresh();
-  _refreshTemp(); // immédiat
-  _tempTimer = setInterval(_refreshTemp, 30000); // toutes les 30s
+  _refreshTemp();
+  _tempTimer = setInterval(_refreshTemp, 30000);
 }
 
 function stopTempRefresh() {
@@ -179,7 +176,7 @@ function stopTempRefresh() {
 async function _refreshTemp() {
   const elGpu = document.getElementById('si-gpu-temp');
   const elCpu = document.getElementById('si-cpu-temp');
-  if (!elGpu && !elCpu) { stopTempRefresh(); return; } // page détruite
+  if (!elGpu && !elCpu) { stopTempRefresh(); return; } // éléments détruits
   try {
     const r = await window.api.execPsScript(PS_TEMP);
     if (!r.ok || !r.out) return;
@@ -217,7 +214,6 @@ async function loadSysinfo() {
     _lastGpuTemp = d.tGpu || 'N/A';
     _lastCpuTemp = d.tCpu || 'N/A';
 
-    // ── Barres d'utilisation disques ──
     let diskBarsHtml = '<span style="color:var(--dim);font-size:12px">Non détecté</span>';
     try {
       const dArr = JSON.parse(d.disksArr || '[]');
@@ -273,7 +269,7 @@ async function loadSysinfo() {
       </div>
       `;
 
-    startTempRefresh(); // démarre le rafraîchissement auto des températures
+    startTempRefresh();
   } catch(e) {
     grid.innerHTML = `<div class="si-loading si-err">❌ ${escHtml(e.message)}</div>`;
   } finally {
@@ -487,7 +483,7 @@ async function scLaunch(id) {
   else    toast('Impossible de lancer : ' + sc.name, 'warn');
 }
 
-const _scIconCache = new Map(); // path → dataURL
+const _scIconCache = new Map();
 
 function renderShortcuts() {
   const wrap = document.getElementById('sc-wrap');
@@ -511,7 +507,6 @@ function renderShortcuts() {
     </div>`;
   }).join('');
 
-  // Chargement async des icônes non encore en cache
   S.shortcuts.forEach(async sc => {
     if (_scIconCache.has(sc.path)) return;
     const dataUrl = await window.api.getFileIcon(sc.path);
@@ -680,7 +675,7 @@ function renderCustomTools() {
 // ══ OUTILS SYSTÈME ═══════════════════════════════════
 
 function toggleCat(id) {
-  // ?? true : état initial undefined → considéré comme replié (true)
+  // undefined ?? true : état initial = replié
   _catCollapsed[id] = !(_catCollapsed[id] ?? true);
   const body = document.getElementById('cat-body-' + id);
   const icon = document.getElementById('cat-icon-' + id);
@@ -715,7 +710,6 @@ async function execTool(ti) {
   const tool = TOOLS[ti];
   if (!tool) return;
 
-  // ── Avertissement Debloat ────────────────────────────
   if (tool.name.includes('Debloat')) {
     const ok = confirm(
       '⚠️  AVERTISSEMENT — Debloat Windows\n\n' +

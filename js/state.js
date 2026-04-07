@@ -1,7 +1,6 @@
 'use strict';
 
 // ══ CONSTANTS ═══════════════════════════════════════════
-// Config stored in AppData via window.api — no localStorage needed
 const P_EMOJIS = ['🎮','🔥','⚡','💀','🦊','🐺','🐉','🎯','🏆','👑','🤖','🦸','🎭','👾','👻','🌙','☀️','⭐','🌟','💫','🔮','⚔️','🛡️','🎲','🎪','💎','🚀','🌊'];
 
 let selEmoji = '🎮'; // currently selected emoji in any picker
@@ -39,11 +38,10 @@ function buildEmojiGrid(containerId, list, currentEmoji, onChange) {
 }
 
 // ══ STATE ═══════════════════════════════════════════════
-let savPath = null;   // absolute path string — no browser handle needed
+let savPath = null;
 let profile = { name: '', emoji: '🎮', folderHint: '' };
 
-// S starts completely empty. Data comes exclusively from Lutility_SAV JSON files.
-// DEFAULTS are written once on first launch when no games.json exists yet.
+// S démarre vide — données chargées depuis Lutility_SAV au démarrage
 const S = {
   games: [],
   notebooks: [],
@@ -60,7 +58,6 @@ const S = {
   activeSub:  null,
 };
 
-// ── Corbeille helpers ─────────────────────────────────
 const TRASH_MAX = 20;
 
 function trashPush(type, name, data, parentPath) {
@@ -68,21 +65,19 @@ function trashPush(type, name, data, parentPath) {
   if (S.trash.length > TRASH_MAX) S.trash.length = TRASH_MAX;
 }
 
-// ── Migrate old notebooks (secs[]) to new format (cats[]) ──
-// Uses STABLE IDs derived from original IDs so note keys never change on reload.
+// Migration ancien format (secs[]) → nouveau (cats[])
+// IDs stables dérivés des originaux → clés de notes inchangées
 function migrateNotebooks(nbs) {
   return (nbs || []).map(nb => {
-    if (nb.cats) return nb; // already new format
-    // old: nb.secs[{id,name,subs:[{id,name}]}]
-    // new: nb.cats[{id,name,secs:[{id,name,pages:[{id,name,subpages:[]}]}]}]
+    if (nb.cats) return nb;
     const cats = (nb.secs || []).map(sec => ({
-      id:   sec.id,               // keep same id = stable cat id
+      id:   sec.id,            // stable cat id
       name: sec.name,
       secs: [{
-        id:   sec.id * 10 + 1,    // deterministic, derived from sec.id
+        id:   sec.id * 10 + 1, // déterministe, dérivé de sec.id
         name: 'Général',
         pages: (sec.subs || []).map(sub => ({
-          id:       sub.id,       // keep same id = stable page id
+          id:       sub.id,    // stable page id
           name:     sub.name,
           subpages: [],
         })),
@@ -91,19 +86,15 @@ function migrateNotebooks(nbs) {
     return { id: nb.id, name: nb.name, emoji: nb.emoji||'', color: nb.color, cats };
   });
 }
-// ── Migrate old note keys to new 5-level key format ──────
-// Old key: "nb{nbId}_s{secId}_sub{subId|root}"
-// New key: "nb{nbId}_cat{catId}_s{newSecId}_p{pageId}_sproot"
-// Stable mapping: catId=secId, newSecId=secId*10+1, pageId=subId
+// Migration clés notes : "nb{nbId}_s{secId}_sub{subId|root}" → "nb{nbId}_cat{catId}_s{newSecId}_p{pageId}_sproot"
 function migrateNoteKeys(notes, oldNbs) {
   const migrated = {};
   Object.keys(notes).forEach(oldKey => {
     if (oldKey.includes('_cat')) {
-      // Already new format — keep as-is
-      migrated[oldKey] = notes[oldKey];
+      migrated[oldKey] = notes[oldKey]; // déjà nouveau format
       return;
     }
-    // Parse old format: nb(\d+)_s(\d+)_sub(\d+|root)
+    // Ancien format : nb(\d+)_s(\d+)_sub(\d+|root)
     const parts = oldKey.split('_');
     if (parts.length !== 3) { migrated[oldKey] = notes[oldKey]; return; }
     const nbId  = parts[0].replace('nb', '');
@@ -112,11 +103,7 @@ function migrateNoteKeys(notes, oldNbs) {
     if (!nbId || !secId) { migrated[oldKey] = notes[oldKey]; return; }
     const catId  = secId;
     const newSec = (+secId) * 10 + 1;
-    if (subPart === 'root') {
-      // Old root note (no sub): no matching page exists → skip
-      return;
-    }
-    // subPart is a sub id → becomes pageId, sproot
+    if (subPart === 'root') return; // ancienne note root sans page → ignore
     const newKey = 'nb' + nbId + '_cat' + catId + '_s' + newSec + '_p' + subPart + '_sproot';
     migrated[newKey] = notes[oldKey];
   });

@@ -57,7 +57,6 @@ function renderNotebooks() {
   if (!c) return;
   c.innerHTML = '';
 
-  // Si le carnet actif est replié, ne pas afficher de note dans l'éditeur
   if (S.activeNB !== null && S.activeNB !== undefined &&
       _collapsed.has('nb_' + S.activeNB) &&
       (S.activePage !== null || S.activeSub !== null)) {
@@ -69,7 +68,6 @@ function renderNotebooks() {
     const grp = document.createElement('div');
     grp.className = 'nb-group';
 
-    // CARNET
     const hdr = document.createElement('div');
     hdr.className = 'nb-hdr lvl-nb' + (S.activeNB === nb.id ? ' on' : '');
     hdr.draggable = true;
@@ -112,7 +110,6 @@ function renderNotebooks() {
       if (_collapsed.has('cat_' + cat.id)) return;
 
       (cat.secs || []).forEach(sec => {
-        // SECTION
         const secEl = document.createElement('div');
         secEl.className = 'nb-row lvl-sec' + (S.activeSec === sec.id && S.activeCat === cat.id ? ' on' : '');
         secEl.draggable = true;
@@ -133,7 +130,6 @@ function renderNotebooks() {
         if (_collapsed.has('sec_' + sec.id)) return;
 
         (sec.pages || []).forEach(page => {
-          // PAGE — ouvre l'éditeur
           const pageEl = document.createElement('div');
           const pageOn = S.activePage === page.id && S.activeSec === sec.id && !S.activeSub;
           pageEl.className = 'nb-row lvl-page' + (pageOn ? ' on' : '');
@@ -151,7 +147,6 @@ function renderNotebooks() {
           grp.appendChild(pageEl);
 
           (page.subpages || []).forEach(sub => {
-            // SOUS-PAGE — ouvre l'éditeur
             const subEl = document.createElement('div');
             const subOn = S.activeSub === sub.id && S.activePage === page.id;
             subEl.className = 'nb-row lvl-sub' + (subOn ? ' on' : '');
@@ -169,7 +164,6 @@ function renderNotebooks() {
             grp.appendChild(subEl);
           });
 
-          // Clic droit sur page → ajouter sous-page
           pageEl.oncontextmenu = e => {
             e.preventDefault(); e.stopPropagation();
             nbCtxMenu(e, [
@@ -180,7 +174,6 @@ function renderNotebooks() {
           };
         });
 
-        // Clic droit sur section → ajouter page / renommer / supprimer
         secEl.oncontextmenu = e => {
           e.preventDefault(); e.stopPropagation();
           nbCtxMenu(e, [
@@ -191,7 +184,6 @@ function renderNotebooks() {
         };
       });
 
-      // Clic droit sur catégorie → ajouter section / renommer / supprimer
       catEl.oncontextmenu = e => {
         e.preventDefault(); e.stopPropagation();
         nbCtxMenu(e, [
@@ -202,7 +194,6 @@ function renderNotebooks() {
       };
     });
 
-    // Clic droit sur carnet → ajouter catégorie / modifier / supprimer
     hdr.oncontextmenu = e => {
       e.preventDefault(); e.stopPropagation();
       nbCtxMenu(e, [
@@ -217,10 +208,8 @@ function renderNotebooks() {
   renderTrash();
 }
 
-// ── Notebook context menu ─────────────────────────────
 let _nbCtxEl = null;
 function nbCtxMenu(e, items) {
-  // Remove existing
   if (_nbCtxEl) _nbCtxEl.remove();
   const menu = document.createElement('div');
   menu.className = 'nb-ctx';
@@ -286,6 +275,7 @@ function nbDropHandle(src, tgt) {
     else if (src.type === 'sub'  && src.pageId === tgt.pageId) { const page=getPage(src.nbId,src.catId,src.secId,src.pageId); if(page)reorder(page.subpages,src.subId,tgt.subId); }
     // Cross moves
     else if (src.type === 'page' && src.secId !== tgt.secId) {
+      // Déplacement cross-section
       const ss=getSec(src.nbId,src.catId,src.secId), ts=getSec(tgt.nbId,tgt.catId,tgt.secId);
       if(ss&&ts){const i=ss.pages.findIndex(x=>x.id===src.pageId);if(i>=0){const[m]=ss.pages.splice(i,1);ts.pages.push(m);
         _migrateNoteKeys(
@@ -302,7 +292,7 @@ function nbDropHandle(src, tgt) {
       }}
     }
   }
-  // Promote sub → page
+  // Promouvoir sub → page
   else if (src.type==='sub' && tgt.type==='sec') {
     const sp=getPage(src.nbId,src.catId,src.secId,src.pageId), ts=getSec(tgt.nbId,tgt.catId,tgt.secId);
     if(sp&&ts){const i=sp.subpages.findIndex(x=>x.id===src.subId);if(i>=0){const[m]=sp.subpages.splice(i,1);ts.pages.push({id:m.id,name:m.name,subpages:[]});
@@ -311,18 +301,17 @@ function nbDropHandle(src, tgt) {
       _migrateNoteKeys(oldKey, newKey);
     }}
   }
-  // Promote page → section
+  // Promouvoir page → section
   else if (src.type==='page' && tgt.type==='cat') {
     const ss=getSec(src.nbId,src.catId,src.secId), tc=S.notebooks.find(x=>x.id===tgt.nbId)?.cats.find(x=>x.id===tgt.catId);
     if(ss&&tc){const i=ss.pages.findIndex(x=>x.id===src.pageId);if(i>=0){const[m]=ss.pages.splice(i,1);
       // Preserve subpages as pages inside the new section
       const subpagesAsPages = (m.subpages||[]).map(sp=>({id:sp.id,name:sp.name,subpages:[]}));
       tc.secs.push({id:m.id,name:m.name,pages:subpagesAsPages});
-      // Migrate page note → section note
+      // Migre les clés de notes : page → section, sous-pages → pages
       const oldPageKey='nb'+src.nbId+'_cat'+src.catId+'_s'+src.secId+'_p'+src.pageId+'_sproot';
       const newSecKey ='nb'+tgt.nbId+'_cat'+tgt.catId+'_s'+src.pageId+'_sec';
       if(S.notes[oldPageKey]){S.notes[newSecKey]=S.notes[oldPageKey];delete S.notes[oldPageKey];}
-      // Migrate each subpage note → page note within new section
       (m.subpages||[]).forEach(sp=>{
         const oldSpKey ='nb'+src.nbId+'_cat'+src.catId+'_s'+src.secId+'_p'+src.pageId+'_sp'+sp.id;
         const newPageKey='nb'+tgt.nbId+'_cat'+tgt.catId+'_s'+src.pageId+'_p'+sp.id+'_sproot';
@@ -446,7 +435,6 @@ function rnOpen(type, nbId, catId, secId, pageId, currentName, subId, currentEmo
   };
   document.getElementById('rn-title').textContent = labels[type] || 'Renommer';
   inp.value = currentName || '';
-  // Emoji picker : visible seulement pour édition (pas création simple)
   _rnSelEmoji = currentEmoji || '';
   const emojiSection = document.getElementById('rn-emoji-section');
   const showEmoji = type.endsWith('-edit') || type.endsWith('-new');
@@ -487,7 +475,7 @@ function rnConfirm() {
 
   closeModal('modal-rename'); renderNotebooks(); saveAll();
 
-  // Si on vient de renommer le niveau actif, mettre à jour le titre dans l'éditeur
+  // Met à jour le titre dans l'éditeur si le niveau actif vient d'être renommé
   const isActiveEdit = (
     (type === 'sec-edit'  && secId  === S.activeSec  && !S.activePage) ||
     (type === 'page-edit' && pageId === S.activePage && !S.activeSub)  ||
@@ -495,8 +483,6 @@ function rnConfirm() {
   );
   if (isActiveEdit) {
     const titleEl = document.getElementById('note-title');
-    // Seulement si le titre correspond encore à l'ancien nom (non personnalisé)
-    // ou si la note n'existe pas encore — on force la mise à jour du titre
     const k = nKey();
     const n = S.notes[k];
     if (!n || !n.title || n.title === titleEl.value) {
@@ -515,7 +501,7 @@ function subDel(nbId,catId,secId,pageId,subId,e){ e.stopPropagation(); if(!confi
 // NOTE KEY & EDITOR
 // ═══════════════════════════════════════════════════════
 function nKey() {
-  // Section note: activePage is null  → key ends with _pnull_sproot → use dedicated format
+  // Section sans page active → clé dédiée (évite _pnull_sproot)
   if ((S.activeSec !== null && S.activeSec !== undefined) && !S.activePage) {
     return 'nb'+S.activeNB+'_cat'+S.activeCat+'_s'+S.activeSec+'_sec';
   }
@@ -523,10 +509,6 @@ function nKey() {
 }
 
 function canEdit() {
-  // Section, Page and Sous-page all open the editor
-  // Section = activeSec set, activePage null
-  // Page    = activePage set, activeSub null
-  // Sous-page = activeSub set
   if (S.activeSub  !== null && S.activeSub  !== undefined) return true;
   if (S.activePage !== null && S.activePage !== undefined) return true;
   if (S.activeSec  !== null && S.activeSec  !== undefined &&
@@ -537,7 +519,7 @@ function canEdit() {
 async function loadNote() {
   if (!canEdit()) { clearEditor(); return; }
 
-  // ── Unlock editor FIRST — before any async work ──
+  // Unlock editor FIRST — avant tout travail async
   const title  = document.getElementById('note-title');
   const body   = document.getElementById('note-body');
   const editor = body?.closest('.note-editor');
@@ -547,6 +529,7 @@ async function loadNote() {
   body.spellcheck      = true;
   title.placeholder    = 'Titre de la note…';
   if (editor) editor.classList.remove('no-page');
+
 
   const k = nKey();
   const n = S.notes[k] || null;
@@ -571,9 +554,9 @@ function clearEditor() {
   if (!title || !body) return;
   title.value           = '';
   title.placeholder     = 'Sélectionnez une page…';
-  title.disabled        = true;           // ← bloque la saisie
+  title.disabled        = true;
   body.innerHTML        = '';
-  body.contentEditable  = 'false';        // ← bloque la saisie
+  body.contentEditable  = 'false';
   const sp = document.getElementById('note-sp');
   if (sp) sp.textContent = '';
   const editor = document.getElementById('note-body')?.closest('.note-editor');
@@ -599,8 +582,7 @@ function onEdit() {
   const k = nKey();
   const body  = document.getElementById('note-body');
   const clone = body.cloneNode(true);
-  // Compat ancien format : strip les blob: URLs (remplacées par readImgAsBlob au chargement)
-  // Les nouvelles images sont des data: URLs directement dans src → aucun traitement nécessaire
+  // Strip les blob: URLs avant sauvegarde (data-src les réhydrate au chargement)
   clone.querySelectorAll('img[data-src]').forEach(img => {
     if (img.src.startsWith('blob:')) img.src = '';
   });
@@ -632,8 +614,8 @@ function insertTable() {
   const cols = Math.max(1, Math.min(10, +document.getElementById('tbl-cols').value || 3));
   const rows = Math.max(1, Math.min(20, +document.getElementById('tbl-rows').value || 3));
 
-  // Insertion DOM directe — execCommand('insertHTML') supprime les attributs
-  // contenteditable sur les cellules dans Chromium, rendant le tableau non éditable
+  // Insertion DOM directe : execCommand('insertHTML') supprime les attributs contenteditable
+  // sur les cellules dans Chromium (tableau non éditable)
   const table = document.createElement('table');
   const thead = document.createElement('thead');
   const hRow  = document.createElement('tr');
@@ -660,7 +642,6 @@ function insertTable() {
   const body = document.getElementById('note-body');
   body.focus();
 
-  // Insère après la sélection courante ou à la fin
   const sel = window.getSelection();
   let inserted = false;
   if (sel && sel.rangeCount) {
@@ -673,7 +654,6 @@ function insertTable() {
       const p = document.createElement('p');
       p.innerHTML = '<br>';
       table.insertAdjacentElement('afterend', p);
-      // Place le curseur dans la première cellule
       const first = table.querySelector('th, td');
       if (first) {
         const r2 = document.createRange();
@@ -693,8 +673,7 @@ function insertTable() {
 
 function pickImg() { document.getElementById('img-input').click(); }
 
-// ── Compression image via Canvas (max 1920px, JPEG 85%) ──────
-// Compresse avant sauvegarde sur disque dans Lutility_SAV/images/
+// Compression canvas (max 1920px, JPEG 85%) avant sauvegarde dans Lutility_SAV/images/
 function compressImg(dataUrl) {
   return new Promise(resolve => {
     const img = new Image();
@@ -708,7 +687,7 @@ function compressImg(dataUrl) {
       c.getContext('2d').drawImage(img, 0, 0, w, h);
       resolve(c.toDataURL('image/jpeg', 0.85));
     };
-    img.onerror = () => resolve(dataUrl); // fallback sans compression
+    img.onerror = () => resolve(dataUrl); // fallback si erreur
     img.src = dataUrl;
   });
 }
@@ -718,7 +697,6 @@ function onImgFile(inp) {
   const reader = new FileReader();
   reader.onload = async e => {
     const dataUrl = await compressImg(e.target.result);
-    // Sauvegarde dans Lutility_SAV/images/ et utilise data-src pour la stabilité
     const relPath  = await saveImg(dataUrl);
     let src, dsrc;
     if (relPath) {
@@ -728,6 +706,7 @@ function onImgFile(inp) {
       if (blobUrl) _imgBlobMap.set(blobUrl, relPath); // fallback suppression
     } else {
       src  = dataUrl; // fallback inline si dossier inaccessible
+
       dsrc = '';
     }
     document.getElementById('note-body').focus();
@@ -761,7 +740,6 @@ function onPaste(e) {
   for (const item of items) {
     if (!item.type.startsWith('image/')) continue;
 
-    // Cas 1 : item de type file (PNG, JPEG uploadé, etc.)
     const file = item.getAsFile();
     if (file) {
       e.preventDefault();
@@ -774,7 +752,7 @@ function onPaste(e) {
       return;
     }
 
-    // Cas 2 : screenshot Windows (bitmap CF_DIB) — fallback via IPC Electron
+    // Screenshot Windows (bitmap CF_DIB) — fallback via IPC Electron
     e.preventDefault();
     window.api.clipboardReadImage().then(async dataUrl => {
       if (!dataUrl) return;
@@ -789,7 +767,7 @@ function onPaste(e) {
 function setFont(font) {
   if (!font) return;
   document.execCommand('fontName', false, font);
-  // execCommand fontName wraps in <font face=""> — also apply via span for modern fonts
+  // fontName wraps in <font face=""> — applique aussi via span pour les polices modernes
   const sel = window.getSelection();
   if (sel && sel.rangeCount) {
     const range = sel.getRangeAt(0);
@@ -887,7 +865,6 @@ function renderTrash() {
   const c = document.getElementById('nb-list');
   if (!c) return;
 
-  // Remove existing trash section
   const existing = document.getElementById('trash-section');
   if (existing) existing.remove();
 
@@ -897,7 +874,6 @@ function renderTrash() {
   section.id = 'trash-section';
   section.style.cssText = 'margin-top:16px;border-top:1px solid var(--bord);padding-top:8px';
 
-  // Header
   const hdr = document.createElement('div');
   hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 12px 4px;cursor:pointer;user-select:none';
   hdr.innerHTML =

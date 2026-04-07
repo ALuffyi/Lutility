@@ -1,7 +1,6 @@
 'use strict';
 
 // ══ JEUX ════════════════════════════════════════════════
-// Escape HTML pour les attributs value="..." dans les inputs
 function esc(s) {
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -44,7 +43,6 @@ function renderGames(){
     });
     list.appendChild(el);
   });
-  // Ensure activeGame is still valid (e.g. after a delete)
   if(S.activeGame && S.games.find(x=>x.id===S.activeGame)) selectGame(S.activeGame);
   else if(S.games.length) { S.activeGame=S.games[0].id; selectGame(S.activeGame); }
 }
@@ -68,7 +66,7 @@ function selectGame(id){
   document.querySelectorAll('.gitem').forEach(el=>el.classList.remove('on'));
   document.querySelectorAll('.gitem').forEach((el,i)=>{if(S.games[i]?.id===id)el.classList.add('on')});
   const g=S.games.find(x=>x.id===id);if(!g)return;
-  g.codes = g.codes || []; // migration données existantes
+  g.codes = g.codes || [];
   const ctrlType = g.ctrlType || null;
   const touchTitle = ctrlType ? '🎮 Touches / Manette' : '⌨️ Touches';
   const selectorHTML = `
@@ -126,9 +124,7 @@ function setCtrlType(gid, type) {
   schedSave();
 }
 
-// ── Boutons manette ────────────────────────────────────
-// Retourne un tableau plat de {v, c?} (bouton) ou 'sep' (séparateur)
-// c = couleur officielle du bouton
+// Retourne [{v, c?}] ou 'sep' — c = couleur officielle du bouton
 function _ctrlBtnsFor(ctrlType) {
   switch(ctrlType) {
     case 'ps': return [
@@ -254,7 +250,7 @@ function onDragStart(e) {
   _dragSrc = { gid: +row.dataset.gid, idx: +row.dataset.idx, type: row.dataset.type };
   row.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', ''); // required for Firefox
+  e.dataTransfer.setData('text/plain', ''); // requis Firefox
 }
 
 function onDragOver(e) {
@@ -272,7 +268,6 @@ function onDragLeave(e) {
 
 function onDragEnd(e) {
   e.currentTarget.classList.remove('dragging');
-  // Clean up any leftover drag-over highlights
   document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
   _dragSrc = null;
 }
@@ -285,14 +280,13 @@ function onDrop(e) {
   const targetGid = +target.dataset.gid;
   const targetIdx = +target.dataset.idx;
   const type = _dragSrc.type;
-  if (_dragSrc.gid !== targetGid) return; // only reorder within same game
-  if (_dragSrc.idx === targetIdx) return;  // dropped on itself
+  if (_dragSrc.gid !== targetGid) return;
+  if (_dragSrc.idx === targetIdx) return;
 
   const g = S.games.find(x => x.id === targetGid);
   if (!g) return;
 
   const arr = type === 'bind' ? g.binds : type === 'code' ? (g.codes||[]) : g.sets;
-  // Remove dragged item and insert at target position
   const [moved] = arr.splice(_dragSrc.idx, 1);
   arr.splice(targetIdx, 0, moved);
 
@@ -314,12 +308,11 @@ function addGame(){
   if(!name){toast('Entrez un nom de jeu','warn');return;}
   const id=Date.now();const nl=name.toLowerCase();const pl=plat.toLowerCase();
   let binds,sets=[{n:'Sensibilité',v:'—'},{n:'DPI',v:'—'},{n:'Résolution',v:'—'},{n:'FPS Max',v:'—'},{n:'V-Sync',v:'—'}];
-  // Détecter le type de manette automatiquement selon la plateforme
+  // Auto-détection manette selon la plateforme
   let ctrlType = null;
   if(pl.includes('ps')||pl.includes('playstation')) ctrlType = 'ps';
   else if(pl.includes('xbox')) ctrlType = 'xbox';
   else if(pl.includes('switch')||pl.includes('nintendo')) ctrlType = 'switch';
-  // Touches par défaut selon la plateforme
   if(ctrlType==='ps'){
     binds=[{a:'Avancer',k:'↑'},{a:'Reculer',k:'↓'},{a:'Gauche',k:'←'},{a:'Droite',k:'→'},{a:'Sauter',k:'✕'},{a:'Attaquer',k:'○'},{a:'Action',k:'□'},{a:'Spécial',k:'△'},{a:'Gâchette G',k:'L2'},{a:'Gâchette D',k:'R2'}];
   } else if(ctrlType==='xbox'){

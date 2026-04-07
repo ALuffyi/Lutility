@@ -1,4 +1,4 @@
-# LUTILITY v2.15.0
+# LUTILITY v2.16.0
 
 > T'as tes paramètres de jeu dans un coin de Discord, tes scripts sur le bureau et tes notes éparpillées partout ? **Lutility regroupe tout ça.**
 
@@ -21,7 +21,7 @@ Fiches de jeux, carnets de notes, tutoriels PC/gaming, lanceur de scripts et out
 
 ## Téléchargement
 
-👉 [Lutility-Setup-2.15.0.exe](https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.15.0.exe)
+👉 [Lutility-Setup-2.16.0.exe](https://github.com/ALuffyi/Lutility/releases/latest/download/Lutility-Setup-2.16.0.exe)
 
 ---
 
@@ -36,13 +36,14 @@ Fiches de jeux, carnets de notes, tutoriels PC/gaming, lanceur de scripts et out
 | ⚡ **Raccourcis** | Lanceur d'applications et scripts (.bat/.cmd/.ps1) personnalisés |
 | 💾 **Sauvegarde** | Dossier `Lutility_SAV` portable (USB recommandé), export/import intégral |
 | 🔄 **Mises à jour** | Badge discret + notification + historique des versions (patch notes intégré) |
+| 🎨 **Personnalisation** | Thème de couleur, taille du texte, densité — via ⚙️ Settings |
 | 🖥️ **Système** | Infos matériel (CPU, GPU, RAM, disques), pilote NVIDIA, températures |
 
 ---
 
 ## Installation
 
-1. Télécharger `Lutility-Setup-2.15.0.exe`
+1. Télécharger `Lutility-Setup-2.16.0.exe`
 2. Lancer l'installateur (choix du répertoire, raccourcis bureau/démarrer)
 3. Démarrer Lutility → wizard de premier lancement (profil + dossier SAV)
 
@@ -67,7 +68,7 @@ Double-clic sur run.bat
 ```
 Double-clic sur build.bat
 ```
-Produit : `dist/Lutility-Setup-2.15.0.exe` (NSIS x64)
+Produit : `dist/Lutility-Setup-2.16.0.exe` (NSIS x64)
 
 ---
 

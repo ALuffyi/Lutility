@@ -1,6 +1,6 @@
 'use strict';
 
-// ══ LAUNCH (Electron) ════════════════════════════════════
+// ══ LAUNCH ══════════════════════════════════════════════
 
 async function initLaunchScreen() {
   const cfg = await window.api.configLoad();
@@ -12,18 +12,17 @@ async function initLaunchScreen() {
     const ok = await window.api.folderExists(savPath);
     if (ok) {
       showReturnCard();
-      // Lecture légère pour afficher les compteurs — sans toucher au DOM de l'app
       await _showReturnCounts();
       return;
     }
-    // Dossier introuvable → écran rapide "Localiser" (sans refaire tout le wizard)
+    // Dossier introuvable → écran "Localiser" (sans relancer le wizard)
     showLostCard();
     return;
   }
   showWizard();
 }
 
-// Lecture légère : compte jeux/pages/notes sans rendre de DOM
+// Lecture légère : affiche les compteurs sans toucher au DOM de l'app
 async function _showReturnCounts() {
   try {
     setStatus('folder', 'ok', profile.folderHint || savPath);
@@ -62,7 +61,6 @@ async function _showReturnCounts() {
   }
 }
 
-// ── DOSSIER PERDU ─────────────────────────────────────────
 function showLostCard() {
   document.getElementById('card-setup').style.display  = 'none';
   document.getElementById('card-return').style.display = 'none';
@@ -71,7 +69,7 @@ function showLostCard() {
   document.getElementById('lost-name').textContent  = profile.name  || 'Joueur';
 }
 
-// Localise un Lutility_SAV existant à son nouvel emplacement (sans copie)
+// Pointe vers un Lutility_SAV existant (sans copie)
 async function quickLocate() {
   const newPath = await window.api.importSavInplace();
   if (!newPath) return;
@@ -81,7 +79,6 @@ async function quickLocate() {
   startApp();
 }
 
-// Choisit un nouveau dossier parent et y déplace les données courantes (si dispo)
 async function quickNewFolder() {
   const chosen = await window.api.chooseFolder();
   if (!chosen) return;
@@ -91,7 +88,7 @@ async function quickNewFolder() {
   startApp();
 }
 
-// ── WIZARD ────────────────────────────────────────────────
+// ── WIZARD ───────────────────────────────────────────────
 function showWizard() {
   document.getElementById('card-setup').style.display  = 'flex';
   document.getElementById('card-return').style.display = 'none';
@@ -152,7 +149,6 @@ async function pickFolder(isChange) {
   if (!chosen) return;
 
   if (isChange && oldPath && oldPath !== chosen) {
-    // Copie intégrale (JSON + images + tout) vers le nouveau dossier
     toast('📁 Copie des données…');
     await window.api.copyFolder(oldPath, chosen);
   }
@@ -167,7 +163,6 @@ async function pickFolder(isChange) {
     toast('📁 Dossier mis à jour et données copiées !');
     return;
   }
-  // Wizard step 2
   const el = document.getElementById('spath');
   if (el) { el.textContent = '✅ ' + chosen; el.classList.add('ok'); }
   const go = document.getElementById('btn-go');
@@ -182,7 +177,6 @@ async function firstLaunch() {
   startApp();
 }
 
-// ── RETURN CARD ───────────────────────────────────────────
 function showReturnCard() {
   document.getElementById('card-setup').style.display  = 'none';
   document.getElementById('card-return').style.display = 'flex';
@@ -220,18 +214,16 @@ function resetSetup() {
   window.api.configSave({ savPath: null, profile: null });
   savPath  = null;
   profile  = { name: '', emoji: '🎮', folderHint: '' };
-  // Réinitialise l'état
   S.games = []; S.notebooks = []; S.notes = {};
   S.trash = []; S.shortcuts = []; S.customTools = [];
   S.activeGame = null;
   S.activeNB = S.activeCat = S.activeSec = S.activePage = S.activeSub = null;
-  // Cache la carte "dossier perdu" si elle était visible
   const lostCard = document.getElementById('card-lost');
   if (lostCard) lostCard.style.display = 'none';
   showWizard();
 }
 
-// ── Export / Import ───────────────────────────────────────
+// ── Export / Import ──────────────────────────────────────
 async function exportSav() {
   if (!savPath) { toast('Aucun dossier configuré', 'warn'); return; }
   const ok = await window.api.exportSav(savPath, profile.name);
@@ -239,7 +231,6 @@ async function exportSav() {
   else    toast('Export annulé ou échoué', 'warn');
 }
 
-// Affiche le modal de choix d'import et retourne 'copy', 'inplace' ou null (annulé)
 let _importChoiceResolve = null;
 let _importChoiceCleanup = null;
 
@@ -274,7 +265,6 @@ async function importSav() {
   if (!newPath) { toast('Import annulé', 'warn'); return; }
   savPath = newPath;
   profile.folderHint = newPath;
-  // Restaure le profil stocké dans la sauvegarde (nom + emoji)
   const savedProfile = await rJSON('profile.json');
   if (savedProfile?.name) {
     profile.name  = savedProfile.name;
@@ -288,14 +278,12 @@ async function importSav() {
   toast('✅ Dossier chargé — profil : ' + profile.name);
 }
 
-// ── Import depuis l'écran de lancement ───────────────────
-// Simplifié : pointe directement vers un dossier Lutility_SAV existant (pas de copie)
+// Import depuis l'écran de lancement : pointe directement vers un Lutility_SAV (pas de copie)
 async function importAndStart() {
   profile.name  = document.getElementById('s-name')?.value?.trim() || profile.name || 'Joueur';
   profile.emoji = selEmoji || profile.emoji || '🎮';
 
-  // Délai court pour que le renderer finisse de rafraîchir avant le dialog natif
-  await new Promise(r => setTimeout(r, 80));
+  await new Promise(r => setTimeout(r, 80)); // laisse le renderer rafraîchir avant le dialog
 
   const newPath = await window.api.importSavInplace();
   if (!newPath) { toast('Import annulé', 'warn'); return; }
@@ -305,12 +293,11 @@ async function importAndStart() {
   startApp();
 }
 
-// ── startApp ──────────────────────────────────────────────
+// ── startApp ─────────────────────────────────────────────
 let _autoSaveTimer    = null;
 let _heartbeatStarted = false;
 
 async function startApp() {
-  // Réinitialise l'état avant chargement pour éviter les résidus
   S.games = []; S.notebooks = []; S.notes = {};
   S.trash = []; S.shortcuts = []; S.customTools = [];
   S.activeGame = null;
@@ -322,16 +309,13 @@ async function startApp() {
   document.getElementById('t-emoji').textContent = profile.emoji || '🎮';
 
   await loadAll();
-  // loadAll() gère déjà renderGames + renderNotebooks + loadNote/clearEditor
-  // On n'appelle que renderTools() + renderProgrammes() qui ne sont pas dans loadAll()
+  // loadAll() gère renderGames + renderNotebooks + loadNote/clearEditor
   renderTools();
   if (typeof renderProgrammes === 'function') renderProgrammes();
   if (typeof renderHome       === 'function') renderHome();
 
-  // Guard : évite d'empiler plusieurs intervals si startApp() est appelé plusieurs fois
   if (!_autoSaveTimer)    _autoSaveTimer    = setInterval(autoSave, 30000);
   if (!_heartbeatStarted) { _heartbeatStarted = true; startFolderHeartbeat(); }
 
-  // Vérification discrète des mises à jour (sans bloquer le démarrage)
-  setTimeout(checkForUpdate, 3000);
+  setTimeout(checkForUpdate, 3000); // vérif MàJ discrète (non bloquante)
 }
