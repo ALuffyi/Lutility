@@ -1,4 +1,4 @@
-# LUTILITY — Guide développeur
+# DEV.md — Guide développeur Lutility
 
 > Référence rapide pour naviguer et modifier le code.
 
@@ -8,27 +8,22 @@
 
 ```
 Lutility-electron/
-├── main.js              Processus principal Electron — IPC, fichiers, fenêtre, tray, MAJ
-├── preload.js           Pont contextBridge → expose window.api au renderer
-├── renderer.html        HTML complet de l'UI (tout est dans ce fichier)
-├── css/style.css        Styles globaux (dark theme, composants, thèmes, densité)
-├── version.json         Version courante + URL de release (utilisé par le checker MAJ)
-├── tutorials.json       Tutoriels bundlés (fallback offline + source en dev)
-├── tutorials-img/       Images des tutoriels (nom de fichier référencé dans tutorials.json)
-├── changelog.json       Historique des versions affiché dans l'onglet MàJ
-├── assets/icon.ico      Icône application
-├── build.bat            Lance electron-builder → dist/Lutility-Setup-x.x.x.exe
-├── run.bat              Lance en dev (npx electron .)
+├── main.js           — Processus principal Electron (IPC, Node fs, fenêtre, tray, spellcheck)
+├── preload.js        — contextBridge : expose window.api au renderer (contextIsolation)
+├── renderer.html     — Shell HTML unique : titlebar, launch screen, app, modals, <script>
+├── tutorials.json    — Tutoriels bundlés (fallback hors-ligne + source en dev)
+├── package.json      — Métadonnées, scripts npm, config electron-builder
+├── css/style.css     — Tout le CSS (thèmes, densité, composants)
 └── js/
-    ├── state.js         État global (S), profil, savPath — partagé par tous les modules
-    ├── launch.js        Wizard premier lancement (4 étapes) + carte "dossier perdu"
-    ├── persist.js       Lecture/écriture fichiers (wJSON/rJSON), saveAll, LED, heartbeat
-    ├── app.js           Nav, modals, horloge, MAJ, apparence, home cards, Settings modal
-    ├── jeux.js          Module Jeux — CRUD fiches, keybinds, paramètres, codes
-    ├── notes.js         Module Notes — carnets, éditeur rich-text, images, sous-pages
-    ├── tools.js         Module Outils — raccourcis, commandes, programmes, infos système
-    ├── tutos.js         Module Tutoriels — liste, filtre, panneau détail
-    └── changelog.js     Affichage du changelog dans l'onglet MàJ
+    ├── state.js      — Globales : S (état), savPath, profile, P_EMOJIS, PLAT, GAMES, migrations
+    ├── persist.js    — I/O JSON (wJSON/rJSON), images blob, autoSave, heartbeat, export MD
+    ├── launch.js     — Écran lancement : wizard 4 étapes, carte retour/perdu, startApp()
+    ├── app.js        — Core renderer : update, home, thèmes, nav, modals, context menu, init
+    ├── notes.js      — Carnets 5 niveaux, éditeur contenteditable, drag&drop, images, corbeille
+    ├── jeux.js       — Jeux : binds, sets, codes, manette (PS/Xbox/Switch), drag&drop
+    ├── tools.js      — Outils intégrés, température, programmes recommandés, raccourcis, scripts
+    ├── tutos.js      — Tutoriels : chargement, filtres catégorie/jeu/recherche, panneau détail
+    └── changelog.js  — Tableau CHANGELOG statique + rendu HTML
 ```
 
 ---
@@ -36,138 +31,207 @@ Lutility-electron/
 ## Ordre de chargement (renderer.html)
 
 ```
-state.js → launch.js → persist.js → app.js → jeux.js → notes.js → tools.js → changelog.js → tutos.js
+state.js → persist.js → launch.js → app.js → jeux.js → notes.js → tools.js → tutos.js → changelog.js
 ```
 
-> `escHtml` est défini dans `tools.js` — ne pas l'appeler au niveau module dans les fichiers chargés avant.
+`escHtml` est défini dans `tools.js` — ne pas l'appeler au niveau module dans les fichiers chargés avant.
 
 ---
 
 ## Flux de démarrage
 
 ```
-1. renderer.html charge les scripts dans l'ordre ci-dessus
-2. state.js     → initialise S{}, savPath, profile
-3. launch.js    → vérifie si savPath existe → si non, affiche le wizard
-4. persist.js   → loadAll() lit les JSON du dossier SAV
-5. app.js       → renderHomeCards() (sync), puis async : charge config, appPrefs, homeCfg
-6. main.js      → restore closeAction depuis config.json au démarrage
+main.js                          renderer.html / js
+───────────────────────────────  ────────────────────────────────────────────
+app.whenReady()
+  loadSpeller()                  — charge .dic en arrière-plan (async)
+  createWindow()                 — BrowserWindow frameless, preload.js injecté
+  createTray()
+                                 scripts chargés dans l'ordre ci-dessus
+                                 initLaunchScreen()
+                                   configLoad() → savPath + profile ?
+                                     oui → folderExists() ?
+                                       oui  → showReturnCard() → startApp()
+                                       non  → showLostCard()
+                                     non  → showWizard() (4 étapes)
+                                 startApp()
+                                   loadAll() — lit games, notebooks, notes,
+                                               shortcuts, customTools, trash
+                                   render* sur chaque module
+                                   applyAppPrefs() + applyHomeVisibility()
+                                   checkForUpdate() (async, silencieux)
+                                   heartbeat 5s → folderExists()
 ```
 
 ---
 
 ## Où modifier quoi
 
-| Je veux...                              | Fichier           | Fonction / Zone                  |
-|-----------------------------------------|-------------------|----------------------------------|
-| Ajouter une carte sur le Home           | `js/app.js`       | `HOME_MENU` array                |
-| Changer les thèmes de couleur           | `js/app.js`       | `THEMES` array                   |
-| Modifier l'UI d'un module               | `renderer.html`   | Section `#p-<module>`            |
-| Ajouter un style CSS                    | `css/style.css`   | Fin du fichier                   |
-| Ajouter un tutoriel                     | `tutorials.json`  | Voir format ci-dessous           |
-| Modifier l'en-tête de la topbar         | `renderer.html`   | Div `.topbar-right`              |
-| Ajouter un raccourci système (IPC)      | `main.js`         | Bloc `ipcMain.handle`            |
-| Exposer un IPC au renderer              | `preload.js`      | `contextBridge.exposeInMainWorld`|
-| Modifier le wizard de démarrage         | `js/launch.js`    | `initLaunchScreen()`             |
-| Changer le comportement de sauvegarde   | `js/persist.js`   | `saveAll()` / `autoSave()`       |
-| Modifier les infos système (CPU/GPU...) | `js/tools.js`     | `loadSysInfo()`                  |
-| Ajouter une version au changelog        | `changelog.json`  | Ajouter entrée en début de tableau |
-| Modifier la version affichée            | `version.json` + `package.json` | `"version"` |
+| Je veux…                              | Fichier           | Fonction / Zone                                      |
+|---------------------------------------|-------------------|------------------------------------------------------|
+| Ajouter un outil intégré              | `js/tools.js`     | Tableau `TOOLS` — objet `{ico, name, tag, tc, desc, admin, type, cmd}` |
+| Ajouter un programme recommandé       | `js/tools.js`     | Tableau `PROGRAMMES`                                 |
+| Ajouter/modifier un tutoriel          | `tutorials.json`  | Tableau JSON (voir format ci-dessous)                |
+| Ajouter une version au changelog      | `js/changelog.js` | Tableau `CHANGELOG`                                  |
+| Modifier les thèmes de couleur        | `js/app.js`       | Tableau `THEMES`                                     |
+| Modifier les tailles de texte         | `js/app.js`       | Tableau `TEXT_SIZES`                                 |
+| Modifier les densités                 | `js/app.js`       | Tableau `DENSITY`                                    |
+| Ajouter une carte Home                | `js/app.js`       | Tableau `HOME_MENU`                                  |
+| Modifier la logique de sauvegarde     | `js/persist.js`   | `saveAll()`, `autoSave()`                            |
+| Ajouter un handler IPC                | `main.js`         | `ipcMain.handle('nom', ...)`                         |
+| Exposer une nouvelle API au renderer  | `preload.js`      | `contextBridge.exposeInMainWorld`                    |
+| Modifier le style visuel              | `css/style.css`   | Variables CSS `--accent`, classes `.theme-*`         |
+| Ajouter une page dans l'app           | `renderer.html`   | `<div class="page" id="p-xxx">` + bouton nav         |
 
 ---
 
 ## Données — config.json
 
-Stocké dans `%APPDATA%/Lutility/config.json` (prod) ou `config.dev.json` (dev).
+Stocké dans `%APPDATA%/lutility/config.json` (prod) ou `%APPDATA%/lutility-dev/config.dev.json` (dev).
+Sauvegarde automatique dans `.bak` à chaque écriture (`writeConfig`).
 
 ```json
 {
-  "savPath": "C:/chemin/vers/Lutility_SAV",
-  "profile": { "name": "Joueur", "emoji": "🎮" },
+  "savPath": "C:/Users/.../Lutility_SAV",
+  "profile": { "name": "Alex", "emoji": "🎮", "folderHint": "C:/Users/.../Lutility_SAV" },
   "closeAction": "minimize",
+  "appPrefs": { "theme": "", "density": "normal", "textSize": "md" },
   "homeViz": {
-    "cards": { "jeux": true, "notes": true, ... },
-    "nav":   { "jeux": true, "maj": true, ... },
+    "cards": { "jeux": true, "notes": true, "shortcuts": true, "programmes": true, "tools": true },
+    "nav":   { "jeux": true, "notes": true, "shortcuts": true, "programmes": true, "tools": true, "maj": true },
     "prefs": { "clock": true, "navLabels": true }
-  },
-  "appPrefs": {
-    "theme": "",
-    "density": "normal",
-    "textSize": "md"
   }
 }
 ```
 
-Données utilisateur (jeux, notes, etc.) dans le dossier `savPath/` :
+**Données utilisateur** dans `Lutility_SAV/` :
 
-```
-games.json · notebooks.json · notes.json · trash.json
-shortcuts.json · custom-tools.json · session.json · profile.json
-images/          ← images embarquées des notes
-```
+| Fichier                    | Contenu                                              |
+|----------------------------|------------------------------------------------------|
+| `games.json`               | Tableau jeux avec binds, sets, codes, type manette   |
+| `notebooks.json`           | Arborescence carnets (5 niveaux : carnet→cat→sec→page→subpage) |
+| `notes.json`               | Contenu HTML des pages (clé → HTML)                  |
+| `shortcuts.json`           | `[{id, name, emoji, path}]`                          |
+| `custom-tools.json`        | `[{id, ico, name, desc, cmd, type, admin}]`          |
+| `trash.json`               | Corbeille (max 20 items, restaurables)               |
+| `images/img_*.{jpg,png}`   | Images des notes (max 1920px, JPEG 85%)              |
+
+**Clé de note** : `nb{nbId}_cat{catId}_s{secId}_p{pageId}_sp{subId|root}`
 
 ---
 
-## Ajouter un tutoriel
+## Tutoriels
 
-Édite `tutorials.json` (ou le fichier sur le repo GitHub pour les utilisateurs en prod) :
+### Ajouter un tutoriel
+
+1. Éditer `tutorials.json` à la racine du projet.
+2. Pousser sur la branche `main` du repo GitHub — l'app récupère le fichier automatiquement au prochain lancement (prod).
+
+### Format JSON
 
 ```json
 {
-  "id": 18,
+  "id": 42,
   "title": "Titre du tutoriel",
   "category": "windows",
   "date": "2026-04",
   "description": "Courte description affichée sur la carte.",
+  "game": "Nom du jeu",
   "steps": [
     {
-      "text": "Texte de l'étape. Supporte le **gras** et les\nsauts de ligne.",
-      "note": "💡 Note optionnelle sous l'étape.",
-      "image": "nom-du-fichier.png"
+      "text": "Texte de l'étape. **Gras** avec doubles astérisques.\nSaut de ligne avec \\n.",
+      "note": "💡 Callout optionnel affiché sous le texte de l'étape.",
+      "image": "nom-image.png"
     }
   ]
 }
 ```
 
-**Catégories valides :** `windows` · `gaming` · `programme` · `autres`
+- **Catégories valides :** `windows` · `gaming` · `programme` · `autres`
+- **`game`** : optionnel, catégorie `gaming` uniquement — active le filtre par jeu
+- **`image`** : nom de fichier dans `tutorials-img/` (chemin relatif depuis renderer.html)
 
-**Images :** place le fichier dans `tutorials-img/` et mets uniquement le nom (ex: `"mon-image.png"`).
+### Stratégie de chargement (prod)
 
-**Jeu** (gaming uniquement) : ajoute `"game": "Nom du jeu"` pour le filtre par jeu.
+1. Cache AppData (`tutorials-cache.json`) → retourné immédiatement
+2. Fetch GitHub en arrière-plan → met à jour le cache pour la prochaine session
+3. Si pas de cache → fetch bloquant → fallback `tutorials.json` bundlé
 
 ---
 
-## Ajouter un thème de couleur
+## Thèmes & apparence
 
-Dans `js/app.js`, ajoute dans le tableau `THEMES` :
+Les thèmes sont des classes CSS appliquées sur `<body>` :
 
-```js
-{ key:'pink', color:'#ec4899', label:'Rose foncé' },
-```
+| Type       | Classes possibles                                                                     | Variable modifiée              |
+|------------|---------------------------------------------------------------------------------------|--------------------------------|
+| Couleur    | *(vide)* · `theme-blue` · `theme-violet` · `theme-green` · `theme-orange` · `theme-red` · `theme-rose` | `--accent`, `--accent-dim` |
+| Densité    | `density-compact` · `density-normal` · `density-comfort`                              | paddings, gaps                 |
+| Taille     | `text-sm` · `text-md` · `text-lg`                                                     | `--fs-base`                    |
 
-Dans `css/style.css`, ajoute :
+**Ajouter un thème :**
 
-```css
-body.theme-pink { --cyan: #ec4899; }
-```
-
-C'est tout — la couleur s'applique à toute l'UI via `var(--cyan)`.
+1. `js/app.js` → tableau `THEMES` :
+   ```js
+   { key: 'gold', color: '#f59e0b', label: 'Or' },
+   ```
+2. `css/style.css` :
+   ```css
+   body.theme-gold { --accent: #f59e0b; --accent-dim: rgba(245,158,11,.15); }
+   ```
 
 ---
 
 ## Conventions
 
-| Pattern          | Usage                                                                 |
-|------------------|-----------------------------------------------------------------------|
-| `toast(msg)`     | Notification bas-écran (app.js) — `toast('✓ Sauvegardé')`           |
-| `escHtml(s)`     | Échappe HTML avant injection innerHTML (défini dans tools.js)        |
-| `nav(id)`        | Change de page — `nav('jeux')`, `nav('home')`                        |
-| `openModal(id)`  | Ouvre un overlay — `openModal('modal-profile')`                      |
-| `saveAll()`      | Sauvegarde tout l'état S{} sur disque (persist.js)                   |
-| `window.api.*`   | Tout accès Node/système passe par preload.js (contextIsolation)       |
-| `S.*`            | État global — `S.games`, `S.notes`, `S.activeGame`…                  |
-| `wJSON/rJSON`    | Écriture/lecture fichiers JSON dans savPath (persist.js)             |
-| `_fonction()`    | Préfixe `_` = privé au module, ne pas appeler depuis l'extérieur     |
+### IPC (main ↔ renderer)
+
+```js
+// renderer
+const result = await window.api.monAction(arg);
+
+// preload.js
+monAction: (arg) => ipcRenderer.invoke('mon-action', arg),
+
+// main.js
+ipcMain.handle('mon-action', (_e, arg) => { /* Node.js */ });
+```
+
+Utiliser `ipcRenderer.send` / `ipcMain.on` pour les événements sans retour (ex: `win-minimize`).
+
+### Écriture fichier atomique
+
+Passer par `atomicWrite()` dans main.js : écrit dans `.tmp` puis `fs.renameSync()` — jamais de fichier à moitié écrit.
+
+### Helpers courants
+
+| Pattern            | Usage                                                              |
+|--------------------|--------------------------------------------------------------------|
+| `toast(msg)`       | Notification bas-écran — `toast('✅ OK')` / `toast('Err', 'err')` |
+| `escHtml(s)`       | Échapper avant injection `innerHTML` (défini dans `tools.js`)      |
+| `nav(id)`          | Changer de page — `nav('jeux')`, `nav('home')`                     |
+| `openModal(id)`    | Ouvrir un overlay — `openModal('modal-profile')`                   |
+| `saveAll()`        | Sauvegarde tout l'état `S{}` (persist.js, via autoSave de préférence) |
+| `window.api.*`     | Tout accès Node/système passe par preload.js                       |
+| `S.*`              | État global — `S.games`, `S.notes`, `S.activeGame`…                |
+| `wJSON / rJSON`    | Écriture/lecture JSON dans `savPath` (persist.js)                  |
+| `_fonction()`      | Préfixe `_` = privé au module, ne pas appeler de l'extérieur       |
+
+### Sauvegarde
+
+`saveAll()` utilise un mutex (`_saving` / `_pendingSave`) pour éviter les écritures concurrentes. Préférer `autoSave()` qui debounce à 800ms (+ intervalle 30s).
+
+### Images dans les notes
+
+Pipeline : fichier/presse-papiers → `compressImg()` (canvas, max 1920px, JPEG 85%) → base64 → `fileWriteBinary()` → `images/img_*.jpg` → affiché via blob URL (`data-src` → `resolveNoteImages()`).
+
+### Dev vs prod
+
+```js
+if (!app.isPackaged) { /* dev */ }
+```
+
+En dev : userData → `lutility-dev/`, config → `config.dev.json`, tutoriels → fichier local (pas de fetch GitHub).
 
 ---
 
@@ -175,16 +239,12 @@ C'est tout — la couleur s'applique à toute l'UI via `var(--cyan)`.
 
 ```bash
 # Développement
-run.bat          # npx electron . (pas de build)
+npm start                     # npx electron .
 
-# Production
-build.bat        # → dist/Lutility-Setup-x.x.x.exe
-
-# Release GitHub
-gh release create vX.X.X dist/Lutility-Setup-X.X.X.exe --title "vX.X.X" --notes "..."
+# Production (installer NSIS)
+npm run build-installer       # → dist/Lutility-Setup-x.x.x.exe
 ```
 
-Penser à mettre à jour **avant** le build :
-- `version.json` → `"version"`, `"url"`, `"notes"`
+Avant le build, mettre à jour :
 - `package.json` → `"version"`
-- `changelog.json` → nouvelle entrée en tête
+- `js/changelog.js` → nouvelle entrée en tête de `CHANGELOG`
