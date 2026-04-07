@@ -308,6 +308,7 @@ let _closeAction = 'minimize'; // 'minimize' | 'quit'
 
 function setCloseAction(action) {
   _closeAction = action;
+  window.api.setCloseAction(action);
   window.api.configSave({ savPath, profile, closeAction: action });
   _updateCloseActionBtns();
   toast(action === 'quit' ? '✕ Fermeture = Quitter' : '🗕 Fermeture = Réduire dans la barre');
