@@ -389,5 +389,38 @@
       "image": "discord-tuto.png"
     }
   ]
+},
+  {
+  "id": 18,
+  "title": "Hunt: Showdown | Méta 1896 (Edition 2026)",
+  "category": "gaming",
+  "date": "2026-04",
+  "game": "Hunt: Showdown",
+  "description": "Guide complet sur l'arsenal d'élite, les munitions spéciales et l'index intégral des traits.",
+  "steps": [
+    {
+      "text": "Le **Mosin-Nagant M1891** (136 dmg, 615 m/s) domine le sniping long cours. Pour la polyvalence, préférez le **Vetterli 71 Kar** ou le **1865 Carbine**, nouvelle méta polyvalente.\nEn arme de poing, le **Caldwell Uppercut** (Munitions Longues) reste le lien méta indispensable en secondaire.",
+      "note": "🎯 Le Mosin-Nagant avec Sniper Scopesmith est le build ultime pour les joueurs pro.",
+      "image": "HSD 1986 - Meta.jpg"
+    },
+    {
+      "text": "Pour la cadence et le combat rapproché, la **Winfield M1873** avec le trait **Levering** est imbattable.\nLe **Romero 77** offre la portée de one-shot maximale en shotgun, tandis que la **Crossbow** et le **Lamat Carbine** offrent respectivement silence et modularité (double canon intégré).",
+      "note": "💡 Le Caldwell Conversion (Dual) avec Fanning permet un tir au jugé précis et rapide.",
+      "image": "HSD 1986 - Weapon.jpg"
+    },
+    {
+      "text": "Maîtrisez les effets des munitions spéciales :\n- **FMJ** : Traverse les surfaces sans perte de dégâts.\n- **DumDum** : Applique un saignement critique.\n- **Poison** : Empoisonne et trouble la vision.\n- **Spitzer** : Vitesse extrême (Hitscan) au détriment des dégâts.",
+      "note": "⚠️ Le Bullet Drop devient critique si votre vélocité est inférieure à 456 m/s."
+    },
+    {
+      "text": "L'index des traits (Attraits) est vital pour optimiser votre chasseur :\n- **S-Tier** : **Resilience** (réanimation avec 125 PV) et **Physician** (soins plus rapides).\n- **Mobilité** : **Greyhound** (course prolongée) et **Kiteskin** (réduction dégâts de chute).\n- **Combat** : **Levering**, **Fanning** et **Quartermaster** pour porter deux armes larges.",
+      "note": "💡 Le trait Bolt Seer vous permet de ne pas perdre vos munitions avec les armes à levier.",
+      "image": "HSD 1986 - Traits.jpg"
+    },
+    {
+      "text": "Combinez vos traits avec vos armes : utilisez les variantes **Scopesmith** (Sniper, Marksman, Deadeye) pour rester en visée entre chaque tir.\nPour les joueurs furtifs, **Beastface** réduit la portée de détection des animaux (corbeaux, chiens), facilitant les approches silencieuses.",
+      "note": "🎯 Priorité méta : Nécromancien + Résilience + Médecin."
+    }
+  ]
 }
 ]
