@@ -84,6 +84,12 @@ const TOOLS = [
     admin:false, type:'CMD',
     cmd:'start ms-settings:windowsupdate',
   },
+  {
+    ico:'🚀', fav:'store.steampowered.com', name:'Driver Booster Free (Steam)', tag:'Update', tc:'g',
+    desc:'Lance Driver Booster Free (IObit) — détecte et met à jour les pilotes obsolètes. Version Steam.',
+    admin:false, type:'PS',
+    cmd:'$paths=@("$env:ProgramFiles\\IObit\\Driver Booster\\DriverBooster.exe","${env:ProgramFiles(x86)}\\IObit\\Driver Booster\\DriverBooster.exe",(Get-ChildItem "$env:ProgramFiles(x86)\\Steam\\steamapps\\common" -Recurse -Filter "DriverBooster.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName));$exe=$paths|Where-Object{$_ -and (Test-Path $_)}|Select-Object -First 1;if($exe){Start-Process $exe}else{Start-Process "steam://search/Driver Booster"}',
+  },
 ];
 
 const TOOL_CATS = [
@@ -138,25 +144,16 @@ try {
 } catch { Write-Output '{"error":"Erreur WMI"}' }
 `.trim();
 
-// Script PowerShell léger — GPU + CPU temp (auto-refresh toutes les 30s)
-const PS_TEMP = `
-$res = @{ tGpu = 'N/A'; tCpu = 'N/A' }
-$nvPaths = @('nvidia-smi','C:\\Program Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe')
-foreach ($p in $nvPaths) {
-  try {
-    $t = & $p '--query-gpu=temperature.gpu' '--format=csv,noheader,nounits' 2>$null
-    if ($t -and $t.Trim() -match '^\\d+$') { $res.tGpu = "$($t.Trim())C"; break }
-  } catch {}
-}
+// Script PowerShell — CPU temp uniquement (WMI, toutes les 30s)
+const PS_CPU_TEMP = `
 try {
   $tz = @(Get-WmiObject MSAcpi_ThermalZoneTemperature -Namespace 'root/wmi' -ErrorAction Stop)
   if ($tz.Count -gt 0) {
-    $maxK  = ($tz | Measure-Object -Property CurrentTemperature -Maximum).Maximum
-    $tc    = [math]::Round(($maxK - 2732) / 10, 0)
-    if ($tc -gt 0 -and $tc -lt 150) { $res.tCpu = "$($tc)C" }
-  }
-} catch {}
-$res | ConvertTo-Json -Compress
+    $maxK = ($tz | Measure-Object -Property CurrentTemperature -Maximum).Maximum
+    $tc   = [math]::Round(($maxK - 2732) / 10, 0)
+    if ($tc -gt 0 -and $tc -lt 150) { Write-Output "$($tc)C" } else { Write-Output 'N/A' }
+  } else { Write-Output 'N/A' }
+} catch { Write-Output 'N/A' }
 `.trim();
 
 let _tempTimer = null;
@@ -173,24 +170,61 @@ function stopTempRefresh() {
   if (_tempTimer) { clearInterval(_tempTimer); _tempTimer = null; }
 }
 
+// ── Auto-refresh Sysinfo (toutes les 3 min) ──────────────────────────────
+let _sysinfoTimer = null;
+
+function startSysinfoRefresh() {
+  stopSysinfoRefresh();
+  // Charge immédiatement si le grid est vide (première visite)
+  const grid = document.getElementById('sysinfo-grid');
+  if (grid && !grid.querySelector('.si-block')) loadSysinfo();
+  _sysinfoTimer = setInterval(() => {
+    if (document.getElementById('sysinfo-grid')) loadSysinfo();
+    else stopSysinfoRefresh();
+  }, 180000);
+}
+
+function stopSysinfoRefresh() {
+  if (_sysinfoTimer) { clearInterval(_sysinfoTimer); _sysinfoTimer = null; }
+}
+
+async function _refreshGpuTemp() {
+  const el = document.getElementById('si-gpu-temp');
+  if (!el) return;
+  const r = await window.api.siTemps();
+  if (!r.ok || !r.gpus.length) return;
+  const t = r.gpus[0].temp;
+  _lastGpuTemp = t != null ? t + 'C' : 'N/A';
+  el.innerHTML = tempBadge(_lastGpuTemp);
+}
+
+async function _refreshCpuTemp() {
+  const el = document.getElementById('si-cpu-temp');
+  if (!el) return;
+  const r = await window.api.execPsScript(PS_CPU_TEMP);
+  if (!r.ok || !r.out) return;
+  _lastCpuTemp = r.out.trim();
+  el.innerHTML = tempBadge(_lastCpuTemp);
+}
+
+async function _refreshRam() {
+  const el = document.getElementById('si-ram-live');
+  if (!el) return;
+  const r = await window.api.siMem();
+  if (!r.ok) return;
+  const used  = (r.used  / 1073741824).toFixed(1);
+  const total = (r.total / 1073741824).toFixed(1);
+  el.textContent = used + ' Go / ' + total + ' Go';
+}
+
 async function _refreshTemp() {
-  const elGpu = document.getElementById('si-gpu-temp');
-  const elCpu = document.getElementById('si-cpu-temp');
-  if (!elGpu && !elCpu) { stopTempRefresh(); return; } // éléments détruits
-  try {
-    const r = await window.api.execPsScript(PS_TEMP);
-    if (!r.ok || !r.out) return;
-    let d;
-    try { d = JSON.parse(r.out.trim()); } catch { return; }
-    if (d.tGpu !== undefined) {
-      _lastGpuTemp = d.tGpu;
-      if (elGpu) elGpu.innerHTML = tempBadge(d.tGpu);
-    }
-    if (d.tCpu !== undefined) {
-      _lastCpuTemp = d.tCpu;
-      if (elCpu) elCpu.innerHTML = tempBadge(d.tCpu);
-    }
-  } catch {}
+  if (!document.getElementById('si-gpu-temp') &&
+      !document.getElementById('si-cpu-temp') &&
+      !document.getElementById('si-ram-live')) {
+    stopTempRefresh();
+    return;
+  }
+  await Promise.all([_refreshGpuTemp(), _refreshCpuTemp(), _refreshRam()]);
 }
 
 async function loadSysinfo() {
@@ -256,7 +290,7 @@ async function loadSysinfo() {
       </div>
       <div class="si-block">
         <div class="si-lbl">💾 RAM</div>
-        <div class="si-val">${escHtml(d.ram||'—')}</div>
+        <div class="si-val" id="si-ram-live">${escHtml(d.ram||'—')}</div>
         <div class="si-sub">${escHtml(d.ramSl||'')}</div>
       </div>
       <div class="si-block si-block-full">
@@ -412,16 +446,30 @@ function renderProgrammes() {
 
 // ══ RACCOURCIS ════════════════════════════════════════
 const SC_EMOJIS = ['🔗','🎮','⚙️','🔧','📂','🚀','💻','🎯','⚡','🔥','🛡️','📡','🖥️','🖱️','⌨️','📁','🎵','🎬','🌐','💡','🧰','🗂️'];
-let _scEmoji  = '🔗';
+let _scEmoji  = '';
+const _scIconCache = new Map();
 let _scEditId = null;
+
+function _scClearEmoji() {
+  _scEmoji = '';
+  document.querySelectorAll('#sc-emoji-grid .emoji-btn').forEach(b => b.classList.remove('sel'));
+  const noBtn = document.getElementById('sc-no-emoji');
+  if (noBtn) noBtn.classList.add('sel');
+}
+
+function _scSyncNoneBtn() {
+  const noBtn = document.getElementById('sc-no-emoji');
+  if (noBtn) noBtn.classList.toggle('sel', !_scEmoji);
+}
 
 function openAddShortcut() {
   _scEditId = null;
-  _scEmoji  = '🔗';
+  _scEmoji  = '';
   document.getElementById('sc-modal-title').textContent = '🔗 Ajouter un raccourci';
   document.getElementById('sc-path').value = '';
   document.getElementById('sc-name').value = '';
-  buildEmojiGrid('sc-emoji-grid', SC_EMOJIS, _scEmoji, e => { _scEmoji = e; });
+  buildEmojiGrid('sc-emoji-grid', SC_EMOJIS, _scEmoji, e => { _scEmoji = e; _scSyncNoneBtn(); });
+  _scSyncNoneBtn();
   openModal('modal-shortcut');
 }
 
@@ -429,11 +477,12 @@ function scEdit(id) {
   const sc = S.shortcuts.find(s => s.id === id);
   if (!sc) return;
   _scEditId = id;
-  _scEmoji  = sc.emoji || '🔗';
+  _scEmoji  = sc.emoji || '';
   document.getElementById('sc-modal-title').textContent = '✏️ Modifier le raccourci';
   document.getElementById('sc-path').value = sc.path;
   document.getElementById('sc-name').value = sc.name;
-  buildEmojiGrid('sc-emoji-grid', SC_EMOJIS, _scEmoji, e => { _scEmoji = e; });
+  buildEmojiGrid('sc-emoji-grid', SC_EMOJIS, _scEmoji, e => { _scEmoji = e; _scSyncNoneBtn(); });
+  _scSyncNoneBtn();
   openModal('modal-shortcut');
 }
 
@@ -483,8 +532,6 @@ async function scLaunch(id) {
   else    toast('Impossible de lancer : ' + sc.name, 'warn');
 }
 
-const _scIconCache = new Map();
-
 function renderShortcuts() {
   const wrap = document.getElementById('sc-wrap');
   if (!wrap) return;
@@ -493,13 +540,14 @@ function renderShortcuts() {
     return;
   }
   wrap.innerHTML = S.shortcuts.map(sc => {
-    const cached = _scIconCache.get(sc.path);
-    const icoHtml = cached
-      ? `<img src="${cached}" class="sc-file-ico" draggable="false">`
-      : `<span class="sc-ico-fallback">${escHtml(sc.emoji || '🔗')}</span>`;
+    const icoInner = sc.emoji
+      ? `<span class="sc-ico-fallback">${escHtml(sc.emoji)}</span>`
+      : (_scIconCache.has(sc.path)
+          ? `<img src="${_scIconCache.get(sc.path)}" class="sc-file-ico" draggable="false">`
+          : `<span class="sc-ico-fallback" style="opacity:.3">⏳</span>`);
     return `
     <div class="sc-card">
-      <div class="sc-ico" id="sc-ico-${sc.id}">${icoHtml}</div>
+      <div class="sc-ico" id="sc-ico-${sc.id}">${icoInner}</div>
       <div class="sc-name" title="${escHtml(sc.path)}">${escHtml(sc.name)}</div>
       <button class="btn sm prim sc-btn" onclick="scLaunch(${sc.id})" title="Lancer">▶</button>
       <button class="btn sm sc-btn" onclick="scEdit(${sc.id})" title="Modifier">✏️</button>
@@ -507,8 +555,9 @@ function renderShortcuts() {
     </div>`;
   }).join('');
 
-  S.shortcuts.forEach(async sc => {
-    if (_scIconCache.has(sc.path)) return;
+  // Chargement async des icônes fichier (uniquement si pas d'emoji)
+  S.shortcuts.filter(sc => !sc.emoji).forEach(async sc => {
+    if (_scIconCache.has(sc.path)) return; // déjà en cache, déjà rendu
     const dataUrl = await window.api.getFileIcon(sc.path);
     if (!dataUrl) return;
     _scIconCache.set(sc.path, dataUrl);
@@ -619,11 +668,22 @@ async function ctDelete(id) {
 async function execCustomTool(id) {
   const ct = (S.customTools || []).find(t => t.id === id);
   if (!ct) return;
+  const filePath = ct.path || ct.cmd;
+  if (!filePath) { toast('Aucun fichier configuré', 'warn'); return; }
+
+  // Vérification dépendances selon l'extension
+  const ext = filePath.split('.').pop().toLowerCase();
+  if (ext === 'py') {
+    const check = await window.api.checkDep('python');
+    if (!check.ok) { toast('⚠️ Python introuvable — vérifiez votre installation', 'warn'); return; }
+  } else if (ext === 'ps1') {
+    const check = await window.api.checkDep('ps1');
+    if (!check.ok) { toast(`⚠️ PowerShell bloqué (politique : ${check.policy}) — lancez Set-ExecutionPolicy RemoteSigned`, 'warn'); return; }
+  }
+
   const btn = document.getElementById('ct-exec-' + id);
   if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   try {
-    const filePath = ct.path || ct.cmd;
-    if (!filePath) { toast('Aucun fichier configuré', 'warn'); return; }
     const ok = await window.api.launchApp(filePath);
     if (ok) toast('▶ ' + ct.name);
     else    toast('Impossible de lancer : ' + ct.name, 'warn');
@@ -633,8 +693,6 @@ async function execCustomTool(id) {
     if (btn) { btn.disabled = false; btn.textContent = '▶'; }
   }
 }
-
-const _ctIconCache = new Map();
 
 function renderCustomTools() {
   const wrap  = document.getElementById('cat-body-custom');
@@ -647,29 +705,14 @@ function renderCustomTools() {
     return;
   }
 
-  wrap.innerHTML = (S.customTools || []).map(ct => {
-    const cached  = _ctIconCache.get(ct.path);
-    const icoHtml = cached
-      ? `<img src="${cached}" class="sc-file-ico" draggable="false">`
-      : `<span class="sc-ico-fallback">${escHtml(ct.ico || '⚙️')}</span>`;
-    return `
+  wrap.innerHTML = (S.customTools || []).map(ct => `
     <div class="sc-card">
-      <div class="sc-ico" id="ct-ico-${ct.id}">${icoHtml}</div>
+      <div class="sc-ico"><span class="sc-ico-fallback">${escHtml(ct.ico || '⚙️')}</span></div>
       <div class="sc-name" title="${escHtml(ct.path || '')}">${escHtml(ct.name)}</div>
       <button class="btn sm prim sc-btn" id="ct-exec-${ct.id}" onclick="execCustomTool(${ct.id})" title="Lancer">▶</button>
       <button class="btn sm sc-btn" onclick="ctEdit(${ct.id})" title="Modifier">✏️</button>
       <button class="btn sm sc-btn sc-del" onclick="ctDelete(${ct.id})" title="Supprimer">✕</button>
-    </div>`;
-  }).join('');
-
-  (S.customTools || []).forEach(async ct => {
-    if (!ct.path || _ctIconCache.has(ct.path)) return;
-    const dataUrl = await window.api.getFileIcon(ct.path);
-    if (!dataUrl) return;
-    _ctIconCache.set(ct.path, dataUrl);
-    const el = document.getElementById('ct-ico-' + ct.id);
-    if (el) el.innerHTML = `<img src="${dataUrl}" class="sc-file-ico" draggable="false">`;
-  });
+    </div>`).join('');
 }
 
 // ══ OUTILS SYSTÈME ═══════════════════════════════════
@@ -801,3 +844,4 @@ function renderTools() {
 
   container.appendChild(toolSec);
 }
+

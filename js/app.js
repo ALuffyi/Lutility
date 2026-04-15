@@ -164,7 +164,6 @@ function _saveAppPrefs() {
 
 // ══ HOME PERSONNALISATION ════════════════════════════════
 let _homeCfg = null;
-let _custModalBuilt = false;
 
 // Ajouter une entrée ici = apparaît automatiquement sur le Home
 const HOME_MENU = [
@@ -232,8 +231,8 @@ function applyHomeCfg() {
     if (secEl) secEl.style.display = any ? '' : 'none';
   }
 
-  // Boutons nav
-  ['jeux','notes','shortcuts','programmes','tools','maj'].forEach(key => {
+  // Boutons nav — dérivé dynamiquement de HOME_MENU + maj
+  [...HOME_MENU.map(m => m.key), 'maj'].forEach(key => {
     const btn = document.getElementById('nav-' + key);
     if (btn) btn.style.display = _homeCfg.nav[key] !== false ? '' : 'none';
   });
@@ -254,10 +253,9 @@ function toggleHomeCustomize() {
 }
 
 function _initCustomModal() {
-  if (_custModalBuilt) return;
-  _custModalBuilt = true;
   const body = document.getElementById('cust-modal-body');
-  if (!body) return;
+  if (!body || !_homeCfg) return;
+  body.innerHTML = ''; // reconstruit à chaque ouverture → état toujours à jour
 
   const CARD_ITEMS = HOME_MENU.map(m => ({ key: m.key, label: m.ico + ' ' + m.label }));
   const NAV_ITEMS  = [...CARD_ITEMS, { key:'maj', label:'📋 MàJ' }];
@@ -362,13 +360,17 @@ function toast(msg,type=''){const t=document.getElementById('toast');t.textConte
 
 // ══ NAV / MODALS ════════════════════════════════════════
 function nav(id){
-  if (typeof stopTempRefresh === 'function' && id !== 'tools') stopTempRefresh();
+  if (id !== 'tools') {
+    if (typeof stopTempRefresh    === 'function') stopTempRefresh();
+    if (typeof stopSysinfoRefresh === 'function') stopSysinfoRefresh();
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nav').forEach(b=>b.classList.remove('on'));
   document.getElementById('p-'+id).classList.add('on');
   const b=document.querySelector(`.nav[data-p="${id}"]`);
   if(b)b.classList.add('on');
   if(id==='tutos' && typeof loadTutos === 'function' && !_tutos.length) loadTutos();
+  if(id==='tools' && typeof startSysinfoRefresh === 'function') startSysinfoRefresh();
 }
 function openModal(id){
   document.getElementById(id).classList.add('on');
@@ -426,7 +428,21 @@ renderHomeCards();
   applyAppPrefs();
   await _loadHomeCfg();
   applyHomeVisibility();
+  // Précharge les infos système en arrière-plan au démarrage
+  setTimeout(() => { if (typeof loadSysinfo === 'function') loadSysinfo(); }, 4000);
 })();
+
+// ── QuickSearch — navigation depuis la mini-fenêtre ──────────────────────
+window.api.onQsOpenNote(id => { nav('notes'); if (typeof selectNoteById === 'function') selectNoteById(id); });
+window.api.onQsNav(pg => nav(pg));
+
+// ── Bannière simulation utilisateur ──────────────────────────────────────
+window.api.onUserSimMode(() => {
+  const b = document.createElement('div');
+  b.style.cssText = 'position:fixed;top:32px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(234,179,8,.92);color:#000;font-size:10px;font-family:var(--mono);padding:2px 14px;border-radius:0 0 6px 6px;letter-spacing:.6px;pointer-events:none;white-space:nowrap';
+  b.textContent = '⚠ SIMULATION UTILISATEUR — isDev=false · config normale';
+  document.body.appendChild(b);
+});
 
 // ══ PROFILE ═════════════════════════════════════════════
 async function saveProfile(){

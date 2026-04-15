@@ -433,6 +433,7 @@ body{flex-direction:column!important}
       <div class="page" id="p-tutos">
         <div class="ph">
           <div class="ph-t" style="--pc:var(--purple)">📖 Tutoriels</div>
+          <button class="btn sm" onclick="teOpen(null)" style="margin-left:auto">+ Tutoriel</button>
         </div>
         <div class="tutos-layout">
           <!-- Colonne gauche : filtres + liste -->
@@ -630,7 +631,10 @@ body{flex-direction:column!important}
     </div>
     <div class="frow" style="margin-bottom:0">
       <label class="flbl">Emoji</label>
-      <div class="emoji-grid" id="sc-emoji-grid" style="margin-top:8px"></div>
+      <div style="margin-top:8px">
+        <button id="sc-no-emoji" class="emoji-btn sel" onclick="_scClearEmoji()" title="Icône officielle du fichier" style="width:100%;height:28px;font-size:11px;border-radius:6px;margin-bottom:6px">— Aucun (icône du fichier)</button>
+        <div class="emoji-grid" id="sc-emoji-grid"></div>
+      </div>
     </div>
     <div class="macts">
       <button class="btn sm" onclick="closeModal('modal-shortcut')">Annuler</button>
@@ -667,6 +671,50 @@ body{flex-direction:column!important}
     <div class="macts">
       <button class="btn sm" onclick="closeModal('modal-custom-tool')">Annuler</button>
       <button class="btn sm prim" onclick="ctConfirm()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ÉDITEUR TUTORIEL ─────────────────────────────── -->
+<div class="overlay" id="modal-tuto-edit">
+  <div class="modal" style="width:600px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column">
+    <div class="modal-t" id="tuto-edit-title" style="--mc:var(--purple)">✏️ Nouveau tutoriel</div>
+    <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-right:4px">
+      <div class="frow">
+        <label class="flbl">Titre</label>
+        <input class="fin" id="te-title" maxlength="80" placeholder="Titre du tutoriel…">
+      </div>
+      <div style="display:flex;gap:12px">
+        <div class="frow" style="flex:1;margin-bottom:0">
+          <label class="flbl">Catégorie</label>
+          <select class="fin" id="te-cat" onchange="teToggleGame()">
+            <option value="windows">🪟 Windows</option>
+            <option value="gaming">🎮 Gaming</option>
+            <option value="programme">📦 Programme</option>
+            <option value="autres">📂 Autres</option>
+          </select>
+        </div>
+        <div class="frow" id="te-game-row" style="flex:1;margin-bottom:0;display:none">
+          <label class="flbl">Jeu</label>
+          <input class="fin" id="te-game" maxlength="48" placeholder="Nom du jeu…">
+        </div>
+      </div>
+      <div class="frow" style="margin-bottom:0">
+        <label class="flbl">Description courte</label>
+        <input class="fin" id="te-desc" maxlength="120" placeholder="Résumé en une phrase…">
+      </div>
+      <!-- Steps -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--dim);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase">Étapes</span>
+          <button class="btn sm" onclick="teAddStep()" style="padding:3px 10px;font-size:11px">+ Étape</button>
+        </div>
+        <div id="te-steps" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+    </div>
+    <div class="macts" style="margin-top:14px">
+      <button class="btn sm" onclick="closeModal('modal-tuto-edit')">Annuler</button>
+      <button class="btn sm prim" onclick="teSave()">💾 Sauvegarder</button>
     </div>
   </div>
 </div>

@@ -918,7 +918,7 @@ function renderTrash() {
   clearBtn.onmouseout  = () => clearBtn.style.color = 'var(--dim)';
   clearBtn.onclick = () => {
     if (!confirm('Vider définitivement la corbeille ?')) return;
-    S.trash = []; saveAll(); renderTrash();
+    S.trash = []; saveAll(); renderTrash(); _refocusEditor();
   };
   section.appendChild(clearBtn);
 
@@ -958,6 +958,12 @@ function trashRestore(idx) {
 function trashDelete(idx) {
   S.trash.splice(idx, 1);
   saveAll(); renderTrash();
+  _refocusEditor();
+}
+
+function _refocusEditor() {
+  if (!S.activePage) return;
+  setTimeout(() => document.getElementById('note-body')?.focus(), 50);
 }
 
 // ═══════════════════════════════════════════════════════
