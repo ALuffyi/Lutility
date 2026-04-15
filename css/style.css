@@ -636,7 +636,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);display:flex
 .cl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .cl-dot.feat{background:var(--cyan)}.cl-dot.fix{background:#fbbf24}
 .cl-ver{font-family:var(--head);font-size:14px;font-weight:700;letter-spacing:1.5px;color:var(--br)}
-.cl-cur-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--cyan);text-transform:uppercase;opacity:.8;margin-left:2px}
+.cl-cur-tag{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--cyan);text-transform:uppercase;opacity:.8;margin-left:2px;padding:1px 7px;border-radius:10px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2)}
+.cl-cur-tag.cl-tag-ok{color:#4ade80;background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.25)}
+.cl-cur-tag.cl-tag-new{color:#fbbf24;background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.25)}
+.cl-card-new{border-left:3px solid #fbbf24}
 .cl-date{font-family:var(--mono);font-size:10px;color:var(--dim2);margin-left:auto}
 .cl-items{margin:0;padding:0 0 0 16px;display:flex;flex-direction:column;gap:4px}
 .cl-items li{font-size:12px;color:var(--dim2);line-height:1.5}
@@ -657,7 +660,7 @@ body.pdf-exporting #note-print-preview {
 
 /* ── Tutoriels ─────────────────────────────────────────────────────────────── */
 .tutos-layout{display:flex;flex:1;min-height:0;gap:0;overflow:hidden}
-.tutos-left{width:320px;min-width:260px;display:flex;flex-direction:column;border-right:1px solid var(--bord);overflow:hidden}
+.tutos-left{width:280px;min-width:220px;display:flex;flex-direction:column;border-right:1px solid var(--bord);overflow:hidden}
 .tutos-search-wrap{padding:14px 14px 8px}
 .tutos-search{width:100%;box-sizing:border-box;background:var(--surf);border:1px solid var(--bord);border-radius:7px;padding:7px 11px;color:var(--br);font-size:12px;outline:none}
 .tutos-search:focus{border-color:var(--purple)}
@@ -674,7 +677,7 @@ body.pdf-exporting #note-print-preview {
 .tuto-game-btn.on{background:rgba(251,191,36,.12);color:#fbbf24;border-color:rgba(251,191,36,.3);font-weight:600}
 /* Tag jeu sur les cartes */
 .tuto-game-tag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;background:rgba(251,191,36,.12);color:#fbbf24}
-.tutos-list{flex:1;overflow-y:auto;padding:4px 10px 12px}
+.tutos-list{flex:1;overflow-y:auto;padding:8px 10px 12px}
 .tutos-empty{color:var(--dim2);font-size:12px;text-align:center;padding:24px 0}
 .tuto-card{display:flex;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:4px;transition:background .15s,border-color .15s}
 .tuto-card:hover{background:var(--surf)}
@@ -712,18 +715,25 @@ body.pdf-exporting #note-print-preview {
 /* Tags panneau */
 .tutos-panel-tags{display:flex;gap:6px;margin-bottom:8px;align-items:center}
 /* Bouton retour sommaire */
-.tutos-back-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--dim2);background:none;border:none;padding:0 0 14px;cursor:pointer;font-family:var(--body);letter-spacing:.3px;transition:color .15s}
-.tutos-back-btn:hover{color:var(--purple)}
+.tutos-back-btn{display:inline-flex;align-items:center;gap:5px;font-size:.79em;color:var(--dim2);background:var(--surf);border:1px solid var(--bord);border-radius:6px;padding:4px 10px;margin-bottom:14px;cursor:pointer;font-family:var(--body);letter-spacing:.3px;transition:background .15s,color .15s,border-color .15s}
+.tutos-back-btn:hover{background:var(--surf2);color:var(--purple);border-color:var(--purple)}
 /* Sommaire tutos (panneau droit sans sélection) */
 .tutos-summary{padding:18px 22px}
-.tutos-sum-hdr{font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--dim2);margin-bottom:14px}
+.tutos-sum-hdr{font-size:.72em;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--dim2);margin-bottom:14px}
 .tutos-sum-group{margin-bottom:12px}
-.tutos-sum-date{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--purple);padding:3px 0 5px;border-bottom:1px solid var(--bord);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
-.tutos-sum-count{background:rgba(168,85,247,.12);color:var(--purple);border-radius:10px;padding:1px 7px;font-size:9px;font-weight:700}
-.tutos-sum-item{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:5px;cursor:pointer;transition:background .12s}
-.tutos-sum-item:hover{background:var(--surf2)}
-.tutos-sum-ico{font-size:12px;flex-shrink:0}
-.tutos-sum-name{font-size:12px;color:var(--br);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tutos-sum-date{font-size:.72em;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--purple);padding:3px 0 5px;border-bottom:1px solid var(--bord);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.tutos-sum-count{background:rgba(168,85,247,.12);color:var(--purple);border-radius:10px;padding:1px 7px;font-size:.64em;font-weight:700}
+.tutos-sum-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;transition:background .12s,border-color .12s;border:1px solid transparent}
+.tutos-sum-item:hover{background:var(--surf)}
+.tutos-sum-item.on{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.3)}
+.tutos-sum-item.on .tutos-sum-name{color:var(--purple);font-weight:600}
+.tutos-sum-ico{font-size:.86em;flex-shrink:0}
+.tutos-sum-name{font-size:.86em;color:var(--br);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.tutos-sum-perso{font-size:9px;background:rgba(168,85,247,.15);color:var(--purple);border-radius:3px;padding:1px 5px;font-family:var(--mono);letter-spacing:.5px;flex-shrink:0}
+.tutos-sum-actions{display:none;gap:2px;flex-shrink:0}
+.tutos-sum-item:hover .tutos-sum-actions{display:flex}
+/* Bouton sommaire en-tête — actif quand le sommaire est affiché */
+.tutos-sommaire-btn.on{background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.4);color:var(--purple)}
 
 
 /* ══════════════════════════════════════════════════════

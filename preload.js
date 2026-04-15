@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('api', {
   chooseExe:    ()             => ipcRenderer.invoke('choose-exe'),
   chooseScript: ()             => ipcRenderer.invoke('choose-script'),
   chooseImage:    ()  => ipcRenderer.invoke('choose-image'),
+  openFolder:     (p) => ipcRenderer.invoke('open-folder', p),
   readFileBase64: (p) => ipcRenderer.invoke('read-file-base64', p),
   renameSavFolder: (old, name) => ipcRenderer.invoke('rename-savfolder', old, name),
 
@@ -83,10 +84,6 @@ contextBridge.exposeInMainWorld('api', {
 
   // Vérification dépendances
   checkDep: (type) => ipcRenderer.invoke('check-dep', type),
-
-  // QuickSearch — événements reçus depuis main
-  onQsOpenNote: (cb) => ipcRenderer.on('qs-open-note', (_e, id) => cb(id)),
-  onQsNav:      (cb) => ipcRenderer.on('qs-nav',       (_e, pg) => cb(pg)),
 
   // Mode simulation utilisateur
   onUserSimMode: (cb) => ipcRenderer.on('user-sim-mode', cb),

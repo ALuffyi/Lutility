@@ -86,9 +86,9 @@ const TOOLS = [
   },
   {
     ico:'🚀', fav:'store.steampowered.com', name:'Driver Booster Free (Steam)', tag:'Update', tc:'g',
-    desc:'Lance Driver Booster Free (IObit) — détecte et met à jour les pilotes obsolètes. Version Steam.',
-    admin:false, type:'PS',
-    cmd:'$paths=@("$env:ProgramFiles\\IObit\\Driver Booster\\DriverBooster.exe","${env:ProgramFiles(x86)}\\IObit\\Driver Booster\\DriverBooster.exe",(Get-ChildItem "$env:ProgramFiles(x86)\\Steam\\steamapps\\common" -Recurse -Filter "DriverBooster.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName));$exe=$paths|Where-Object{$_ -and (Test-Path $_)}|Select-Object -First 1;if($exe){Start-Process $exe}else{Start-Process "steam://search/Driver Booster"}',
+    desc:'Lance Driver Booster Free (IObit) via Steam (App 920490) — détecte et met à jour les pilotes obsolètes.',
+    admin:false, type:'CMD',
+    cmd:'start steam://run/920490',
   },
 ];
 
@@ -351,7 +351,7 @@ const PROGRAMMES = [
     url:'https://brave.com/download/', fav:'brave.com' },
   { cat:'nav', ico:'🦊', name:'Firefox',
     desc:'Navigateur libre et open-source — vie privée, extensions, sync.',
-    url:'https://www.mozilla.org/firefox/download/thanks/', fav:'mozilla.org' },
+    url:'https://www.mozilla.org/firefox/download/thanks/', fav:'firefox.com' },
   { cat:'nav', ico:'🎭', name:'Opera GX',
     desc:'Navigateur gaming — limiteur CPU/RAM, intégrations Discord & Twitch.',
     url:'https://www.opera.com/gx', fav:'opera.com' },
@@ -421,9 +421,17 @@ function renderProgrammes() {
       card.className = 'tcard';
       if (cat.tc) card.dataset.tc = cat.tc;
 
+      const icoHtml = prog.fav
+        ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(prog.fav)}&sz=64"
+                width="30" height="30"
+                style="border-radius:5px;object-fit:contain;flex-shrink:0"
+                onerror="this.outerHTML='<span style=\\'font-size:22px\\'>${prog.ico.replace(/'/g,"\\'")}</span>'"
+                alt="${escHtml(prog.name)}">`
+        : `<span style="font-size:22px">${escHtml(prog.ico)}</span>`;
+
       card.innerHTML = `
         <div class="tcard-hdr">
-          <div class="tcard-ico" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0;font-size:22px">${escHtml(prog.ico)}</div>
+          <div class="tcard-ico" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;flex-shrink:0">${icoHtml}</div>
           <div class="tcard-name">${escHtml(prog.name)}</div>
         </div>
         <div class="tcard-body">

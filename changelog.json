@@ -1,5 +1,15 @@
 [
   {
+    "version": "2.17.1",
+    "date": "2026-04-15",
+    "type": "fix",
+    "label": "Correctif",
+    "changes": [
+      "Menu MàJ : versions affichées de la plus récente à la plus ancienne",
+      "Badge version installée / à jour visible à l'ouverture sans défilement"
+    ]
+  },
+  {
     "version": "2.17.0",
     "date": "2026-04-15",
     "type": "feat",
