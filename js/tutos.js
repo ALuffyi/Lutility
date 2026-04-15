@@ -22,7 +22,7 @@ async function loadTutos() {
   _renderTutoCounts();
   _renderGameFilter();
   renderTutos();
-  if (!_openTutoId) _renderTutoSummary();
+  if (!_openTutoId) _renderPanelEmpty();
 }
 
 function _renderTutoCounts() {
@@ -89,60 +89,53 @@ function renderTutos() {
     list.innerHTML = '<div class="tutos-empty">Aucun tutoriel trouvé.</div>';
     return;
   }
-  list.innerHTML = filtered.map(t => {
-    const isUser = _userTutos.some(u => u.id === t.id);
-    return `
-    <div class="tuto-card ${_openTutoId === t.id ? 'on' : ''}" onclick="openTuto(${t.id})">
-      <div class="tuto-card-ico">${_catIco(t.category)}</div>
-      <div class="tuto-card-body">
-        <div class="tuto-card-title">${escHtml(t.title)}${isUser ? ' <span style="font-size:9px;background:rgba(168,85,247,.15);color:var(--purple);border-radius:3px;padding:1px 5px;font-family:var(--mono);letter-spacing:.5px">perso</span>' : ''}</div>
-        <div class="tuto-card-desc">${escHtml(t.description)}</div>
-        <div class="tuto-card-meta">
-          <span class="tuto-cat-tag tuto-cat-${t.category}">${_catLabel(t.category)}</span>
-          ${t.game ? `<span class="tuto-game-tag">${escHtml(t.game)}</span>` : ''}
-          <span class="tuto-steps-count">${t.steps?.length || 0} étape${(t.steps?.length||0)>1?'s':''}</span>
-          ${t.date ? `<span class="tuto-date">${_fmtTutoDate(t.date)}</span>` : ''}
-          ${(isUser || window.api.isDev) ? `<button class="btn sm" style="padding:1px 7px;font-size:10px;margin-left:auto" onclick="event.stopPropagation();teOpen(${t.id})">✏️</button>` : ''}${isUser && window.api.isDev ? `<button class="btn sm" style="padding:1px 7px;font-size:10px" title="Publier dans tutorials.json" onclick="event.stopPropagation();tePublish(${t.id})">📤</button>` : ''}${(isUser || window.api.isDev) ? `<button class="btn sm sc-del" style="padding:1px 7px;font-size:10px" onclick="event.stopPropagation();teDelete(${t.id})">✕</button>` : ''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function _renderTutoSummary() {
-  const panel = document.getElementById('tutos-panel');
-  if (!panel) return;
-  const all = _allTutos();
-  if (!all.length) {
-    panel.innerHTML = `<div class="tutos-panel-empty"><span class="tutos-panel-ico">📖</span><div>Aucun tutoriel disponible</div></div>`;
-    return;
-  }
-  // Regrouper par date YYYY-MM
+  // Grouper par date YYYY-MM
   const groups = {};
-  for (const t of all) {
+  for (const t of filtered) {
     const key = t.date || '0000-00';
     if (!groups[key]) groups[key] = [];
     groups[key].push(t);
   }
   const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
-  const html = sortedKeys.map(key => {
+  list.innerHTML = sortedKeys.map(key => {
     const label = key === '0000-00' ? 'Sans date' : _fmtTutoDate(key);
     const items = groups[key];
     return `<div class="tutos-sum-group">
       <div class="tutos-sum-date">${label}<span class="tutos-sum-count">${items.length}</span></div>
-      ${items.map(t => `<div class="tutos-sum-item" onclick="openTuto(${t.id})">
-        <span class="tutos-sum-ico">${_catIco(t.category)}</span>
-        <span class="tutos-sum-name">${escHtml(t.title)}</span>
-      </div>`).join('')}
+      ${items.map(t => {
+        const isUser = _userTutos.some(u => u.id === t.id);
+        const editBtns = (isUser || window.api.isDev)
+          ? `<span class="tutos-sum-actions">
+              <button class="btn sm" style="padding:1px 6px;font-size:10px" onclick="event.stopPropagation();teOpen(${t.id})" title="Modifier">✏️</button>
+              ${isUser && window.api.isDev ? `<button class="btn sm" style="padding:1px 6px;font-size:10px" onclick="event.stopPropagation();tePublish(${t.id})" title="Publier">📤</button>` : ''}
+              <button class="btn sm sc-del" style="padding:1px 6px;font-size:10px" onclick="event.stopPropagation();teDelete(${t.id})" title="Supprimer">✕</button>
+            </span>`
+          : '';
+        return `<div class="tutos-sum-item ${_openTutoId === t.id ? 'on' : ''}" onclick="openTuto(${t.id})">
+          <span class="tutos-sum-ico">${_catIco(t.category)}</span>
+          <span class="tutos-sum-name">${escHtml(t.title)}${isUser ? ' <span class="tutos-sum-perso">perso</span>' : ''}</span>
+          ${editBtns}
+        </div>`;
+      }).join('')}
     </div>`;
   }).join('');
-  panel.innerHTML = `<div class="tutos-summary"><div class="tutos-sum-hdr">Sommaire</div>${html}</div>`;
+}
+
+function _setSommaireBtn(active) {
+  const btn = document.getElementById('tutos-sommaire-btn');
+  if (btn) btn.classList.toggle('on', active);
+}
+
+function _renderPanelEmpty() {
+  const panel = document.getElementById('tutos-panel');
+  if (panel) panel.innerHTML = `<div class="tutos-panel-empty"><span class="tutos-panel-ico">📖</span><div>Sélectionnez un tutoriel</div></div>`;
+  _setSommaireBtn(false);
 }
 
 function closeTuto() {
   _openTutoId = null;
   renderTutos();
-  _renderTutoSummary();
+  _renderPanelEmpty();
 }
 
 function openTuto(id) {
@@ -153,12 +146,12 @@ function openTuto(id) {
   }
   _openTutoId = id;
   renderTutos();
+  _setSommaireBtn(false);
   const t = _allTutos().find(x => x.id === id);
   const panel = document.getElementById('tutos-panel');
   if (!t || !panel) return;
   panel.innerHTML = `
     <div class="tutos-panel-content">
-      <button class="tutos-back-btn" onclick="closeTuto()">← Sommaire</button>
       <div class="tutos-panel-hdr">
         <div class="tutos-panel-tags">
           <span class="tuto-cat-tag tuto-cat-${t.category}">${_catLabel(t.category)}</span>
@@ -351,8 +344,11 @@ async function _tePickImage(i) {
   if (!savPath) { toast('Dossier SAV requis', 'warn'); return; }
   const p = await window.api.chooseImage();
   if (!p) return;
-  const ext = p.split('.').pop().toLowerCase();
-  const filename = `tuto_${Date.now()}.${ext}`;
+  const ext  = p.split('.').pop().toLowerCase();
+  const safe = s => (s || '').replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, '_') || 'user';
+  const d    = new Date();
+  const date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const filename = `${safe(profile.name || 'Profil')}_Tutoriels_${date}.${ext}`;
   const b64 = await window.api.readFileBase64(p);
   if (!b64) { toast('Impossible de lire l\'image', 'warn'); return; }
   const r = await window.api.saveTutoImage(savPath, b64, filename);
@@ -432,8 +428,7 @@ async function teDelete(id) {
   }
   if (_openTutoId === id) {
     _openTutoId = null;
-    const panel = document.getElementById('tutos-panel');
-    if (panel) panel.innerHTML = '<div class="tutos-panel-empty"><span class="tutos-panel-ico">📖</span><div>Sélectionnez un tutoriel</div></div>';
+    _renderPanelEmpty();
   }
   toast('Tutoriel supprimé');
   await loadTutos();

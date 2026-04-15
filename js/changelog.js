@@ -1,6 +1,27 @@
 // ══ CHANGELOG ════════════════════════════════════════════
 const CHANGELOG = [
   {
+    version: '2.17.1',
+    date:    '2026-04-15',
+    type:    'fix',
+    changes: [
+      'Menu MàJ : versions affichées de la plus récente à la plus ancienne',
+      'Badge version installée / à jour visible à l\'ouverture sans défilement',
+    ]
+  },
+  {
+    version: '2.17.0',
+    date:    '2026-04-15',
+    type:    'feat',
+    changes: [
+      'Sommaire tutoriels repositionné dans la colonne gauche — navigation permanente',
+      'Bouton d\'accès direct au dossier Photos depuis la barre d\'outils Notes',
+      'Renommage automatique des images : Profil_Menu_Date',
+      'Versions dynamiques dans MàJ : installée / disponible / à jour',
+      'Suppression de la fonction Ctrl+Espace (QuickSearch)',
+    ]
+  },
+  {
     version: '2.16.0',
     date:    '2026-04-07',
     type:    'feat',
@@ -117,17 +138,34 @@ const CHANGELOG = [
 async function loadChangelog() {
   const wrap = document.getElementById('cl-list');
   if (!wrap) return;
+
   let current = '';
-  try { current = await window.api.getVersion(); } catch {}
+  let latest  = '';
+  const [verRes, updRes] = await Promise.allSettled([
+    window.api.getVersion(),
+    window.api.checkUpdate(),
+  ]);
+  if (verRes.status === 'fulfilled') current = verRes.value  || '';
+  if (updRes.status === 'fulfilled') latest  = updRes.value?.version || '';
+
+  const upToDate = !latest || latest === current || !semverGt(latest, current);
+
   wrap.innerHTML = CHANGELOG.map(entry => {
     const isCurrent = current && entry.version === current;
-    const dot  = entry.type === 'feat' ? 'feat' : 'fix';
-    const items = entry.changes.map(c => `<li>${escHtml(c)}</li>`).join('');
-    return `<div class="cl-card${isCurrent ? ' cl-card-cur' : ''}">
+    const isLatest  = !upToDate && latest && entry.version === latest;
+    const dot       = entry.type === 'feat' ? 'feat' : 'fix';
+    const items     = entry.changes.map(c => `<li>${escHtml(c)}</li>`).join('');
+
+    let badge = '';
+    if (isCurrent && upToDate)   badge = '<span class="cl-cur-tag cl-tag-ok">✓ à jour</span>';
+    else if (isCurrent)          badge = '<span class="cl-cur-tag">installée</span>';
+    else if (isLatest)           badge = '<span class="cl-cur-tag cl-tag-new">↑ disponible</span>';
+
+    return `<div class="cl-card${isCurrent ? ' cl-card-cur' : ''}${isLatest ? ' cl-card-new' : ''}">
       <div class="cl-hdr">
         <span class="cl-dot ${dot}"></span>
         <span class="cl-ver">v${escHtml(entry.version)}</span>
-        ${isCurrent ? '<span class="cl-cur-tag">installée</span>' : ''}
+        ${badge}
         <span class="cl-date">${_fmtDate(entry.date)}</span>
       </div>
       <ul class="cl-items">${items}</ul>

@@ -673,6 +673,18 @@ function insertTable() {
 
 function pickImg() { document.getElementById('img-input').click(); }
 
+function _activeNotebookName() {
+  const nb = S.notebooks.find(x => x.id === S.activeNB);
+  return nb?.name || 'Notes';
+}
+
+async function openImgFolder() {
+  if (!savPath) { toast('Dossier SAV requis', 'warn'); return; }
+  // Ouvre le sous-dossier du carnet actif si disponible, sinon la racine images/
+  const nb = _safeN(_activeNotebookName());
+  await window.api.openFolder(savPath + '/images/' + nb);
+}
+
 // Compression canvas (max 1920px, JPEG 85%) avant sauvegarde dans Lutility_SAV/images/
 function compressImg(dataUrl) {
   return new Promise(resolve => {
@@ -697,7 +709,7 @@ function onImgFile(inp) {
   const reader = new FileReader();
   reader.onload = async e => {
     const dataUrl = await compressImg(e.target.result);
-    const relPath  = await saveImg(dataUrl);
+    const relPath  = await saveImg(dataUrl, _activeNotebookName());
     let src, dsrc;
     if (relPath) {
       const blobUrl = await readImgAsBlob(relPath);
@@ -718,7 +730,7 @@ function onImgFile(inp) {
 }
 
 async function _insertImgDataUrl(dataUrl) {
-  const relPath = await saveImg(dataUrl);
+  const relPath = await saveImg(dataUrl, _activeNotebookName());
   let src, dsrc;
   if (relPath) {
     const blobUrl = await readImgAsBlob(relPath);

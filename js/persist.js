@@ -68,14 +68,37 @@ async function repairSavDir() {
 }
 
 // ── Image storage ─────────────────────────────────────────
-async function saveImg(base64DataUrl) {
+// Sanitise : garde lettres (dont accentuées), chiffres, tirets — retire emojis et chars interdits
+function _safeN(s) {
+  return (s || '')
+    .replace(/[^\p{L}\p{N}\s\-]/gu, '')   // garde lettres unicode, chiffres, espaces, tirets
+    .replace(/\s+/g, '_')
+    .replace(/_+/g, '_')
+    .trim() || 'user';
+}
+
+async function saveImg(base64DataUrl, notebookName = 'Notes') {
   if (!savPath) return null;
   try {
     const match = base64DataUrl.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
     if (!match) return null;
     const ext      = match[1].replace('jpeg', 'jpg');
     const b64data  = match[2];
-    const filename = 'images/img_' + Date.now() + '.' + ext;
+    const profName = _safeN(profile.name || 'Profil');
+    const nbName   = _safeN(notebookName);
+    const d        = new Date();
+    const date     = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const folder   = `images/${nbName}`;
+    const base     = `${profName}_${nbName}_${date}`;
+    // Unicité si plusieurs images le même jour
+    let filename = `${folder}/${base}.${ext}`;
+    let attempt  = 0;
+    while (attempt < 99) {
+      const exists = await window.api.fileReadBinary(savPath, filename).catch(() => null);
+      if (!exists) break;
+      attempt++;
+      filename = `${folder}/${base}_${attempt}.${ext}`;
+    }
     const ok = await window.api.fileWriteBinary(savPath, filename, b64data);
     return ok ? filename : null;
   } catch(e) { return null; }

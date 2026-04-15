@@ -359,7 +359,32 @@ let _tt;
 function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type);t.classList.add('on');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('on'),2800);}
 
 // ══ NAV / MODALS ════════════════════════════════════════
+let _navHistory  = [];
+let _navIdx      = -1;
+let _navFromSide = false; // vrai quand nav() est déclenché par back/fwd souris
+
+function navBack() {
+  if (_navIdx > 0) { _navIdx--; _navFromSide = true; nav(_navHistory[_navIdx]); }
+}
+function navFwd() {
+  if (_navIdx < _navHistory.length - 1) { _navIdx++; _navFromSide = true; nav(_navHistory[_navIdx]); }
+}
+
+// Boutons latéraux souris : 3 = arrière, 4 = avant
+document.addEventListener('mousedown', e => {
+  if (e.button === 3) { e.preventDefault(); navBack(); }
+  if (e.button === 4) { e.preventDefault(); navFwd(); }
+});
+
 function nav(id){
+  // Gestion historique (ne pas empiler si appelé par navBack/navFwd)
+  if (!_navFromSide) {
+    _navHistory = _navHistory.slice(0, _navIdx + 1);
+    _navHistory.push(id);
+    _navIdx = _navHistory.length - 1;
+  }
+  _navFromSide = false;
+
   if (id !== 'tools') {
     if (typeof stopTempRefresh    === 'function') stopTempRefresh();
     if (typeof stopSysinfoRefresh === 'function') stopSysinfoRefresh();
@@ -399,7 +424,7 @@ document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.overlay.on').forEach(o=>o.classList.remove('on'));hideTbl();}});
 
 // ══ CLOSE ACTION — 'minimize' | 'quit' ══════════════════
-let _closeAction = 'minimize';
+let _closeAction = 'quit';
 
 function setCloseAction(action) {
   _closeAction = action;
@@ -431,10 +456,6 @@ renderHomeCards();
   // Précharge les infos système en arrière-plan au démarrage
   setTimeout(() => { if (typeof loadSysinfo === 'function') loadSysinfo(); }, 4000);
 })();
-
-// ── QuickSearch — navigation depuis la mini-fenêtre ──────────────────────
-window.api.onQsOpenNote(id => { nav('notes'); if (typeof selectNoteById === 'function') selectNoteById(id); });
-window.api.onQsNav(pg => nav(pg));
 
 // ── Bannière simulation utilisateur ──────────────────────────────────────
 window.api.onUserSimMode(() => {

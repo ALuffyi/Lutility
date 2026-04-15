@@ -174,53 +174,6 @@ function createTray() {
   tray.on('double-click', () => { win.show(); win.focus(); win.webContents.focus(); });
 }
 
-// ── QuickSearch (Ctrl+Espace) ─────────────────────────
-let _cachedSavPath = null;
-let qsWin = null;
-
-function createQuickSearch() {
-  qsWin = new BrowserWindow({
-    width: 480, height: 500,
-    frame: false, resizable: false,
-    alwaysOnTop: true, skipTaskbar: true,
-    backgroundColor: '#0f1117',
-    webPreferences: {
-      preload: path.join(__dirname, 'preload-qs.js'),
-      contextIsolation: true, nodeIntegration: false,
-    },
-    show: false,
-  });
-  qsWin.loadFile('quicksearch.html');
-  qsWin.on('blur',   () => qsWin?.hide());
-  qsWin.on('closed', () => { qsWin = null; });
-}
-
-function toggleQuickSearch() {
-  if (!qsWin || qsWin.isDestroyed()) createQuickSearch();
-  if (qsWin.isVisible()) { qsWin.hide(); return; }
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  qsWin.setPosition(Math.floor((width - 480) / 2), Math.floor(height * 0.22));
-  qsWin.show(); qsWin.focus();
-  if (_cachedSavPath) {
-    try {
-      const state = JSON.parse(fs.readFileSync(path.join(_cachedSavPath, 'state.json'), 'utf8'));
-      qsWin.webContents.send('qs-data', {
-        notes:     (state.pages      || []).map(p => ({ id: p.id,  title: p.title || 'Sans titre', type: 'note' })),
-        shortcuts: (state.shortcuts  || []).map(s => ({ id: s.id,  name: s.name,  emoji: s.emoji || '🔗', path: s.path, type: 'shortcut' })),
-        scripts:   (state.customTools|| []).map(t => ({ id: t.id,  name: t.name,  ico: t.ico || '⚙️',    path: t.path || t.cmd, type: 'script' })),
-      });
-    } catch {}
-  }
-}
-
-ipcMain.on('qs-close',      ()        => qsWin?.hide());
-ipcMain.on('qs-open-note',  (_e, id)  => { qsWin?.hide(); if (win && !win.isDestroyed()) { win.show(); win.focus(); win.webContents.send('qs-open-note', id); } });
-ipcMain.on('qs-nav',        (_e, pg)  => { qsWin?.hide(); if (win && !win.isDestroyed()) { win.show(); win.focus(); win.webContents.send('qs-nav', pg); } });
-ipcMain.handle('qs-launch', async (_e, filePath) => {
-  try { await shell.openPath(filePath); qsWin?.hide(); return { ok: true }; }
-  catch(e) { return { ok: false, err: e.message }; }
-});
-
 // ── Single-instance lock ──────────────────────────────
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
@@ -236,11 +189,6 @@ if (!gotLock) {
   });
   app.whenReady().then(() => {
     loadSpeller(); createWindow(); createTray();
-    const ok = globalShortcut.register('CommandOrControl+Space', toggleQuickSearch);
-    if (!ok) console.warn('[Lutility] Ctrl+Space : enregistrement du raccourci global échoué');
-    // Init savPath depuis config
-    const cfg = readConfig();
-    if (cfg?.savPath) _cachedSavPath = cfg.savPath;
   });
   app.on('will-quit', () => globalShortcut.unregisterAll());
 }
@@ -254,14 +202,13 @@ ipcMain.on('win-maximize', () => win.isMaximized() ? win.unmaximize() : win.maxi
 ipcMain.on('win-close',    () => win.close());
 
 // ── Close action (quit vs minimize to tray) ───────────
-let _closeAction = 'minimize';
+let _closeAction = 'quit';
 ipcMain.on('set-close-action', (_e, action) => { _closeAction = action; });
 
 // ── Config IPC ────────────────────────────────────────
 ipcMain.handle('config-load', () => readConfig());
 ipcMain.handle('config-save', (_e, data) => {
   writeConfig(data);
-  if (data?.savPath) _cachedSavPath = data.savPath;
   return true;
 });
 
@@ -563,6 +510,15 @@ ipcMain.handle('choose-script', async () => {
 ipcMain.handle('read-file-base64', (_e, filePath) => {
   try { return fs.readFileSync(filePath).toString('base64'); }
   catch { return null; }
+});
+
+ipcMain.handle('open-folder', async (_e, folderPath) => {
+  try {
+    const full = path.isAbsolute(folderPath) ? folderPath : path.join(__dirname, folderPath);
+    if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
+    const err = await require('electron').shell.openPath(full);
+    return { ok: !err, err };
+  } catch(e) { return { ok: false, err: e.message }; }
 });
 
 ipcMain.handle('choose-image', async () => {
