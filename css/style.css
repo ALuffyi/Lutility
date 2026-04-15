@@ -681,8 +681,8 @@ body.pdf-exporting #note-print-preview {
 .tuto-card.on{background:var(--surf2);border-color:var(--purple)}
 .tuto-card-ico{font-size:20px;flex-shrink:0;padding-top:1px}
 .tuto-card-body{min-width:0;flex:1}
-.tuto-card-title{font-size:12px;font-weight:600;color:var(--br);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
-.tuto-card-desc{font-size:11px;color:var(--dim2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:5px}
+.tuto-card-title{font-size:.86em;font-weight:600;color:var(--br);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.tuto-card-desc{font-size:.79em;color:var(--dim2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:5px}
 .tuto-card-meta{display:flex;align-items:center;gap:6px}
 .tuto-cat-tag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500}
 .tuto-cat-windows{background:rgba(59,130,246,.15);color:#60a5fa}
@@ -698,19 +698,33 @@ body.pdf-exporting #note-print-preview {
 .tutos-panel-ico{font-size:48px;opacity:.3}
 .tutos-panel-content{}
 .tutos-panel-hdr{margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--bord)}
-.tutos-panel-title{font-size:18px;font-weight:700;color:var(--br);margin:8px 0 6px;font-family:var(--head);letter-spacing:.5px}
-.tutos-panel-desc{font-size:12px;color:var(--dim2);line-height:1.5;margin:0}
+.tutos-panel-title{font-size:1.28em;font-weight:700;color:var(--br);margin:8px 0 6px;font-family:var(--head);letter-spacing:.5px}
+.tutos-panel-desc{font-size:.86em;color:var(--dim2);line-height:1.5;margin:0}
 .tutos-steps{display:flex;flex-direction:column;gap:16px}
 .tuto-step{display:flex;gap:14px;align-items:flex-start}
 .tuto-step-num{width:26px;height:26px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
 .tuto-step-body{flex:1;min-width:0}
-.tuto-step-text{font-size:13px;color:var(--br);line-height:1.6;margin-bottom:6px}
+.tuto-step-text{font-size:.93em;color:var(--br);line-height:1.6;margin-bottom:6px}
 .tuto-step-text strong{color:var(--br);font-weight:700}
-.tuto-step-note{font-size:11px;color:var(--dim2);background:var(--surf);border-left:2px solid var(--purple);padding:6px 10px;border-radius:0 5px 5px 0;margin:4px 0 8px;line-height:1.5}
+.tuto-step-note{font-size:.79em;color:var(--dim2);background:var(--surf);border-left:2px solid var(--purple);padding:6px 10px;border-radius:0 5px 5px 0;margin:4px 0 8px;line-height:1.5}
 .tuto-step-note strong{color:var(--br);font-weight:600}
 .tuto-step-img{max-width:100%;border-radius:6px;border:1px solid var(--bord);margin-top:6px;display:block}
 /* Tags panneau */
 .tutos-panel-tags{display:flex;gap:6px;margin-bottom:8px;align-items:center}
+/* Bouton retour sommaire */
+.tutos-back-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--dim2);background:none;border:none;padding:0 0 14px;cursor:pointer;font-family:var(--body);letter-spacing:.3px;transition:color .15s}
+.tutos-back-btn:hover{color:var(--purple)}
+/* Sommaire tutos (panneau droit sans sélection) */
+.tutos-summary{padding:18px 22px}
+.tutos-sum-hdr{font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--dim2);margin-bottom:14px}
+.tutos-sum-group{margin-bottom:12px}
+.tutos-sum-date{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--purple);padding:3px 0 5px;border-bottom:1px solid var(--bord);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.tutos-sum-count{background:rgba(168,85,247,.12);color:var(--purple);border-radius:10px;padding:1px 7px;font-size:9px;font-weight:700}
+.tutos-sum-item{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:5px;cursor:pointer;transition:background .12s}
+.tutos-sum-item:hover{background:var(--surf2)}
+.tutos-sum-ico{font-size:12px;flex-shrink:0}
+.tutos-sum-name{font-size:12px;color:var(--br);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 
 /* ══════════════════════════════════════════════════════
    PERSONNALISATION — APPARENCE

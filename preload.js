@@ -32,6 +32,8 @@ contextBridge.exposeInMainWorld('api', {
   launchApp: (path) => ipcRenderer.invoke('launch-app', path),
   chooseExe:    ()             => ipcRenderer.invoke('choose-exe'),
   chooseScript: ()             => ipcRenderer.invoke('choose-script'),
+  chooseImage:    ()  => ipcRenderer.invoke('choose-image'),
+  readFileBase64: (p) => ipcRenderer.invoke('read-file-base64', p),
   renameSavFolder: (old, name) => ipcRenderer.invoke('rename-savfolder', old, name),
 
   // Export / Import
@@ -66,5 +68,32 @@ contextBridge.exposeInMainWorld('api', {
   setCloseAction: (action) => ipcRenderer.send('set-close-action', action),
 
   // Tutoriels
-  readTutorials: () => ipcRenderer.invoke('read-tutorials'),
+  readTutorials:          ()              => ipcRenderer.invoke('read-tutorials'),
+  readUserTutorials:      (savPath)       => ipcRenderer.invoke('read-user-tutorials',   savPath),
+  saveUserTutorial:       (savPath, tuto) => ipcRenderer.invoke('save-user-tutorial',    savPath, tuto),
+  deleteUserTutorial:     (savPath, id)   => ipcRenderer.invoke('delete-user-tutorial',  savPath, id),
+  saveTutoImage:          (savPath, b64, filename) => ipcRenderer.invoke('save-tuto-image', savPath, b64, filename),
+  saveOfficialTutorial:   (tuto)          => ipcRenderer.invoke('save-official-tutorial', tuto),
+  deleteOfficialTutorial: (id)            => ipcRenderer.invoke('delete-official-tutorial', id),
+
+  // systeminformation
+  siTemps: ()  => ipcRenderer.invoke('si-temps'),
+  siMem:   ()  => ipcRenderer.invoke('si-mem'),
+  siDisk:  ()  => ipcRenderer.invoke('si-disk'),
+
+  // Vérification dépendances
+  checkDep: (type) => ipcRenderer.invoke('check-dep', type),
+
+  // QuickSearch — événements reçus depuis main
+  onQsOpenNote: (cb) => ipcRenderer.on('qs-open-note', (_e, id) => cb(id)),
+  onQsNav:      (cb) => ipcRenderer.on('qs-nav',       (_e, pg) => cb(pg)),
+
+  // Mode simulation utilisateur
+  onUserSimMode: (cb) => ipcRenderer.on('user-sim-mode', cb),
+
+  // Mode dev
+  isDev: ipcRenderer.sendSync('is-dev-sync'),
+
+  // Publication tutos (dev only)
+  publishTutorial: (tuto) => ipcRenderer.invoke('publish-tutorial', tuto),
 });

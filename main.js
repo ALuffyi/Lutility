@@ -1,16 +1,20 @@
-const { app, BrowserWindow, ipcMain, dialog, net, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, net, Tray, Menu, nativeImage, globalShortcut, screen, shell } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 
 let tray = null;
 
-// En dev : userData séparé → config.dev.json distincte + lock single-instance indépendant
+// ── Mode simulation utilisateur : npx electron . --user-sim ───────────────
+// Simule une instance "prod" (isDev=false, config normale) depuis le run.bat
+const IS_USER_SIM = !app.isPackaged && process.argv.includes('--user-sim');
+
 if (!app.isPackaged) {
-  app.setPath('userData', path.join(app.getPath('appData'), 'lutility-dev'));
+  const folder = IS_USER_SIM ? 'lutility-user-sim' : 'lutility-dev';
+  app.setPath('userData', path.join(app.getPath('appData'), folder));
 }
 
 const USER_DATA   = app.getPath('userData');
-const CONFIG_NAME = app.isPackaged ? 'config' : 'config.dev';
+const CONFIG_NAME = app.isPackaged || IS_USER_SIM ? 'config' : 'config.dev';
 const CONFIG_FILE = path.join(USER_DATA, CONFIG_NAME + '.json');
 const CONFIG_BAK  = CONFIG_FILE + '.bak';
 
@@ -119,6 +123,7 @@ function createWindow() {
   win.once('ready-to-show', () => {
     win.maximize();
     win.show();
+    if (IS_USER_SIM) win.webContents.send('user-sim-mode');
     win.webContents.session.setSpellCheckerLanguages(['fr-FR', 'en-US']);
     win.webContents.session.setPermissionRequestHandler((_wc, permission, cb) => {
       cb(permission === 'clipboard-read' || permission === 'clipboard-sanitized-write');
@@ -169,6 +174,53 @@ function createTray() {
   tray.on('double-click', () => { win.show(); win.focus(); win.webContents.focus(); });
 }
 
+// ── QuickSearch (Ctrl+Espace) ─────────────────────────
+let _cachedSavPath = null;
+let qsWin = null;
+
+function createQuickSearch() {
+  qsWin = new BrowserWindow({
+    width: 480, height: 500,
+    frame: false, resizable: false,
+    alwaysOnTop: true, skipTaskbar: true,
+    backgroundColor: '#0f1117',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload-qs.js'),
+      contextIsolation: true, nodeIntegration: false,
+    },
+    show: false,
+  });
+  qsWin.loadFile('quicksearch.html');
+  qsWin.on('blur',   () => qsWin?.hide());
+  qsWin.on('closed', () => { qsWin = null; });
+}
+
+function toggleQuickSearch() {
+  if (!qsWin || qsWin.isDestroyed()) createQuickSearch();
+  if (qsWin.isVisible()) { qsWin.hide(); return; }
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  qsWin.setPosition(Math.floor((width - 480) / 2), Math.floor(height * 0.22));
+  qsWin.show(); qsWin.focus();
+  if (_cachedSavPath) {
+    try {
+      const state = JSON.parse(fs.readFileSync(path.join(_cachedSavPath, 'state.json'), 'utf8'));
+      qsWin.webContents.send('qs-data', {
+        notes:     (state.pages      || []).map(p => ({ id: p.id,  title: p.title || 'Sans titre', type: 'note' })),
+        shortcuts: (state.shortcuts  || []).map(s => ({ id: s.id,  name: s.name,  emoji: s.emoji || '🔗', path: s.path, type: 'shortcut' })),
+        scripts:   (state.customTools|| []).map(t => ({ id: t.id,  name: t.name,  ico: t.ico || '⚙️',    path: t.path || t.cmd, type: 'script' })),
+      });
+    } catch {}
+  }
+}
+
+ipcMain.on('qs-close',      ()        => qsWin?.hide());
+ipcMain.on('qs-open-note',  (_e, id)  => { qsWin?.hide(); if (win && !win.isDestroyed()) { win.show(); win.focus(); win.webContents.send('qs-open-note', id); } });
+ipcMain.on('qs-nav',        (_e, pg)  => { qsWin?.hide(); if (win && !win.isDestroyed()) { win.show(); win.focus(); win.webContents.send('qs-nav', pg); } });
+ipcMain.handle('qs-launch', async (_e, filePath) => {
+  try { await shell.openPath(filePath); qsWin?.hide(); return { ok: true }; }
+  catch(e) { return { ok: false, err: e.message }; }
+});
+
 // ── Single-instance lock ──────────────────────────────
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
@@ -182,7 +234,15 @@ if (!gotLock) {
       win.webContents.focus();
     }
   });
-  app.whenReady().then(() => { loadSpeller(); createWindow(); createTray(); });
+  app.whenReady().then(() => {
+    loadSpeller(); createWindow(); createTray();
+    const ok = globalShortcut.register('CommandOrControl+Space', toggleQuickSearch);
+    if (!ok) console.warn('[Lutility] Ctrl+Space : enregistrement du raccourci global échoué');
+    // Init savPath depuis config
+    const cfg = readConfig();
+    if (cfg?.savPath) _cachedSavPath = cfg.savPath;
+  });
+  app.on('will-quit', () => globalShortcut.unregisterAll());
 }
 
 app.on('window-all-closed', () => { if (app.isQuiting || _closeAction === 'quit') app.quit(); });
@@ -199,7 +259,11 @@ ipcMain.on('set-close-action', (_e, action) => { _closeAction = action; });
 
 // ── Config IPC ────────────────────────────────────────
 ipcMain.handle('config-load', () => readConfig());
-ipcMain.handle('config-save', (_e, data) => { writeConfig(data); return true; });
+ipcMain.handle('config-save', (_e, data) => {
+  writeConfig(data);
+  if (data?.savPath) _cachedSavPath = data.savPath;
+  return true;
+});
 
 // Dialog sans parent : évite qu'il s'ouvre derrière la fenêtre frameless sur Windows.
 // invalidate() force le re-rendu pour corriger l'écran noir après fermeture.
@@ -496,6 +560,20 @@ ipcMain.handle('choose-script', async () => {
   return (r.canceled || !r.filePaths.length) ? null : r.filePaths[0];
 });
 
+ipcMain.handle('read-file-base64', (_e, filePath) => {
+  try { return fs.readFileSync(filePath).toString('base64'); }
+  catch { return null; }
+});
+
+ipcMain.handle('choose-image', async () => {
+  const r = await showDialog({
+    title: 'Choisir une image',
+    filters: [{ name: 'Images', extensions: ['png','jpg','jpeg','gif','webp'] }, { name: 'Tous', extensions: ['*'] }],
+    properties: ['openFile'],
+  });
+  return (r.canceled || !r.filePaths.length) ? null : r.filePaths[0];
+});
+
 ipcMain.handle('rename-savfolder', (_e, oldPath, newName) => {
   try {
     if (!oldPath || !fs.existsSync(oldPath)) return { ok: false, path: oldPath };
@@ -618,4 +696,160 @@ ipcMain.handle('exec-admin', (_e, cmd, type) => {
       else     resolve({ ok: true,  out: '✅ Exécuté en Admin.' });
     });
   });
+});
+
+// ── Mode dev (sync) ──────────────────────────────────────────────────────
+ipcMain.on('is-dev-sync', (e) => { e.returnValue = !app.isPackaged && !IS_USER_SIM; });
+
+// ── Publication tuto perso → tutorials.json (dev only) ───────────────────
+ipcMain.handle('publish-tutorial', (_e, tuto) => {
+  if (app.isPackaged) return { ok: false, err: 'Non disponible en production' };
+  try {
+    let arr = [];
+    try { arr = JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {}
+    const maxId = arr.reduce((m, t) => Math.max(m, typeof t.id === 'number' ? t.id : 0), 0);
+    const published = { ...tuto, id: maxId + 1 };
+    let copiedImages = 0, failedImages = 0;
+    const imgDir = path.join(__dirname, 'tutorials-img');
+
+    // Convertit file:/// → filename relatif + copie dans tutorials-img/
+    published.steps = (published.steps || []).map(s => {
+      if (!s.image?.startsWith('file://')) return s;
+      const srcPath = decodeURIComponent(s.image.replace(/^file:\/\/\//,'').replace(/\//g, path.sep));
+      const filename = path.basename(srcPath);
+      try {
+        if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir, { recursive: true });
+        fs.copyFileSync(srcPath, path.join(imgDir, filename));
+        copiedImages++;
+      } catch { failedImages++; }
+      const c = { ...s, image: filename };
+      if (!c.imageWidth || c.imageWidth === 100) delete c.imageWidth;
+      return c;
+    });
+
+    arr.push(published);
+    atomicWrite(TUTOS_LOCAL, JSON.stringify(arr, null, 2));
+    return { ok: true, id: published.id, copiedImages, failedImages };
+  } catch(e) { return { ok: false, err: e.message }; }
+});
+
+// ── Vérification dépendances scripts ─────────────────────────────────────
+ipcMain.handle('check-dep', (_e, type) => {
+  const { exec } = require('child_process');
+  const cmds = {
+    python: 'python --version',
+    ps1:    'powershell -Command "Get-ExecutionPolicy"',
+  };
+  const cmd = cmds[type];
+  if (!cmd) return Promise.resolve({ ok: true });
+  return new Promise(resolve => {
+    exec(cmd, { timeout: 5000 }, (err, stdout) => {
+      if (type === 'ps1') {
+        const policy = (stdout || '').trim().toLowerCase();
+        resolve({ ok: policy !== 'restricted', policy: policy || 'unknown' });
+      } else {
+        resolve({ ok: !err });
+      }
+    });
+  });
+});
+
+// ── systeminformation — GPU temp + RAM live ───────────────────────────────
+const si = require('systeminformation');
+
+ipcMain.handle('si-temps', async () => {
+  try {
+    const gpus = await si.graphics();
+    const temps = gpus.controllers
+      .filter(c => c.temperatureGpu != null)
+      .map(c => ({ name: c.name, temp: c.temperatureGpu }));
+    return { ok: true, gpus: temps };
+  } catch(e) { return { ok: false, gpus: [] }; }
+});
+
+ipcMain.handle('si-disk', async () => {
+  try {
+    const list = await si.fsSize();
+    const disks = list
+      .filter(d => d.size > 0)
+      .map(d => ({ fs: d.fs, mount: d.mount, size: d.size, used: d.used }));
+    return { ok: true, disks };
+  } catch(e) { return { ok: false, disks: [] }; }
+});
+
+ipcMain.handle('si-mem', async () => {
+  try {
+    const m = await si.mem();
+    return {
+      ok: true,
+      total: m.total,
+      used:  m.active,
+      free:  m.free,
+    };
+  } catch(e) { return { ok: false }; }
+});
+
+// ── Tutoriels officiels (dev only) ───────────────────────────────────────
+ipcMain.handle('save-official-tutorial', (_e, tuto) => {
+  if (app.isPackaged) return { ok: false, err: 'Non disponible en production' };
+  try {
+    let arr = [];
+    try { arr = JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {}
+    const idx = arr.findIndex(t => t.id === tuto.id);
+    if (idx >= 0) arr[idx] = tuto; else arr.push(tuto);
+    atomicWrite(TUTOS_LOCAL, JSON.stringify(arr, null, 2));
+    return { ok: true };
+  } catch(e) { return { ok: false, err: e.message }; }
+});
+
+ipcMain.handle('delete-official-tutorial', (_e, id) => {
+  if (app.isPackaged) return { ok: false, err: 'Non disponible en production' };
+  try {
+    let arr = [];
+    try { arr = JSON.parse(fs.readFileSync(TUTOS_LOCAL, 'utf8')); } catch {}
+    arr = arr.filter(t => t.id !== id);
+    atomicWrite(TUTOS_LOCAL, JSON.stringify(arr, null, 2));
+    return { ok: true };
+  } catch(e) { return { ok: false, err: e.message }; }
+});
+
+// ── Tutoriels utilisateur (SAV) ───────────────────────────────────────────
+ipcMain.handle('read-user-tutorials', (_e, savPath) => {
+  try {
+    const f = path.join(savPath, 'tutorials-user.json');
+    return JSON.parse(fs.readFileSync(f, 'utf8'));
+  } catch { return []; }
+});
+
+ipcMain.handle('save-user-tutorial', (_e, savPath, tuto) => {
+  try {
+    const f = path.join(savPath, 'tutorials-user.json');
+    let arr = [];
+    try { arr = JSON.parse(fs.readFileSync(f, 'utf8')); } catch {}
+    const idx = arr.findIndex(t => t.id === tuto.id);
+    if (idx >= 0) arr[idx] = tuto; else arr.push(tuto);
+    atomicWrite(f, JSON.stringify(arr, null, 2));
+    return { ok: true };
+  } catch(e) { return { ok: false, err: e.message }; }
+});
+
+ipcMain.handle('delete-user-tutorial', (_e, savPath, id) => {
+  try {
+    const f = path.join(savPath, 'tutorials-user.json');
+    let arr = [];
+    try { arr = JSON.parse(fs.readFileSync(f, 'utf8')); } catch {}
+    arr = arr.filter(t => t.id !== id);
+    atomicWrite(f, JSON.stringify(arr, null, 2));
+    return { ok: true };
+  } catch(e) { return { ok: false, err: e.message }; }
+});
+
+ipcMain.handle('save-tuto-image', (_e, savPath, base64, filename) => {
+  try {
+    const dir = path.join(savPath, 'tutorials-img');
+    fs.mkdirSync(dir, { recursive: true });
+    const dest = path.join(dir, filename);
+    fs.writeFileSync(dest, Buffer.from(base64, 'base64'));
+    return { ok: true, path: dest };
+  } catch(e) { return { ok: false, err: e.message }; }
 });

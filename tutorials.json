@@ -373,21 +373,21 @@
     ]
   },
   {
-  "id": 17,
-  "title": "Activer le mode développeur Discord",
-  "category": "programme",
-  "date": "2026-04",
-  "description": "Activez le mode développeur pour récupérer facilement les identifiants (ID) des membres, salons et rôles.",
-  "steps": [
-    {
-      "text": "Ouvrez l'application **Discord** et rendez-vous dans les **Paramètres Utilisateurs** (icône roue dentée).\nDans le menu de gauche, cliquez sur la section **Apparence** ou **Avancé** (selon votre version).",
-      "note": "💡 Cette option est indispensable pour configurer précisément les permissions d'un bot."
-    },
-    {
-      "text": "Faites défiler jusqu'à la section **Avancé** et cochez l'option **Mode Développeur**.\nUne fois activé, vous pouvez faire un **clic droit** sur n'importe quel élément (utilisateur, salon, rôle) pour voir l'option **Copier l'identifiant**.",
-      "note": "🎯 Vous gagnerez un temps précieux lors du développement de votre bot.",
-      "image": "discord-tuto.png"
-    }
-  ]
-}
+    "id": 17,
+    "title": "Activer le mode développeur Discord",
+    "category": "programme",
+    "date": "2026-04",
+    "description": "Activez le mode développeur pour récupérer facilement les identifiants (ID) des membres, salons et rôles.",
+    "steps": [
+      {
+        "text": "Ouvrez l'application **Discord** et rendez-vous dans les **Paramètres Utilisateurs** (icône roue dentée).\nDans le menu de gauche, cliquez sur la section **Apparence** ou **Avancé** (selon votre version).",
+        "note": "💡 Cette option est indispensable pour configurer précisément les permissions d'un bot."
+      },
+      {
+        "text": "Faites défiler jusqu'à la section **Avancé** et cochez l'option **Mode Développeur**.\nUne fois activé, vous pouvez faire un **clic droit** sur n'importe quel élément (utilisateur, salon, rôle) pour voir l'option **Copier l'identifiant**.",
+        "note": "🎯 Vous gagnerez un temps précieux lors du développement de votre bot.",
+        "image": "discord-tuto.png"
+      }
+    ]
+  }
 ]

@@ -1,5 +1,19 @@
 [
   {
+    "version": "2.17.0",
+    "date": "2026-04-15",
+    "type": "feat",
+    "label": "Nouveautés",
+    "changes": [
+      "Tutoriels : sommaire par dates dans le panneau droit — aperçu rapide de tous les guides sans avoir à chercher",
+      "Retour au sommaire depuis un tutoriel ouvert (bouton ← ou clic sur la carte active)",
+      "Informations système chargées automatiquement au démarrage — plus besoin de visiter l'onglet Outils",
+      "Nouvel outil Mise à jour : Driver Booster Free (Steam) — détecte et met à jour les pilotes obsolètes",
+      "Settings : taille du texte désormais appliquée dans toute l'interface, y compris les Tutoriels",
+      "Corrections de cohérence et nettoyage interne"
+    ]
+  },
+  {
     "version": "2.16.0",
     "date": "2026-04-07",
     "type": "feat",

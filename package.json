@@ -1,6 +1,6 @@
 {
   "name": "lutility",
-  "version": "2.16.0",
+  "version": "2.17.0",
   "description": "Lutility — utilitaire personnel gaming",
   "author": "Lutility",
   "main": "main.js",
@@ -47,6 +47,7 @@
     "electron-builder": "^25.1.8"
   },
   "dependencies": {
-    "dictionary-fr": "^3.0.0"
+    "dictionary-fr": "^3.0.0",
+    "systeminformation": "^5.31.5"
   }
 }
