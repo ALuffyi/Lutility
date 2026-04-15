@@ -86,9 +86,9 @@ const TOOLS = [
   },
   {
     ico:'🚀', fav:'store.steampowered.com', name:'Driver Booster Free (Steam)', tag:'Update', tc:'g',
-    desc:'Lance Driver Booster Free (IObit) — détecte et met à jour les pilotes obsolètes. Version Steam.',
-    admin:false, type:'PS',
-    cmd:'$paths=@("$env:ProgramFiles\\IObit\\Driver Booster\\DriverBooster.exe","${env:ProgramFiles(x86)}\\IObit\\Driver Booster\\DriverBooster.exe",(Get-ChildItem "$env:ProgramFiles(x86)\\Steam\\steamapps\\common" -Recurse -Filter "DriverBooster.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName));$exe=$paths|Where-Object{$_ -and (Test-Path $_)}|Select-Object -First 1;if($exe){Start-Process $exe}else{Start-Process "steam://search/Driver Booster"}',
+    desc:'Lance Driver Booster Free (IObit) via Steam (App 920490) — détecte et met à jour les pilotes obsolètes.',
+    admin:false, type:'CMD',
+    cmd:'start steam://run/920490',
   },
 ];
 
